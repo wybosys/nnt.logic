@@ -1,0 +1,27 @@
+{
+    "compilerOptions":{
+        "module":"commonjs",
+        "target":"es6",
+        "outDir":"bin",
+        "sourceMap":true,
+        "allowSyntheticDefaultImports":true,
+        "allowUnreachableCode": true,
+        "removeComments": true,
+        "experimentalDecorators": true,
+        "noImplicitAny": true,
+        "noImplicitUseStrict": true,
+        "newLine": "LF",
+        "moduleResolution": "node",
+        "types":[
+            "node"
+        ]
+    },
+    "include":[
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "src/nnt/client",
+        "cache",
+        "assets"
+    ]
+}

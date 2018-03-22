@@ -1,0 +1,18 @@
+{
+  "config": {
+    "sidexpire": 86400,
+    "cidexpire": 600,
+    "cache": "cache",
+    "https": false,
+    "deskey": "joi>:90",
+    "cluster": 1
+  },
+  "server": [
+  ],
+  "container": [
+  ],
+  "dbms": [
+  ],
+  "logger": [
+  ]
+}
