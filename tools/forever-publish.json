@@ -1,0 +1,13 @@
+[
+  {
+    "uid": "develop",
+    "append": true,
+    "watch": true,
+    "watchDirectory": "bin",
+    "sourceDir": "./",
+    "script": "index.js",
+    "args": [
+      "--publish"
+    ]
+  }
+]

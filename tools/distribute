@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+python3 ./tools/distribute.py
+FN=`date "+%Y%m%d%H%M"`
+FILE=${FN}.tar.gz
+
+scp ${FILE} aliyunNew:dist/${FILE}
+
+# 远程部署
+ssh aliyunNew "cd dist; tar -xvf ${FILE};\rm ${FILE};\cp -rf build_distribute/* ../server/appsrv; \rm -rf build_distrib\
+ute;"
+
+rm ${FILE}

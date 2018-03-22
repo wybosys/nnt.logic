@@ -1,0 +1,15 @@
+{
+    "name": "nnt-client",
+    "module": "amd",
+    "version": "0.0.1",
+    "description": "NNT服务客户端SDK",
+    "typings": "dist/nnt.d.ts",
+    "files": [
+        "src",
+        "dist/*.js",
+        "dist/*.d.ts"
+    ],
+    "keywords": [
+        "nnt"
+    ]
+}
