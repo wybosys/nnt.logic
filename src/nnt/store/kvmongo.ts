@@ -67,7 +67,6 @@ export class KvMongo extends AbstractNosql {
         return true;
     }
 
-    protected _hdl = mongo.MongoClient;
     protected _repl: mongo.ReplSet;
     protected _db: mongo.Db;
 
@@ -85,7 +84,7 @@ export class KvMongo extends AbstractNosql {
         url += this.repl.server.join(",") + "/" + this.scheme + "?replicaSet=" + this.repl.name;
         try {
             let opts: IndexedObject = {};
-            this._db = await this._hdl.connect(url, opts);
+            this._db = await mongo.connect(url, opts);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
         }
         catch (err) {
@@ -103,7 +102,7 @@ export class KvMongo extends AbstractNosql {
                     password: this.password
                 }
             }
-            this._db = await this._hdl.connect(url, opts);
+            this._db = await mongo.connect(url, opts);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
         }
         catch (err) {
@@ -113,7 +112,7 @@ export class KvMongo extends AbstractNosql {
 
     async close(): Promise<void> {
         if (this._db) {
-            this._db.close(true);
+            //this._db.close(true);
             this._db = null;
         }
     }
