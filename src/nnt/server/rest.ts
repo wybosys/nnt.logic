@@ -232,6 +232,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         if (req.method == "POST") {
             // 如果是multipart-form得请求，则不适用于处理buffer
             let ct = req.headers["content-type"];
+            if (!ct)
+                ct = 'application/json';
             if (ct.indexOf("form") != -1) {
                 let form = new formidable.IncomingForm();
                 form.parse(req, (err: any, fields, files) => {
