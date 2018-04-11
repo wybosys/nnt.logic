@@ -18,9 +18,11 @@ export class Ueditor implements IRouter {
         // 删除注释
         cfgstr = cfgstr.replace(/\/\*[\s\S]+?\*\//g, "");
         this._cfg = toJsonObject(cfgstr);
+        this._cfgstr = cfgstr;
     }
 
     private _cfg: IndexedObject;
+    private _cfgstr: string;
 
     @action(Null)
     async call(trans: Transaction) {
@@ -35,18 +37,7 @@ export class Ueditor implements IRouter {
     }
 
     protected async _cmd_config(trans: Transaction, jsonp: string) {
-        let cfg = ObjectT.LightClone(this._cfg);
-        // 修改成访问的地址
-        let srv = <Rest>trans.server;
-        // 获得访问的地址
-        let urls = [
-            srv.https ? "https://" : "http://",
-            trans.info.host,
-            trans.info.path,
-            "?action=use&name="
-        ];
-        cfg.imageUrlPrefix = urls.join("");
-        trans.model = jsonp ? jsonp + "(" + toJson(cfg) + ")" : cfg;
+        trans.model = jsonp ? jsonp + "(" + this._cfgstr + ")" : this._cfg;
     }
 
     protected async _cmd_uploadimage(trans: Transaction, jsonp: string) {
