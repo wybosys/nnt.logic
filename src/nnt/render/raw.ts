@@ -1,11 +1,11 @@
 import {IRender} from "./render";
-import {Transaction} from "../server/transaction";
+import {Transaction, TransactionSubmitOption} from "../server/transaction";
 
 export class Raw implements IRender {
 
     type = "text/plain";
 
-    render(trans: Transaction): string {
+    render(trans: Transaction, opt?: TransactionSubmitOption): string {
         return trans.model.toString();
     }
 }

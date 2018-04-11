@@ -90,10 +90,10 @@ var ApiCldService = /** @class */ (function (_super) {
     };
     ApiCldService.prototype.doPay = function (cnt) {
         var win = window;
-        if (win['iap']) {
+        if (win['iap']) { //苹果支付
             this.payByApple(win['iap'], cnt);
         }
-        else {
+        else { //微信支付
             this.payByWeixin(win['wxPay'], cnt);
         }
     };

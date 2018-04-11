@@ -7,8 +7,7 @@ import {
 import {RegisterChannel, Sdk} from "../../sdk";
 import {Transaction} from "../../../server/transaction";
 import {Call} from "../../../manager/servers";
-import {MediaSupport} from "../../../server/mediastore";
-import {logger} from "../../../core/logger";
+import {AudioSupport} from "../../../server/audiostore";
 
 export class Apicloud extends Channel {
 
@@ -86,8 +85,8 @@ export class Apicloud extends Channel {
 
     async doRemoteAudios(m: GetRemoteMedia, ui: SdkUserInfo): Promise<void> {
         m.paths = await (AsyncArray(m.medias).convert<string>((e, done) => {
-            Call(this._sdk.mediasrv, 'mediastore.upload', {
-                type: MediaSupport.AMR,
+            Call(this._sdk.mediasrv, 'audiostore.upload', {
+                type: AudioSupport.AMR,
                 file: e
             }).then(t => {
                 done(t.model.path);

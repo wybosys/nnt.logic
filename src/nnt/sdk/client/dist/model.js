@@ -447,7 +447,7 @@ function Decode(mdl, params) {
         return;
     var _loop_1 = function (key) {
         var fp = fps[key];
-        if (fp == null)
+        if (fp == null) // 注意这边和core/proto有些不同，不去判断input的类型
             return "continue";
         var val = params[key];
         if (fp.valtype) {

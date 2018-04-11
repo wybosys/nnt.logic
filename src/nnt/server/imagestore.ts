@@ -79,7 +79,7 @@ function IsImageStorePath(path: string): boolean {
     return path.match(PAT_IMAGESTOREPATH) != null;
 }
 
-class RImageStore implements IRouter {
+export class RImageStore implements IRouter {
     action = "imagestore";
     hash = new Hashids("imagestore");
 

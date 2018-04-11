@@ -2,7 +2,7 @@ import {logger} from "../core/logger";
 import {Json} from "./json";
 import {Protobuf} from "./protobuf";
 import {Vue} from "./vue";
-import {Transaction} from "../server/transaction";
+import {Transaction, TransactionSubmitOption} from "../server/transaction";
 import {Raw} from "./raw";
 
 export interface IRender {
@@ -11,7 +11,7 @@ export interface IRender {
     type: string;
 
     // 渲染
-    render(trans: Transaction): string;
+    render(trans: Transaction, opt?: TransactionSubmitOption): string;
 }
 
 let renders = new Map<string, IRender>();

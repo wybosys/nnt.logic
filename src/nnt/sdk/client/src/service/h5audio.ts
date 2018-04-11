@@ -106,7 +106,7 @@ export class H5AudioRecorder extends AudioRecorder {
         };
         reader.onerror = e => {
             PLAYING = false;
-            cb && cb(new Error(e.message));
+            cb && cb(new Error("录音失败"));
         };
         reader.readAsDataURL(this._data);
     }

@@ -20,7 +20,23 @@ export class TransactionInfo {
 
     // 客户端的地址
     addr: string;
+
+    // 来源
+    referer: string;
+    path: string;
 }
+
+export interface TransactionSubmitOption {
+
+    // 仅输出模型
+    model?: boolean;
+
+    // 直接输出数据
+    raw?: boolean;
+
+    // 输出的类型
+    type?: string;
+};
 
 export abstract class Transaction {
 
@@ -150,11 +166,11 @@ export abstract class Transaction {
     }
 
     // 同步模式会自动提交，异步模式需要手动提交
-    implSubmit: () => void;
+    implSubmit: (opt?: TransactionSubmitOption) => void;
     private _submited: boolean;
     private _submited_timeout: boolean;
 
-    submit() {
+    submit(opt?: TransactionSubmitOption) {
         if (this._submited) {
             if (!this._submited_timeout)
                 logger.warn("api已经发送");
@@ -173,7 +189,7 @@ export abstract class Transaction {
                 logger.exception(err);
             }
         }
-        this.implSubmit();
+        this.implSubmit(opt);
 
         // 只有打开了频控，并且此次是正常操作，才解锁
         if (this.frqctl && this.status != STATUS.HFDENY)

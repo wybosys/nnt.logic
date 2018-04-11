@@ -1,6 +1,6 @@
 import {Node} from "../config/config"
 import {parse as urlparse} from "url"
-import {EmptyTransaction, Transaction} from "./transaction";
+import {EmptyTransaction, Transaction, TransactionSubmitOption} from "./transaction";
 import {FindRender} from "../render/render";
 import {AbstractServer, IConsoleServer} from "./server";
 import {RestService} from "./rest/service";
@@ -23,6 +23,7 @@ import https = require("https");
 import spdy = require("spdy");
 import fs = require("fs");
 import formidable = require("formidable");
+import {action} from "../core/router";
 
 export interface RestResponseData {
     contentType: string;
@@ -55,13 +56,13 @@ interface TransactionPayload {
     rsp: http.ServerResponse;
 }
 
-function TransactionSubmit() {
+function TransactionSubmit(opt?: TransactionSubmitOption) {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
     let r = FindRender(self.params["render"]);
-    let ct: IndexedObject = {"Content-Type": r.type};
+    let ct: IndexedObject = {"Content-Type": (opt && opt.type) ? opt.type : r.type};
     pl.rsp.writeHead(200, ct);
-    pl.rsp.end(r.render(self));
+    pl.rsp.end(r.render(self, opt));
 }
 
 function TransactionOutput(type: string, obj: any) {
@@ -211,7 +212,18 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         // 打开跨域支持
         rsp.setHeader("Access-Control-Allow-Origin", "*");
         rsp.setHeader("Access-Control-Allow-Credentials", "true");
-        rsp.setHeader("Access-Control-Allow-Methods", "GET, POST");
+        rsp.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+        // 直接对option进行成功响应
+        if (req.method == "OPTIONS") {
+            if (req.headers["access-control-request-headers"])
+                rsp.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"]);
+            if (req.headers["access-control-request-method"] == "POST")
+                rsp.setHeader("Content-Type", "multipart/form-data");
+            rsp.writeHead(204);
+            rsp.end();
+            return;
+        }
 
         // 处理url请求
         let url = urlparse(req.url, true);
@@ -219,7 +231,9 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
 
         // 需要支持以/分割和以&分割的两种url形式
         let params = <IndexedObject>url.query;
-        if (url.pathname.indexOf("/action") == 0) {
+        // 为了支持第三方平台通过action同名传递动作
+        if (url.pathname.indexOf("/$$/") == 0 ||
+            url.pathname.indexOf("/action/") == 0) {
             let p = url.pathname.split("/");
             for (let i = 1, l = p.length; i < l;) {
                 let k = p[i++];
@@ -280,7 +294,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
 
     // 处理请求
     invoke(params: any, req: http.ServerRequest, rsp: http.ServerResponse, ac?: AcEntity) {
-        if (typeof params["action"] != "string") {
+        let action = params["$$"] || params["action"];
+        if (typeof action != "string") {
             rsp.writeHead(400);
             rsp.end();
             return;
@@ -290,11 +305,12 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         try {
             t.ace = ac;
             t.server = this;
-            t.action = params["action"];
+            t.action = action;
             t.params = params;
 
             // 从请求中保存下信息
             if (req) {
+                let url = urlparse(req.url, true);
                 if ("_agent" in params)
                     t.info.agent = params["_agent"];
                 else
@@ -302,6 +318,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 t.info.host = req.headers['host'];
                 t.info.origin = req.headers['origin'] as string;
                 t.info.addr = req.connection.remoteAddress;
+                t.info.referer = req.headers['referer'] as string;
+                t.info.path = url.pathname;
             }
 
             this.onBeforeInvoke(t);

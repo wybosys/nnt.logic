@@ -23,9 +23,9 @@ import {WechatPayResult, WechatUnifiedOrder} from "./paymodel";
 import {Decode, Encode, Output as ApiOutput} from "../../../core/proto";
 import {STATUS} from "../../../core/models";
 import {logger} from "../../../core/logger";
-import {MediaSupport} from "../../../server/mediastore";
 import {S2SWechatTicket, S2SWechatToken} from "./s2smodel";
 import {ACROOT} from "../../../acl/acl";
+import {AudioSupport} from "../../../server/audiostore";
 
 export class Wechat extends Channel {
 
@@ -646,9 +646,9 @@ export class Wechat extends Channel {
         m.paths = await (AsyncArray(m.medias).convert<string>((e, done) => {
             let url = "https://api.weixin.qq.com/cgi-bin/media/get?access_token=" + tk + "&media_id=" + e;
             // 下载图片
-            Call(this._sdk.mediasrv, "mediastore.download", {
+            Call(this._sdk.mediasrv, "audiostore.download", {
                 source: url,
-                type: MediaSupport.AMR
+                type: AudioSupport.AMR
             }, ACROOT).then(t => {
                 done(t.model.path);
             });
