@@ -69,6 +69,7 @@ export class KvMongo extends AbstractNosql {
 
     protected _repl: mongo.ReplSet;
     protected _db: mongo.Db;
+    protected _cli: mongo.MongoClient;
 
     async open(): Promise<void> {
         if (this.cluster)
@@ -81,10 +82,11 @@ export class KvMongo extends AbstractNosql {
         let url = "mongodb://";
         if (this.user)
             url += encodeURIComponent(this.user) + ":" + encodeURIComponent(this.password) + "@";
-        url += this.repl.server.join(",") + "/" + this.scheme + "?replicaSet=" + this.repl.name;
+        url += this.repl.server.join(",") + "?replicaSet=" + this.repl.name;
         try {
             let opts: IndexedObject = {};
-            this._db = await mongo.connect(url, opts);
+            this._cli = await mongo.MongoClient.connect(url, opts);
+            this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
         }
         catch (err) {
@@ -93,7 +95,7 @@ export class KvMongo extends AbstractNosql {
     }
 
     protected async doOpenAlone() {
-        let url = "mongodb://" + this.host + "/" + this.scheme;
+        let url = "mongodb://" + this.host;
         try {
             let opts: IndexedObject = {};
             if (this.user) {
@@ -102,7 +104,8 @@ export class KvMongo extends AbstractNosql {
                     password: this.password
                 }
             }
-            this._db = await mongo.connect(url, opts);
+            this._cli = await mongo.MongoClient.connect(url, opts);
+            this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
         }
         catch (err) {
@@ -111,8 +114,9 @@ export class KvMongo extends AbstractNosql {
     }
 
     async close(): Promise<void> {
-        if (this._db) {
-            //this._db.close(true);
+        if (this._cli) {
+            this._cli.close(true);
+            this._cli = null;
             this._db = null;
         }
     }
