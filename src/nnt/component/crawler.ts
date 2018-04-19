@@ -1,12 +1,15 @@
 import {logger} from "../core/logger";
 import {IndexedObject} from "../core/kernel";
-import {Config, IsDebug} from "../manager/config";
+import {Config} from "../manager/config";
 
 let Spooky = require('spooky');
 
 function safe_time(second: number): number {
     return second ? second * 1000 : null;
 }
+
+type ArgumentFunction = IndexedObject | Function;
+type ArgumentFunctions = ArgumentFunction[];
 
 export class Crawler {
 
@@ -76,7 +79,7 @@ export class Crawler {
         return this._hdl.evaluate.apply(this._hdl, arguments);
     }
 
-    then(then: () => void) {
+    then(then: Function | ArgumentFunctions) {
         return this._hdl.then(then);
     }
 

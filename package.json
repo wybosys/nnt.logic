@@ -72,6 +72,7 @@
     "sharp": "^0.20.1",
     "soap": "^0.23.0",
     "spdy": "^3.4.7",
+    "spooky": "^0.2.5",
     "sprintf-js": "^1.1.1",
     "stream-buffers": "^3.0.1",
     "streamifier": "^0.1.1",
