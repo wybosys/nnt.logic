@@ -477,6 +477,15 @@ export class ArrayT {
         return r;
     }
 
+    static Merge<T>(...arr: Array<Array<T>>): T[] {
+        let r = new Array<T>();
+        arr && arr.forEach(e => {
+            if (e)
+                r = r.concat(e);
+        });
+        return r;
+    }
+
     static Pack<T, R>(arr: T[], proc: (e: T, idx: number) => R, skipnull = true): R[] {
         let r = new Array();
         arr && arr.forEach((e, idx) => {
@@ -950,6 +959,14 @@ export class ArrayT {
 }
 
 export class SetT {
+
+    static ToArray<T>(arr: Set<T>): T[] {
+        let r: T[] = [];
+        arr.forEach(e => {
+            r.push(e);
+        });
+        return r;
+    }
 
     static FromArray<T, R>(arr: T[], convert?: (e: T, idx?: number) => R, skipnull = true): Set<R> {
         let r = new Set<R>();
