@@ -12,6 +12,10 @@ export class Routers {
 
     protected _routers = new Map<string, IRouter>();
 
+    get length(): number {
+        return this._routers.size;
+    }
+
     register(obj: IRouter) {
         if (this._routers.get(obj.action)) {
             logger.fatal("已经注册了一个同名的路由{{=it.action}}", {action: obj.action});

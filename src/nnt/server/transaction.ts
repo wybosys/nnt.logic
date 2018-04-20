@@ -173,7 +173,7 @@ export abstract class Transaction {
     submit(opt?: TransactionSubmitOption) {
         if (this._submited) {
             if (!this._submited_timeout)
-                logger.warn("api已经发送");
+                logger.warn("数据已经发送");
             return;
         }
         if (this._timeout) {
@@ -182,6 +182,7 @@ export abstract class Transaction {
             this._submited_timeout = true;
         }
         this._submited = true;
+        this._outputed = true;
         if (this.hookSubmit) {
             try {
                 this.hookSubmit();
@@ -213,6 +214,7 @@ export abstract class Transaction {
             this._timeout = null;
         }
         this._outputed = true;
+        this._submited = true;
         this.implOutput(type, obj);
     }
 

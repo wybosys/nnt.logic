@@ -1,18 +1,28 @@
 {
-  "config": {
-    "sidexpire": 86400,
-    "cidexpire": 600,
-    "cache": "cache",
-    "https": false,
-    "deskey": "joi>:90",
-    "cluster": 1
-  },
-  "server": [
-  ],
-  "container": [
-  ],
-  "dbms": [
-  ],
-  "logger": [
-  ]
+    "config": {
+        "sidexpire": 86400,
+        "cidexpire": 600,
+        "cache": "cache",
+        "https": false,
+        "deskey": "joi>:90",
+        "cluster": 1
+    },
+    "server": [
+        {
+            "id": "sample",
+            "listen": "*",
+            "port": 8090,
+            "entry": "app.Sample",
+            "enable": "debug",
+            "router": [
+                "nnt.server.apidoc.Router"
+            ]
+        }
+    ],
+    "container": [
+    ],
+    "dbms": [
+    ],
+    "logger": [
+    ]
 }
