@@ -113,6 +113,10 @@ export const MP_KEY = "__modelproto";
 export const FP_KEY = "__fieldproto";
 export const OWNFP_KEY = "__ownfieldproto";
 
+export function GetAllFields(mdl: any): { [key: string]: FieldOption } {
+    return mdl[FP_KEY];
+}
+
 // 是否是模型
 export function IsModel(clz: any): boolean {
     return clz[MP_KEY] != null;

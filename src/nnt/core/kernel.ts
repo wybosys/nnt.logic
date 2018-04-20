@@ -15,6 +15,11 @@ export function ispod(v: any): boolean {
     return v == "number" || v == "string" || v == "boolean";
 }
 
+// 创建一个纯Json对象
+export function JsonObject<T>():T {
+    return Object.create(null);
+}
+
 export function ToObject(obj: any, proc?: (obj: any) => any): any {
     if (!obj)
         return null;

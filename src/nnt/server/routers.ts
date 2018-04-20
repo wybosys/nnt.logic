@@ -3,6 +3,7 @@ import {logger} from "../core/logger";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {AddListener, RemoveListener} from "./rest/listener";
+import {MapT} from "../core/kernel";
 
 export interface IRouterable {
     routers: Routers;
@@ -34,6 +35,10 @@ export class Routers {
 
     forEach(proc: (v: IRouter, k: string) => void) {
         this._routers.forEach(proc);
+    }
+
+    toArray(): IRouter[] {
+        return MapT.Values(this._routers);
     }
 
     async process(trans: Transaction) {

@@ -1,10 +1,9 @@
 <html>
-<meta charset="UTF-8">
 <head>
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/zepto.min.js"></script>
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/vue.min.js"></script>
-    <link type="text/css" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
-    <link type="text/css" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap-vue.min.css"></link>
+    <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
+    <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap-vue.min.css"></link>
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/polyfill.min.js"></script>
     <script type="text/javascript"
             src="http://develop.91egame.com/devops/cdn/provider/file/bootstrap-vue.min.js"></script>
@@ -15,7 +14,7 @@
 <div id="app" class="container-fluid">
     <div class="row">
         <div class="col-md-2">
-            <b-list-group v-for="info in router.actions">
+            <b-list-group v-for="info in actions">
                 <b-list-group-item v-on:click="actSelectAction(info)">${info.name}</b-list-group-item>
             </b-list-group>
         </div>
@@ -67,7 +66,7 @@
     delimiters: ['${', '}'],
     el: '#app',
     data: {            
-      router: {{router}},
+      actions: {{actions}},
       action: null,
       current: "",
       form: {},
@@ -78,7 +77,7 @@
     methods: {
       actSelectAction(info) {        
         this.action = info;
-        this.current = this.router.name + '.' + info.name;
+        this.current = info.name;
         this.log = null;
         this.form = {};
 
