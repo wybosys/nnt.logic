@@ -230,6 +230,10 @@ export class DateTime {
         this._date.setTime(this._timestamp * 1000);
     }
 
+    valueOf(): number {
+        return this._timestamp;
+    }
+
     get time(): number {
         return this.timestamp;
     }
