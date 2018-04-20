@@ -1,129 +1,146 @@
+import {ArrayT, asString, SafeEval} from "../core/kernel";
 import {logger} from "../core/logger";
-import {IndexedObject} from "../core/kernel";
-import {Config} from "../manager/config";
+import tmp = require('tmp');
+import fs = require('fs');
 
-let Spooky = require('spooky');
+const spawn = require('child_process').spawn;
+
+function pack_value(val: any): string {
+    let str = asString(val);
+    if (typeof val == "string")
+        return '"' + str + '"';
+    return str;
+}
 
 function safe_time(second: number): number {
     return second ? second * 1000 : null;
 }
 
-type ArgumentFunction = IndexedObject | Function;
-type ArgumentFunctions = ArgumentFunction[];
+function pack_function(fun: Function): string {
+    if (!fun)
+        return null;
+    let str = fun.toString();
+    // let需要换成var
+    str = str.replace(/let /g, 'var ');
+    // ()=> 换成 function ()
+    str = str.replace(/\(([a-zA-Z0-9_, ]+)\) =>/g, "function ($1)")
+    return str;
+}
 
+function pack_arguments(args: any[]): string {
+    if (!args || args.length == 0)
+        return null;
+    return ArrayT.Convert(args, pack_value).join(', ');
+}
+
+// 每一步生成对应的代码，然后最终生成临时的casperjs文件
 export class Crawler {
 
-    connect(url?: string): Promise<void> {
-        return new Promise<void>((resolv, reject) => {
-            let opt: any = {
-                child: {
-                    port: 10008
-                },
-                casper: {
-                    logLevel: 'debug',
-                    verbose: true
-                }
-            };
-            // 不能在ideau中调试打开http的模式
-            if (!Config.DEBUG)
-                opt.child['transport'] = 'http';
-            let hdl = new Spooky(opt, (err: Error) => {
-                if (err) {
-                    logger.log(err.message);
-                    reject(err);
+    private _buffer: string[] = [];
+
+    protected cmd(cmd: string, ...cmps: any[]): this {
+        cmps = ArrayT.QueryObjects(cmps, e => e != null);
+        this._buffer.push('hdl.' + cmd + '(' + cmps.join(', ') + ');');
+        return this;
+    }
+
+    connect(url: string, then?: () => void): this {
+        return this.start(url, then);
+    }
+
+    start(url: string, then?: () => void): this {
+        return this.cmd('start', '"' + url + '"', pack_function(then));
+    }
+
+    run(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            // 生成最终执行的脚本
+            let cmds: string[] = [];
+            ArrayT.PushObjects(cmds, [
+                'function Output(hdl, typ, obj) { hdl.echo(JSON.stringify({type:typ, payload:obj}) + ","); }',
+                'function hookError(hdl, msg, btrace) { Output(hdl, "error", msg); };',
+                'var hdl = require("casper").create({onError:hookError});',
+                'hdl.result = function(obj) { Output(this, "result", obj); }',
+                'hdl.log = function(obj) { Output(this, "log", obj); };'
+            ]);
+            ArrayT.PushObjects(cmds, this._buffer);
+            ArrayT.PushObjects(cmds, [
+                'hdl.run();'
+            ]);
+
+            // 命令保存到文件
+            let text = cmds.join('\n');
+            //logger.log(text);
+            let tf = tmp.fileSync();
+            fs.writeSync(tf.fd, text);
+
+            let output: any;
+            let err: string;
+
+            // 执行
+            let proc = spawn('casperjs', [tf.name]);
+            proc.stdout.on('data', (data: Uint8Array) => {
+                let msg = data.toString();
+                msg = '[' + msg + ']';
+                // 分解结果
+                let msgs = SafeEval(msg);
+                if (!msgs) {
+                    logger.warn("无法处理数据 " + msg);
                     return;
                 }
-
-                this._hdl = hdl;
-                hdl.on('error', (e: any, stack: any) => {
-                    logger.error(e);
-                    if (stack)
-                        logger.log(stack);
+                msgs.forEach((msg: any) => {
+                    switch (msg.type) {
+                        case 'result': {
+                            output = msg.payload;
+                        }
+                            break;
+                        case 'log': {
+                            logger.log(msg.payload);
+                        }
+                            break;
+                    }
                 });
-
-                hdl.on('console', (line: string) => {
-                    logger.log(line);
+                let result = ArrayT.QueryObject(msgs, (e: any) => {
+                    return e.type == 'result';
                 });
-
-                hdl.on('log', (log: any) => {
-                    if (log.space === 'remote')
-                        logger.log(log.message.replace(/ \- .*/, ''));
-                });
-
-                if (url)
-                    this.start(url);
-                resolv();
+                if (result) {
+                    output = result.payload;
+                }
+            });
+            proc.stderr.on('data', (data: Uint8Array) => {
+                err = data.toString();
+                logger.warn(err);
+            });
+            proc.on('close', () => {
+                if (err)
+                    reject(new Error(err));
+                else
+                    resolve(output);
             });
         });
     }
 
-    _hdl: any;
-
-    start(url: string, then?: () => void) {
-        return this._hdl.start(url, then);
+    evaluate(func: Function, ...args: any[]): this {
+        return this.cmd('evaluate', pack_function(func), pack_arguments(args));
     }
 
-    run(): Promise<void> {
-        return new Promise<void>(resolve => {
-            this._hdl.on('::run::end', () => {
-                resolve();
-            });
-            this._hdl.run(function () {
-                this.emit('::run::end');
-                this.exit();
-            });
-        });
+    then(then: Function, ...args: any[]): this {
+        let sf = pack_function(then);
+        if (sf && args) {
+            sf = 'function(){(' + sf + ').call(this, ' + pack_arguments(args) + ');}';
+        }
+        return this.cmd('then', sf);
     }
 
-    evaluate(func: Function, ...args: any[]) {
-        return this._hdl.evaluate.apply(this._hdl, arguments);
+    wait(second: number, then?: () => void): this {
+        return this.cmd('wait', safe_time(second), pack_function(then));
     }
 
-    then(then: Function | ArgumentFunctions) {
-        return this._hdl.then(then);
+    echo(str: string, style?: string): this {
+        return this.cmd('echo', str, style);
     }
 
-    thenEvaluate(func: Function, ...args: any[]) {
-        return this._hdl.thenEvaluate.apply(this._hdl, arguments);
+    exit(): this {
+        return this.cmd('exit');
     }
-
-    thenClick(selector: string, then?: () => void) {
-        return this._hdl.thenClick(selector, then);
-    }
-
-    wait(second: number, then?: () => void) {
-        return this._hdl.wait(safe_time(second), then);
-    }
-
-    waitFor(test: () => boolean, then?: () => void, timeout?: () => void, second?: number, details?: any) {
-        return this._hdl.waitFor(test, then, timeout, safe_time(second), details);
-    }
-
-    waitForSelector(selector: string, then?: () => void, timeout?: () => void, second?: number) {
-        return this._hdl.waitForSelector(selector, then, timeout, safe_time(second));
-    }
-
-    echo(str: string, style?: string) {
-        return this._hdl.echo(str, style ? style : 'INFO');
-    }
-
-    exit() {
-        this._hdl.exit();
-    }
-
-    on(idr: string, cb: (data: any) => void) {
-        return this._hdl.on(idr, cb);
-    }
-
-    collect(varnm: string) {
-        this.on(varnm, (data: any) => {
-            this._collects[varnm] = data;
-        });
-    }
-
-    result(varnm: string): any {
-        return this._collects[varnm];
-    }
-
-    private _collects: IndexedObject = {};
 }

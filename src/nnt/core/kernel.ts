@@ -1950,6 +1950,36 @@ export function toJsonObject(o: jsonobj, def: any = null): IndexedObject {
     return def;
 }
 
+export function toJsonArray(o: jsonobj, def: any[] = null): IndexedObject[] {
+    let t = typeof(o);
+    if (t == 'string') {
+        if (o == "undefined" || o == "null")
+            return def;
+        let r: any;
+        try {
+            r = JSON.parse(o as string);
+        }
+        catch (err) {
+            logger.warn(o + " " + err);
+            r = def;
+        }
+        return r;
+    }
+    else if (t == 'object')
+        return <any>o;
+    return def;
+}
+
+export function SafeEval(str: string): any {
+    let r: any;
+    try {
+        r = eval(str);
+    } catch (ex) {
+        logger.warn(ex);
+    }
+    return r;
+}
+
 function INT(v: any): number {
     return Math.floor(v);
 }
