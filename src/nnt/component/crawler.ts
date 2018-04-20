@@ -24,6 +24,8 @@ function pack_function(fun: Function): string {
     str = str.replace(/let /g, 'var ');
     // ()=> 换成 function ()
     str = str.replace(/\(([a-zA-Z0-9_, ]+)\) =>/g, "function ($1)")
+    // 替换console为alert，否则无法从evaluate中传出
+    str = str.replace(/console\.(log|warn)\(/g, 'alert(');
     return str;
 }
 
@@ -59,9 +61,11 @@ export class Crawler {
             ArrayT.PushObjects(cmds, [
                 'function Output(hdl, typ, obj) { hdl.echo(JSON.stringify({type:typ, payload:obj}) + ","); }',
                 'function hookError(hdl, msg, btrace) { Output(hdl, "error", msg); };',
-                'var hdl = require("casper").create({onError:hookError});',
+                'function hookAlert(hdl, msg) { Output(hdl, "log", msg); };',
+                'var hdl = require("casper").create({onError:hookError, onAlert:hookAlert});',
+                // 抛出返回值
                 'hdl.result = function(obj) { Output(this, "result", obj); }',
-                'hdl.log = function(obj) { Output(this, "log", obj); };'
+                'hdl.log = function (obj) { Output(this, "info", obj); };'
             ]);
             ArrayT.PushObjects(cmds, this._buffer);
             ArrayT.PushObjects(cmds, [
@@ -96,6 +100,16 @@ export class Crawler {
                             break;
                         case 'log': {
                             logger.log(msg.payload);
+                        }
+                            break;
+                        case 'warn': {
+                            logger.warn(msg.payload);
+                        }
+                            break;
+                        case 'info': {
+                            if (msg.payload.indexOf('[alert]') != -1)
+                                return;
+                            logger.info(msg.payload);
                         }
                             break;
                     }
