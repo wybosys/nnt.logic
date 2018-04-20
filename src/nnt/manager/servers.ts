@@ -122,11 +122,12 @@ export function Call(srvid: string, action: string, params: IndexedObject, ac?: 
 export function ConsoleSubmit() {
     let self = <Transaction>this;
     let cb = self.params["__callback"];
-    cb(this);
+    cb(self);
 }
 
 export function ConsoleOutput(type: string, obj: any) {
     let self = <Transaction>this;
     let cb = self.params["__callback"];
-    cb(this);
+    self.payload = obj;
+    cb(self);
 }
