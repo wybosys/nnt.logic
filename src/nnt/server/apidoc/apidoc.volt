@@ -158,9 +158,9 @@
             params[input.name] = this.form[input.index];
         }      
         // 请求数据
-        let url = location.href.replace('/apidoc', '/' + this.action.name);
+        let url = location.href.replace('action=api.doc', 'action=' + this.action.action);
         if (Object.keys(params).length)
-          url += '?' + $.param(params);
+          url += '&' + $.param(params);
         // 如果存在文件，则强制为post
         if (Object.keys(files).length) {
           Post(url, files, (err, resp)=>{
