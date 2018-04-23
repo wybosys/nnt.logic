@@ -49,6 +49,7 @@
                     <b-form-input type="text" v-model="form[param.index]" v-else></b-form-input>
                 </b-form-group>
                 <b-button type="submit" variant="primary">提交</b-button>
+                <b-button @click="actOpen">OPEN</b-button>
             </b-form>
         </div>
         <div class="col-md">
@@ -185,11 +186,31 @@
           });
         }
       },
+      actOpen() {
+        let params = {}; // 普通参数
+        for (let idx in this.inputs) {
+          let input = this.inputs[idx];
+          if (!(input.index in this.form)) {
+            if (!input.optional) {
+              alert("没有设置参数 " + input.name);
+              return;
+            }
+            else
+              continue;
+          }
+            params[input.name] = this.form[input.index];
+        }
+        // 请求数据
+        let url = location.href.replace('action=api.doc', 'action=' + this.action.action);
+        if (Object.keys(params).length)
+          url += '&' + $.param(params);
+        window.open(url);
+      },
       actRecordAudio() {
       },
       actPlayAudio() {
       }
-    }
+    },
   });
 
   function Get(url, cb) {

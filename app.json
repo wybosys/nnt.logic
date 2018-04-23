@@ -14,9 +14,18 @@
             "port": 8090,
             "entry": "app.Sample",
             "enable": "debug",
-            "router": [
-                "nnt.server.apidoc.Router"
-            ]
+            "router": {
+                "nnt.server.apidoc.Router": {
+                    "export": {
+                        "router": [
+                            "entry://app/sample"
+                        ],
+                        "model": [
+                            "entry://app/sample"
+                        ]
+                    }
+                }
+            }
         }
     ],
     "container": [

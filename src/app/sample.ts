@@ -1,9 +1,10 @@
 import {Rest} from "../nnt/server/rest";
 import {action, IRouter} from "../nnt/core/router";
-import {input, output, string} from "../nnt/core/proto";
+import {input, model, output, string} from "../nnt/core/proto";
 import {Transaction} from "../nnt/server/transaction";
 
-class Echoo {
+@model()
+export class Echoo {
 
     @string(1, [input], "输入")
     input: string;
@@ -12,7 +13,7 @@ class Echoo {
     output: string;
 }
 
-class RSample implements IRouter {
+export class RSample implements IRouter {
     action = "sample";
 
     @action(Echoo)
