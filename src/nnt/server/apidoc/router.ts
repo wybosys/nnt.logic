@@ -1,17 +1,28 @@
 import {action, FindAction, GetAllActionNames, IRouter} from "../../core/router";
-import {Null} from "../../core/models";
+import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
 import {IsClass, Require, static_cast} from "../../core/core";
 import {AnyClass, ArrayT, IndexedObject, JsonObject, length, ObjectT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
-import {FpToDecoDef, FpToTypeDef, GetAllFields, GetAllOwnFields, GetModelInfo, IsModel, Output} from "../../core/proto";
+import {
+    boolean,
+    FpToDecoDef,
+    FpToTypeDef,
+    GetAllFields,
+    GetAllOwnFields,
+    GetModelInfo,
+    input,
+    IsModel,
+    optional,
+    Output
+} from "../../core/proto";
 import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
+import {RespFile} from "../file";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
-import {RespFile} from "../file";
 
 interface ParameterInfo {
     name: string;
@@ -45,6 +56,15 @@ interface RouterConfig {
     }
 }
 
+class ExportApis {
+
+    @boolean(1, [input, optional], "生成logic客户端使用的apis")
+    logic: boolean;
+
+    @boolean(2, [input, optional], "生成h5g游戏使用apis")
+    h5g: boolean;
+}
+
 export class Router implements IRouter {
     action = "api";
 
@@ -66,8 +86,15 @@ export class Router implements IRouter {
         trans.submit();
     }
 
-    @action(Null, [], "生成api接口文件")
+    @action(ExportApis, [], "生成api接口文件")
     export(trans: Transaction) {
+        let m: ExportApis = trans.model;
+        if (!m.logic && !m.h5g) {
+            trans.status = STATUS.PARAMETER_NOT_MATCH;
+            trans.submit();
+            return;
+        }
+
         // 分析出的所有结构
         let params = {
             clazzes: new Array(),
@@ -167,7 +194,12 @@ export class Router implements IRouter {
             });
         });
         // 渲染模板
-        let src = fs.readFileSync(expand("~/src/nnt/server/apidoc/apis.dust"), "utf8");
+        let apis: string;
+        if (m.logic)
+            apis = "~/src/nnt/server/apidoc/apis-logic.dust";
+        else if (m.h5g)
+            apis = "~/src/nnt/server/apidoc/apis-h5g.dust";
+        let src = fs.readFileSync(expand(apis), "utf8");
         let tplcfg = (<any>tpl).config;
         let old = tplcfg.whitespace;
         tplcfg.whitespace = true;

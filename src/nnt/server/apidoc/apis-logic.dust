@@ -1,0 +1,41 @@
+import {~lb}Model{~rb} from "./model-impl";
+
+export module models {
+
+{#enums}
+    export enum {.name} {~lb}
+    {#.defs}
+        {.name} = {.value},
+    {/.defs}
+    {~rb}
+{/enums}
+
+{#consts}
+    export const {.name} = {.value|s};
+{/consts}
+
+{#clazzes}
+    export class {.name} extends {.super} {~lb}
+    {#.fields}
+        {?.deco}{.deco|s}{/.deco}
+        {.name}{?.optional}?{/.optional}:{.type|s};
+    {/.fields}
+    {~rb}
+{/clazzes}
+}
+
+export module routers {
+{#routers}
+    export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
+{/routers}
+}
+
+export module api {
+{#routers}
+    export function {.name}():{.type} {~lb}
+    return Model.NewRequest(routers.{.name});
+    {~rb}
+{/routers}
+}
+
+Model.BindImpl(api, models, routers);
