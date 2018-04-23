@@ -1,6 +1,4 @@
-import {~lb}Model{~rb} from "./model-impl";
-
-export module models {
+namespace app.models {
 
 {#enums}
     export enum {.name} {~lb}
@@ -24,18 +22,17 @@ export module models {
 {/clazzes}
 }
 
-export module routers {
+namespace app.routers {
 {#routers}
     export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
 {/routers}
 }
 
-export module api {
+namespace app.api {
 {#routers}
     export function {.name}():{.type} {~lb}
-    return Model.NewRequest(routers.{.name});
+    return NewRequest(routers.{.name});
     {~rb}
 {/routers}
 }
 
-Model.BindImpl(api, models, routers);
