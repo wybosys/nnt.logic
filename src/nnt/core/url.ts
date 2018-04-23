@@ -44,7 +44,7 @@ export function expand(url:string):string {
     let ps = url.split("/");
     if (ps[0] == "~")
         ps[0] = CWD;
-    else if (ps[0] == "/")
+    else if (ps[0] == "")
         ps[0] = HOME;
     else {
         return ph.resolve(url);

@@ -12,7 +12,7 @@ import {AcEntity} from "../acl/acl";
 import {Config} from "../manager/config";
 import {expand} from "../core/url";
 import {RespFile} from "./file";
-import {IndexedObject, nonnull1st} from "../core/kernel";
+import {IndexedObject, nonnull1st, ObjectT} from "../core/kernel";
 import {App} from "../manager/app";
 import {IApiServer} from "./apiserver";
 import {ParseContentToParams} from "./rest/params";
@@ -23,7 +23,6 @@ import https = require("https");
 import spdy = require("spdy");
 import fs = require("fs");
 import formidable = require("formidable");
-import {action} from "../core/router";
 
 export interface RestResponseData {
     contentType: string;
@@ -48,7 +47,7 @@ interface RestNode extends Node {
     mediasrv?: string;
 
     // 通过配置加载的路由器
-    router?: string[];
+    router?: string[] | IndexedObject; // router的列表或者 router:config 的对象
 }
 
 interface TransactionPayload {
@@ -72,19 +71,29 @@ function TransactionOutput(type: string, obj: any) {
     if (self.gzip)
         ct["Content-Encoding"] = "gzip";
     if (obj instanceof RespFile) {
-        if (pl.req.headers["if-modified-since"]) {
-            // 判断下请求的文件有没有改变
-            if (obj.stat.mtime.toUTCString() == pl.req.headers["if-modified-since"]) {
-                pl.rsp.writeHead(304, "Not Modified");
-                pl.rsp.end();
-                return;
-            }
-        }
         ct["Content-Length"] = obj.length;
-        // 增加过期控制
-        ct["Expires"] = obj.expire.toUTCString();
-        ct["Cache-Control"] = "max-age=" + DateTime.WEEK;
-        ct["Last-Modified"] = obj.stat.mtime.toUTCString();
+        if (obj.cachable) {
+            // 只有文件对象才可以增加过期控制
+            if (pl.req.headers["if-modified-since"]) {
+                // 判断下请求的文件有没有改变
+                if (obj.stat.mtime.toUTCString() == pl.req.headers["if-modified-since"]) {
+                    pl.rsp.writeHead(304, "Not Modified");
+                    pl.rsp.end();
+                    return;
+                }
+            }
+            ct["Expires"] = obj.expire.toUTCString();
+            ct["Cache-Control"] = "max-age=" + DateTime.WEEK;
+            ct["Last-Modified"] = obj.stat.mtime.toUTCString();
+        }
+        // 如果是提供下载
+        if (obj.download) {
+            pl.rsp.setHeader('Accept-Ranges', 'bytes');
+            pl.rsp.setHeader('Accept-Length', obj.length);
+            pl.rsp.setHeader('Content-Disposition', 'attachment; filename=' + obj.file);
+            pl.rsp.setHeader('Content-Description', "File Transfer");
+            pl.rsp.setHeader('Content-Transfer-Encoding', 'binary');
+        }
         pl.rsp.writeHead(200, ct);
         obj.readStream.pipe(pl.rsp);
     }
@@ -137,16 +146,30 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             }
         }
         if (c.router) {
-            for (let i = 0; i < c.router.length; ++i) {
-                let e = c.router[i];
-                let router = App.shared().instanceEntry(e);
-                if (!router) {
-                    logger.warn("没有找到该实例类型 {{=it.clz}}", {clz: e});
-                    return false;
+            if (c.router instanceof Array) {
+                for (let i = 0; i < c.router.length; ++i) {
+                    let e = c.router[i];
+                    let router = App.shared().instanceEntry(e);
+                    if (!router) {
+                        logger.warn("没有找到该实例类型 {{=it.clz}}", {clz: e});
+                        return false;
+                    }
+                    else {
+                        this._routers.register(router);
+                    }
                 }
-                else {
-                    this._routers.register(router);
-                }
+            }
+            else {
+                ObjectT.Foreach(c.router, (cfg, ent) => {
+                    let router = App.shared().instanceEntry(ent);
+                    if (!router || (router.config && !router.config(cfg))) {
+                        logger.warn("没有找到该实例类型 {{=it.clz}}", {clz: ent});
+                        return false;
+                    }
+                    else {
+                        this._routers.register(router);
+                    }
+                });
             }
         }
         this.router = c.router;
@@ -159,7 +182,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     http2: boolean;
     imgsrv: string;
     mediasrv: string;
-    router: string[];
+    router: string[] | IndexedObject;
 
     protected _hdl: http.Server | https.Server;
 

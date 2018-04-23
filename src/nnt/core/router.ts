@@ -5,6 +5,9 @@ export interface IRouter {
 
     // router的标记
     action: string;
+
+    // 接受配置文件的设置
+    config?: (node: IndexedObject) => void;
 }
 
 // action可用的模式

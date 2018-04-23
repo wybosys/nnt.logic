@@ -25,6 +25,13 @@ export class RespFile {
         return r;
     }
 
+    static Plain(txt: string, typ?: string): RespFile {
+        let r = new RespFile();
+        r.type = typ;
+        r._buf = new Buffer(txt);
+        return r;
+    }
+
     get length(): number {
         if (this._stat)
             return this._stat.size;
@@ -45,9 +52,28 @@ export class RespFile {
     protected _buf: Buffer;
     type: string;
     protected _stat: fs.Stats;
+    protected _cachable: boolean = true;
+
+    get file(): string {
+        if (this._file)
+            return this._file;
+        if (this._downloadfile)
+            return this._downloadfile;
+        return null;
+    }
 
     get stat(): fs.Stats {
         return this._stat;
+    }
+
+    get cachable(): boolean {
+        return this._stat != null;
+    }
+
+    protected _downloadfile: string;
+    asDownload(filename: string): this {
+        this._downloadfile = filename;
+        return this;
     }
 
     private _expire: Date;
@@ -59,5 +85,9 @@ export class RespFile {
         this._expire = new Date();
         this._expire.setTime((DateTime.Now() + DateTime.YEAR) * 1000);
         return this._expire;
+    }
+
+    get download(): boolean {
+        return this._downloadfile != null;
     }
 }

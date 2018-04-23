@@ -2,12 +2,16 @@ import {action, FindAction, GetAllActionNames, IRouter} from "../../core/router"
 import {Null} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
-import {static_cast} from "../../core/core";
-import {AnyClass, ArrayT, JsonObject, length, ObjectT, toJson} from "../../core/kernel";
+import {IsClass, Require, static_cast} from "../../core/core";
+import {AnyClass, ArrayT, IndexedObject, JsonObject, length, ObjectT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
-import {GetAllFields} from "../../core/proto";
+import {FpToDecoDef, FpToTypeDef, GetAllFields, GetAllOwnFields, GetModelInfo, IsModel, Output} from "../../core/proto";
+import {logger} from "../../core/logger";
+import {UpcaseFirst} from "../../core/string";
 import fs = require("fs");
+import tpl = require("dustjs-linkedin");
+import {RespFile} from "../file";
 
 interface ParameterInfo {
     name: string;
@@ -34,6 +38,13 @@ interface ActionInfo {
     params: ParameterInfo[];
 }
 
+interface RouterConfig {
+    export: {
+        router: string[],
+        model: string[]
+    }
+}
+
 export class Router implements IRouter {
     action = "api";
 
@@ -54,6 +65,130 @@ export class Router implements IRouter {
         }
         trans.submit();
     }
+
+    @action(Null, [], "生成api接口文件")
+    export(trans: Transaction) {
+        // 分析出的所有结构
+        let params = {
+            clazzes: new Array(),
+            enums: new Array(),
+            consts: new Array(),
+            routers: new Array()
+        };
+
+        // 遍历所有模型，生成模型段
+        this._cfg.export.model.forEach(each => {
+            Require(expand(each), clz => {
+                if (!IsModel(clz)) {
+                    if (clz["name"])
+                        logger.log("跳过生成 {{=it.clz}}", {clz: clz["name"]});
+                    return;
+                }
+
+                let name = clz["name"];
+                let mp = GetModelInfo(clz);
+                if (mp.hidden)
+                    return;
+                if (mp.enum) {
+                    let em = {
+                        name: name,
+                        defs: new Array()
+                    };
+                    params.enums.push(em);
+                    // 枚举得每一项定义都是静态的，所以可以直接遍历
+                    for (let key in clz) {
+                        em.defs.push({
+                            name: key,
+                            value: clz[key]
+                        })
+                    }
+                }
+                else if (mp.constant) {
+                    for (let key in clz) {
+                        params.consts.push({
+                            name: name.toUpperCase() + "_" + key.toUpperCase(),
+                            value: Output(clz[key])
+                        });
+                    }
+                }
+                else {
+                    // 判断是否有父类
+                    let clazz = {
+                        name: name,
+                        super: mp.parent ? mp.parent["name"] : "Model",
+                        fields: new Array()
+                    };
+                    params.clazzes.push(clazz);
+                    // 构造临时对象来获得fields得信息
+                    let tmp = new clz();
+                    let fps = GetAllOwnFields(tmp);
+                    ObjectT.Foreach(fps, (fp, key) => {
+                        if (fp.id <= 0) {
+                            logger.warn("Model的 Field 不能 <=0 {{=it.name}}", {name: name + "." + key});
+                            return;
+                        }
+                        if (!fp.input && !fp.output)
+                            return;
+                        let type = FpToTypeDef(fp);
+                        let deco = FpToDecoDef(fp, "Model.");
+                        clazz.fields.push({
+                            name: key,
+                            type: type,
+                            optional: fp.optional,
+                            file: fp.file,
+                            enum: fp.enum,
+                            input: fp.input,
+                            deco: deco
+                        });
+                    });
+                }
+            });
+        });
+        // 遍历所有接口，生成接口段
+        let routers = new Array();
+        this._cfg.export.router.forEach(e => {
+            let path = expand(e);
+            Require(path, t => {
+                if (!IsClass(t))
+                    return;
+                routers.push(new t());
+            });
+        });
+        routers.forEach((router) => {
+            let as = GetAllActionNames(router);
+            as.forEach(a => {
+                let ap = FindAction(router, a);
+                params.routers.push({
+                    name: UpcaseFirst(router.action) + UpcaseFirst(a),
+                    action: router.action + "." + a,
+                    type: "models." + ap.clazz["name"],
+                    comment: ap.comment
+                });
+            });
+        });
+        // 渲染模板
+        let src = fs.readFileSync(expand("~/src/nnt/server/apidoc/apis.dust"), "utf8");
+        let tplcfg = (<any>tpl).config;
+        let old = tplcfg.whitespace;
+        tplcfg.whitespace = true;
+        let compiled = tpl.compile(src, "api-generator");
+        tplcfg.whitespace = old;
+        tpl.loadSource(compiled);
+        tpl.render("api-generator", params, (err, out) => {
+            if (err)
+                out = err.toString();
+
+            // 输出到客户端
+            trans.output('text/plain', RespFile.Plain(out).asDownload("apis.ts"));
+        });
+    }
+
+    config(cfg: IndexedObject): boolean {
+        this._cfg = static_cast<RouterConfig>(cfg);
+        return true;
+    }
+
+    protected _cfg: RouterConfig;
 
     static ActionsInfo(routers: Routers): ActionInfo[] {
         let r: ActionInfo[] = [];

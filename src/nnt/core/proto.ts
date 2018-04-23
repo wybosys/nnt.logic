@@ -117,6 +117,14 @@ export function GetAllFields(mdl: any): { [key: string]: FieldOption } {
     return mdl[FP_KEY];
 }
 
+export function GetAllOwnFields(mdl: any): { [key: string]: FieldOption } {
+    return mdl[OWNFP_KEY];
+}
+
+export function GetModelInfo(clz: any): ModelOption {
+    return clz[MP_KEY];
+}
+
 // 是否是模型
 export function IsModel(clz: any): boolean {
     return clz[MP_KEY] != null;
