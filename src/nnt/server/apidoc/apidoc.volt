@@ -157,7 +157,9 @@
             files[input.name] = this.form[input.index];
           else
             params[input.name] = this.form[input.index];
-        }      
+        }
+        if (localStorage.getItem('::nnt::logic::sid'))
+            params['_sid'] = localStorage.getItem('::nnt::logic::sid');
         // 请求数据
         let url = location.href.replace('action=api.doc', 'action=' + this.action.action);
         if (Object.keys(params).length)
@@ -200,6 +202,8 @@
           }
             params[input.name] = this.form[input.index];
         }
+        if (localStorage.getItem('::nnt::logic::sid'))
+            params['_sid'] = localStorage.getItem('::nnt::logic::sid');
         // 请求数据
         let url = location.href.replace('action=api.doc', 'action=' + this.action.action);
         if (Object.keys(params).length)
@@ -249,6 +253,11 @@
                   try {
                     var jsd = JSON.parse(hdl.responseText);
                     cb(null, {'status':hdl.status, 'data':jsd});
+                    // 判断是否含有登陆信息
+                    var sid = hdl.getResponseHeader("X-NntLogic-SessionId");
+                    if (sid) {
+                        localStorage.setItem('::nnt::logic::sid', sid);
+                    }
                   }
                   catch (e) {
                     cb(new Error(hdl.responseText));

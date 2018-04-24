@@ -1,6 +1,6 @@
 import {Node} from "../config/config"
 import {parse as urlparse} from "url"
-import {EmptyTransaction, Transaction, TransactionSubmitOption} from "./transaction";
+import {EmptyTransaction, RESPONSE_SID, Transaction, TransactionSubmitOption} from "./transaction";
 import {FindRender} from "../render/render";
 import {AbstractServer, IConsoleServer} from "./server";
 import {RestService} from "./rest/service";
@@ -60,6 +60,8 @@ function TransactionSubmit(opt?: TransactionSubmitOption) {
     let pl: TransactionPayload = self.payload;
     let r = FindRender(self.params["render"]);
     let ct: IndexedObject = {"Content-Type": (opt && opt.type) ? opt.type : r.type};
+    if (self.responseSessionId)
+        pl.rsp.setHeader(RESPONSE_SID, self.sessionId());
     pl.rsp.writeHead(200, ct);
     pl.rsp.end(r.render(self, opt));
 }

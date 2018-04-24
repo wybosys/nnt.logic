@@ -41,8 +41,28 @@ class RpcModel extends Base {
     }
 }
 
-export function Call(srvid: string, args: IndexedObject): Promise<IndexedObject> {
-    return new Promise<Base>(resolve => {
+export function Call(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
+export function Call(srvid: string, args: IndexedObject): Promise<IndexedObject>;
+
+export function Call(): Promise<IndexedObject> {
+    let srvid: string;
+    let subpath: string;
+    let args: IndexedObject;
+    switch (arguments.length) {
+        case 2: {
+            srvid = arguments[0];
+            args = arguments[1];
+            subpath = "";
+        }
+            break;
+        case 3: {
+            srvid = arguments[0];
+            subpath = arguments[1];
+            args = arguments[2];
+        }
+            break;
+    }
+    return new Promise<IndexedObject>(resolve => {
         let srv = <Remote>Find(srvid);
         if (!srv) {
             logger.fatal("没有找到服务 " + srvid);
@@ -57,10 +77,28 @@ export function Call(srvid: string, args: IndexedObject): Promise<IndexedObject>
         }
 
         let m = new RpcModel();
-        m.url = srv.host;
+        m.url = srv.host + subpath;
         m.additionParams = args;
         RestSession.Get(m).then(m => {
             resolve(m.data);
+        });
+    });
+}
+
+// 比Call多出数据的后处理
+export function Fetch(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
+export function Fetch(srvid: string, args: IndexedObject): Promise<IndexedObject>;
+
+export function Fetch(): Promise<IndexedObject> {
+    let args = arguments;
+    return new Promise<IndexedObject>(resolve => {
+        Call.apply(this, args).then((resp: any) => {
+            if (!resp || resp.code != 0) {
+                resolve(null);
+            }
+            else {
+                resolve(resp.data || resp.message);
+            }
         });
     });
 }

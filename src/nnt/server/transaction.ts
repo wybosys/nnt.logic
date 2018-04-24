@@ -9,6 +9,8 @@ import {CancelDelay, DateTime, Delay, DelayHandler} from "../core/time";
 import {Config} from "../manager/config";
 import {promise} from "../core/core";
 
+export const RESPONSE_SID = "X-NntLogic-SessionId";
+
 export class TransactionInfo {
 
     // 客户端
@@ -255,6 +257,9 @@ export abstract class Transaction {
 
     // 环境信息
     info = new TransactionInfo();
+
+    // 是否把sid返回客户端
+    responseSessionId: boolean;
 }
 
 export class EmptyTransaction extends Transaction {
