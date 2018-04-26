@@ -1814,6 +1814,14 @@ export class MapT {
         return r;
     }
 
+    static Keys<K, V>(m: Map<K, V>): K[] {
+        let r = new Array<K>();
+        m.forEach((v, k) => {
+            r.push(k);
+        });
+        return r;
+    }
+
     static Values<K, V, R>(m: Map<K, V>, proc?: (v: V, k: K) => R, skipnull = false): R[] {
         let r = new Array<R>();
         if (proc) {

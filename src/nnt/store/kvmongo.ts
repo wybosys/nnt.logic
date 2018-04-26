@@ -231,7 +231,10 @@ export class KvMongo extends AbstractNosql {
             pipes = cmd;
         else if ('$group' in cmd ||
             '$match' in cmd ||
-            "$project" in cmd) {
+            "$project" in cmd ||
+            "$sort" in cmd ||
+            "$limit" in cmd
+        ) {
             pipes = [];
             for (let k in cmd) {
                 let t: IndexedObject = {};
@@ -242,16 +245,21 @@ export class KvMongo extends AbstractNosql {
         else
             pipes = [cmd];
         if (cb) {
-            col.aggregate(pipes, (err, res) => {
+            col.aggregate(pipes, (err, cursor) => {
                 if (err) {
                     logerr(err, ["aggregate", page, cmd]);
                     cb(null);
                 }
                 else {
-                    if (res instanceof Array)
-                        cb(res);
-                    else
-                        cb([res]);
+                    cursor.toArray((err, res) => {
+                        if (err) {
+                            logerr(err, ["aggregate", page, cmd]);
+                            cb(null);
+                        }
+                        else {
+                            cb(res);
+                        }
+                    });
                 }
             });
         }
