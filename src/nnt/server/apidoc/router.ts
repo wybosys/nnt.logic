@@ -21,6 +21,7 @@ import {
 import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
+import {clazz_type} from "../../sdk/client/src/model";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 
@@ -40,6 +41,8 @@ interface ParameterInfo {
     input: boolean;
     output: boolean;
     comment: string;
+    valtyp: clazz_type | string;
+    keytyp: clazz_type | string;
 }
 
 interface ActionInfo {
@@ -273,6 +276,8 @@ export class Router implements IRouter {
             t.input = fp.input;
             t.output = fp.output;
             t.comment = fp.comment;
+            t.valtyp = fp.valtype;
+            t.keytyp = fp.keytype;
             return t;
         });
     }
