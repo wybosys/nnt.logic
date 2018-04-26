@@ -82,6 +82,7 @@ export class Router implements IRouter {
             let infos = Router.ActionsInfo(srv.routers);
             // 渲染页面
             trans.output('text/html;charset=utf-8;', this._page.render({actions: toJson(infos)}));
+            return;
         }
         trans.submit();
     }

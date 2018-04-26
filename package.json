@@ -56,6 +56,7 @@
     "express": "^4.16.3",
     "fluent-ffmpeg": "^2.1.2",
     "formidable": "^1.2.1",
+    "generatorics": "^1.1.0",
     "gm": "^1.23.1",
     "hashids": "^1.1.4",
     "jsdom": "^11.6.2",

@@ -37,14 +37,14 @@ let masteralltasks = new Array<TaskRecord>();
 
 // 添加任务
 // clusters 在集群中添加任务，会保证集群中只有一个运行
-export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean): boolean {
+export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean): TaskRecord {
     if (!clusters) {
         let rcd = doCronAdd(time, task);
         if (rcd) {
             tasks.push(rcd);
-            return true;
+            return rcd;
         }
-        return false;
+        return null;
     }
 
     // 只有集群中的主服务可以添加任务
@@ -56,9 +56,9 @@ export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean)
                 time: time,
                 task: task
             });
-            return true;
+            return rcd;
         }
-        return false;
+        return null;
     }
 
     let rcd = {
@@ -66,7 +66,7 @@ export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean)
         task: task
     };
     masteralltasks.push(rcd);
-    return false;
+    return rcd;
 }
 
 Clusters.OnBecomeMaster(() => {

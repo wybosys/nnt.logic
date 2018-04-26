@@ -1,6 +1,7 @@
 import fs = require("fs");
 import dotpl = require("dot");
 import async = require("async");
+import G = require("generatorics");
 import {logger} from "./logger";
 import {vsprintf} from "sprintf-js";
 
@@ -16,7 +17,7 @@ export function ispod(v: any): boolean {
 }
 
 // 创建一个纯Json对象
-export function JsonObject<T>():T {
+export function JsonObject<T>(): T {
     return Object.create(null);
 }
 
@@ -207,17 +208,25 @@ export function IsEmpty(o: any): boolean {
 // 一个key多个value
 export class Multimap<K, V> {
 
-    get(key: K): Array<V> {
-        return this._store.get(key);
+    get(k: K): Array<V> {
+        return this._store.get(k);
     }
 
-    push(key: K, v: V) {
-        let arr = this._store.get(key);
+    set(k: K, arr: V[]) {
+        this._store.set(k, arr);
+    }
+
+    push(k: K, v: V) {
+        let arr = this._store.get(k);
         if (arr == null) {
             arr = new Array<V>();
-            this._store.set(key, arr);
+            this._store.set(k, arr);
         }
         arr.push(v);
+    }
+
+    forEach(proc: (vs: V[], k: K) => void) {
+        this._store.forEach(proc);
     }
 
     clear() {
@@ -474,10 +483,10 @@ export class KeysMap<V> {
 
 export class ArrayT {
 
-    static Allocate<T>(len: number, def: T = null): T[] {
+    static Allocate<T>(len: number, obj: () => T): T[] {
         let r = new Array<T>();
         while (len--) {
-            r.push(def);
+            r.push(obj());
         }
         return r;
     }
@@ -646,13 +655,22 @@ export class ArrayT {
         return r;
     }
 
-    static Random<T>(arr: Array<T>): T {
+    static Random<T>(arr: T[]): T {
         if (!arr || arr.length == 0)
             return null;
         return arr[Random.Rangei(0, arr.length)];
     }
 
-    static Randoms<T>(arr: Array<T>, len: number): T[] {
+    static RandomPop<T>(arr: T[]): T {
+        if (!arr || arr.length == 0)
+            return null;
+        let idx = Random.Rangei(0, arr.length);
+        let r = arr[idx];
+        this.RemoveObjectAtIndex(arr, idx);
+        return r;
+    }
+
+    static Randoms<T>(arr: T[], len: number): T[] {
         if (arr.length == 0 || arr.length < len)
             return [];
         if (arr.length == len)
@@ -791,7 +809,7 @@ export class ArrayT {
     /** 乱序 */
     static Disorder<T>(arr: T[]) {
         arr.sort((): number => {
-            return Math.random();
+            return Math.random() - Math.random();
         });
     }
 
@@ -961,6 +979,42 @@ export class ArrayT {
             return def;
         return arr[idx - 1];
     }
+
+    // 组合
+    static CombineEach<T>(arr: T[], proc: (oo: T, io: T, idx?: number, oid?: number, iid?: number) => boolean) {
+        let cont = true;
+        let idx = 0;
+        for (let i = 0, len = arr.length; i < len; ++i) {
+            let outer = arr[i];
+            for (let j = i + 1; j < len; ++j) {
+                let inner = arr[j];
+                cont = proc(outer, inner, idx++, i, j);
+                if (!cont)
+                    break;
+            }
+            if (!cont)
+                break;
+        }
+    };
+
+    static Combination<T>(arr: T[], m = arr.length): T[][] {
+        let iter = G.combination(arr, m);
+        // G的库需要
+        return IterateT.ToArray(iter, e => e.slice());
+    }
+
+    static Permutation<T>(arr: T[], m = arr.length): T[][] {
+        let iter = G.permutation(arr, m);
+        return IterateT.ToArray(iter, e => e.slice());
+    }
+
+    static EachCombination<T>(arr: T[], m: number, proc: (e: T[]) => void) {
+        this.Combination(arr, m).forEach(proc);
+    }
+
+    static EachPermutation<T>(arr: T[], m: number, proc: (e: T[]) => void) {
+        this.Permutation(arr, m).forEach(proc);
+    }
 }
 
 export class SetT {
@@ -1016,11 +1070,11 @@ export class IterateT {
         return null;
     }
 
-    static ToArray<T>(iter: Iterator<T>): Array<T> {
+    static ToArray<T>(iter: Iterator<T>, proc?: (v: T) => T): Array<T> {
         let r = new Array();
         let res = iter.next();
         while (!res.done) {
-            r.push(res.value);
+            r.push(proc ? proc(res.value) : res.value);
             res = iter.next();
         }
         return r;
@@ -1272,12 +1326,28 @@ export class ObjectT {
     }
 }
 
+export class Range<T> {
+
+    constructor(l: T, r: T) {
+        this.left = l;
+        this.right = r;
+    }
+
+    contains(o: T): boolean {
+        return this.left <= o && o <= this.right;
+    }
+
+    left: T;
+    right: T;
+}
+
 export class Random {
 
     static Rangef(from: number, to: number): number {
         return Math.random() * (to - from) + from;
     }
 
+    // @param close true:[], false:[)
     static Rangei(from: number, to: number, close = false): number {
         if (close)
             return Math.round(Random.Rangef(from, to));
@@ -1427,7 +1497,21 @@ export class NumberT {
             return v;
         return def;
     }
+
+    // 设置小数精度
+    // length 小数点后的位数
+    static TrimFloat(v: number, length: number): number {
+        let p = Math.pow(10, length);
+        return Math.round(v * p) / p;
+    }
+
+    // 整数拆分
+    static SplitInteger(v: number, base: number): [number, number] {
+        let n = (v / base) >> 0;
+        return [n, v - n * base];
+    }
 }
+
 
 // 格式化字串
 export function format(fmt: string, ...args: any[]): string {
@@ -1460,7 +1544,7 @@ export function template(fmt: string, params: IndexedObject): string {
 export class StringT {
 
     // 去除掉float后面的0
-    static TermFloat(str: string): string {
+    static TrimFloat(str: string): string {
         let lr = str.split('.');
         if (lr.length != 2) {
             console.warn("传入的 stirng 格式错误");
@@ -1833,7 +1917,7 @@ function SafeNumber(o: any, def = 0): number {
 }
 
 /** 转换到 float */
-export function toFloat<T extends INumber>(o: PodType | T, def = 0): number {
+export function toFloat(o: any, def = 0): number {
     if (o == null)
         return def;
     let tp = typeof(o);
@@ -1849,7 +1933,7 @@ export function toFloat<T extends INumber>(o: PodType | T, def = 0): number {
 }
 
 /** 转换到 int */
-export function toInt<T extends INumber>(o: PodType | T, def = 0): number {
+export function toInt(o: any, def = 0): number {
     if (o == null)
         return def;
     let tp = typeof(o);
@@ -1901,7 +1985,7 @@ export function toBoolean(v: any): boolean {
 }
 
 /** 转换到字符串 */
-export function asString<T extends IString>(o: PodType | T, def = ''): string {
+export function asString(o: any, def = ''): string {
     if (o == null)
         return def;
     let tp = typeof(o);

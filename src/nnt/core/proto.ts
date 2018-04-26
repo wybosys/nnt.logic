@@ -1,5 +1,18 @@
 // 协议数据定义
-import {AnyClass, asString, IndexedObject, IsEmpty, ObjectT, toFloat, toInt, toJsonObject, ToObject} from "./kernel";
+import {
+    AnyClass,
+    ArrayT,
+    asString,
+    IndexedObject,
+    IsEmpty,
+    Multimap,
+    ObjectT,
+    toBoolean,
+    toFloat,
+    toInt,
+    toJsonObject,
+    ToObject
+} from "./kernel";
 import {Config} from "../manager/config";
 import {logger} from "./logger";
 import MODEL_FIELDS_MAX = Config.MODEL_FIELDS_MAX;
@@ -90,6 +103,7 @@ export interface FieldOption {
     // 类型标签
     array?: boolean;
     map?: boolean;
+    multimap?: boolean;
     string?: boolean;
     integer?: boolean;
     double?: boolean;
@@ -286,6 +300,16 @@ export function map(id: number, keytyp: clazz_type, valtyp: clazz_type, opts: st
     };
 }
 
+export function multimap(id: number, keytyp: clazz_type, valtyp: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    let fp = field(id, opts, comment, valid);
+    fp.multimap = true;
+    fp.keytype = keytyp;
+    fp.valtype = valtyp;
+    return (target: any, key: string) => {
+        DefineFp(target, key, fp);
+    };
+}
+
 // json对象
 export function json(id: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
@@ -449,6 +473,60 @@ export function DecodeValue(fp: FieldOption, val: any): any {
             }
             return map;
         }
+        else if (fp.multimap) {
+            let mmap = new Multimap();
+            if (typeof(fp.valtype) == "string") {
+                if (fp.valtype == string_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        mmap.set(ek, ArrayT.Convert(ev, e => asString(e)));
+                    }
+                }
+                else if (fp.valtype == integer_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            mmap.set(ek, ArrayT.Convert(ev, e => toInt(e)));
+                        }
+                    }
+                }
+                else if (fp.valtype == double_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            mmap.set(ek, ArrayT.Convert(ev, e => toFloat(e)));
+                        }
+                    }
+                }
+                else if (fp.valtype == boolean_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            mmap.set(ek, ArrayT.Convert(ev, e => toBoolean(e)));
+                        }
+                    }
+                }
+            }
+            else {
+                let clz: any = fp.valtype;
+                for (let ek in val) {
+                    let ev = val[ek];
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        mmap.set(ek, ArrayT.Convert(ev, e => {
+                            let t = new clz();
+                            Decode(t, e);
+                            return t;
+                        }));
+                    }
+                    ;
+                }
+            }
+            return map;
+        }
         else if (fp.enum) {
             return toInt(val);
         }
@@ -529,7 +607,28 @@ export function Output(mdl: any): IndexedObject {
             if (fp.array) {
                 // 通用类型，则直接可以输出
                 if (typeof(fp.valtype) == "string") {
-                    r[fk] = val;
+                    let arr = new Array();
+                    if (fp.valtype == string_t) {
+                        val.forEach((e: any) => {
+                            arr.push(e ? e.toString() : null);
+                        });
+                    }
+                    else if (fp.valtype == integer_t) {
+                        val.forEach((e: any) => {
+                            arr.push(toInt(e));
+                        });
+                    }
+                    else if (fp.valtype == double_t) {
+                        val.forEach((e: any) => {
+                            arr.push(toFloat(e));
+                        });
+                    }
+                    else if (fp.valtype == boolean_t) {
+                        val.forEach((e: any) => {
+                            arr.push(!!e);
+                        });
+                    }
+                    r[fk] = arr;
                 }
                 else {
                     // 特殊类型，需要迭代进去
@@ -551,6 +650,22 @@ export function Output(mdl: any): IndexedObject {
                     else {
                         val.forEach((v: any, k: string) => {
                             m[k] = Output(v);
+                        });
+                    }
+                }
+                r[fk] = m;
+            }
+            else if (fp.multimap) {
+                let m: IndexedObject = {};
+                if (val) {
+                    if (typeof(fp.valtype) == "string") {
+                        val.forEach((v: any[], k: string) => {
+                            m[k] = v;
+                        });
+                    }
+                    else {
+                        val.forEach((v: any[], k: string) => {
+                            m[k] = ArrayT.Convert(v, e => Output(e));
                         });
                     }
                 }
@@ -631,6 +746,9 @@ export function FpToTypeDef(fp: FieldOption): string {
     else if (fp.map) {
         typ = "Map<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">";
     }
+    else if (fp.multimap) {
+        typ = "Multimap<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">";
+    }
     else if (fp.enum) {
         typ = (<AnyClass>fp.valtype)["name"];
     }
@@ -687,7 +805,7 @@ function ValtypeDefToDef(def: clazz_type): string {
         case boolean_t:
             return "boolean";
     }
-    return "unknown";
+    return (<any>def).name ? (<any>def).name : "unknown";
 }
 
 function FpToCommentDef(fp: FieldOption): string {
@@ -709,6 +827,9 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
     }
     else if (fp.map) {
         deco = "@" + ns + "map(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.multimap) {
+        deco = "@" + ns + "multimap(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     }
     else if (fp.enum) {
         deco = "@" + ns + "enumerate(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";

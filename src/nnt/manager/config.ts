@@ -22,7 +22,7 @@ export module Config {
     export let MODEL_FIELDS_MAX: number = 100;
 
     // transaction超时时间
-    export let TRANSACTION_TIMEOUT: number = 5;
+    export let TRANSACTION_TIMEOUT: number = 20;
 
     // 默认的https证书配置
     export let HTTPS: boolean;
