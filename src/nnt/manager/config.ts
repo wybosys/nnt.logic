@@ -65,3 +65,16 @@ export function IsRelease(): boolean {
 export function DebugValue<T>(d: T, r: T): T {
     return Config.DISTRIBUTION ? r : d;
 }
+
+// 支持DEVOPS的架构判断
+export function IsDevops(): boolean {
+    return 'DEVOPS' in process.env && !('DEVOPS_RELEASE' in process.env);
+}
+
+export function IsDevopsRelease(): boolean {
+    return 'DEVOPS_RELEASE' in process.env;
+}
+
+export function IsLocal(): boolean {
+    return !('DEVOPS' in process.env) && !('DEVOPS_RELEASE' in process.env);
+}

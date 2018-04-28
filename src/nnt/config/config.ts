@@ -1,4 +1,4 @@
-import {Config, IsDebug, IsRelease} from "../manager/config";
+import {Config, IsDebug, IsDevops, IsDevopsRelease, IsLocal, IsRelease} from "../manager/config";
 import {ArrayT} from "../core/kernel";
 import {logger} from "../core/logger";
 
@@ -46,13 +46,12 @@ export function NodeIsEnable(node: Node): boolean {
             return IsDebug();
         if (e == "release")
             return IsRelease();
-
-        // 支持通过环境变量开关
-        let res = e.match(ENV_PARSE);
-        if (res) {
-            let varn = process.env[res[1]];
-            return varn != null;
-        }
+        if (e == "devops")
+            return IsDevops();
+        if (e == "devops-release")
+            return IsDevopsRelease();
+        if (e == "local")
+            return IsLocal();
 
         logger.fatal("配置遇到一个不支持的节点开关：{{=it.cond}}@{{=it.id}}", {id: node.id, cond: e});
         return false;
