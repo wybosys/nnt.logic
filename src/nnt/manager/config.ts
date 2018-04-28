@@ -1,3 +1,5 @@
+import {logger} from "../core/logger";
+
 export module Config {
 
     // DEBUG模式
@@ -78,3 +80,10 @@ export function IsDevopsRelease(): boolean {
 export function IsLocal(): boolean {
     return !('DEVOPS' in process.env) && !('DEVOPS_RELEASE' in process.env);
 }
+
+if (IsDevopsRelease())
+    logger.info("DEVOPS RELEASE 环境");
+else if (IsDevops())
+    logger.info("DEVOPS 环境");
+else
+    logger.info("LOCAL 环境");
