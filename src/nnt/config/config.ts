@@ -25,6 +25,8 @@ export class Attribute {
     }
 }
 
+const ENV_PARSE = /\$\{?([a-zA-Z0-9_]+)\}?/;
+
 // 判断此Node节点是否可用
 export function NodeIsEnable(node: Node): boolean {
     if (!node.enable)
@@ -44,6 +46,14 @@ export function NodeIsEnable(node: Node): boolean {
             return IsDebug();
         if (e == "release")
             return IsRelease();
+
+        // 支持通过环境变量开关
+        let res = e.match(ENV_PARSE);
+        if (res) {
+            let varn = process.env[res[1]];
+            return varn != null;
+        }
+
         logger.fatal("配置遇到一个不支持的节点开关：{{=it.cond}}@{{=it.id}}", {id: node.id, cond: e});
         return false;
     });
