@@ -2,7 +2,7 @@ import {Filter, image_t, ImageFilter} from "./filter";
 import {ArrayT, toNumber} from "../../core/kernel";
 import {FileInfo} from "../fileinfo";
 import fs = require("fs");
-import sharp = require("sharp");
+import sharp = require("sharpkit");
 import {logger} from "../../core/logger";
 import log = logger.log;
 

@@ -1,4 +1,4 @@
-import sharp = require("sharp");
+import sharp = require("sharpkit");
 import {sep} from "path";
 import {logger} from "../../core/logger";
 import {ArrayT} from "../../core/kernel";
