@@ -34,6 +34,12 @@
     ],
     "logger": [
         {
+            "id": "console",
+            "filter": "all",
+            "entry": "nnt.logger.Console",
+            "enable": "local"
+        },
+        {
             "id": "file",
             "filter": "all",
             "entry": "nnt.logger.Log4Ts",
