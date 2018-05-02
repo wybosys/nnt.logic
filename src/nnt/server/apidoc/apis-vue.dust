@@ -1,0 +1,33 @@
+import {ApiBase, ApiOutBase} from './ApiBase'
+
+{#clazzes}
+export class {.name}In extends ApiBase {
+constructor() {
+super()
+this.controller = {.router}
+this.action = {.action}
+this.returnData = new {.name}Out()
+}
+{#inputs}
+_{.name}
+get {.name}() {
+return this._{.name}
+}
+set {.name}(val) {
+this._{.name} = val
+this.params['{.name}'] = val
+}
+{/inputs}
+}
+export class {.name}Out extends ApiOutBase {
+constructor() {
+super()
+this.controller = {.router}
+this.action = {.action}
+this.returnData = new {.name}Out()
+}
+{#outputs}
+{.name}
+{/outputs}
+}
+{/clazzes}

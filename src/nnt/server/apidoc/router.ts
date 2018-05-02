@@ -22,6 +22,7 @@ import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
 import {clazz_type} from "../../sdk/client/src/model";
+import {VueExport} from "./vue-export";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 
@@ -52,7 +53,7 @@ interface ActionInfo {
     params: ParameterInfo[];
 }
 
-interface RouterConfig {
+export interface RouterConfig {
     export: {
         router: string[],
         model: string[]
@@ -61,11 +62,14 @@ interface RouterConfig {
 
 class ExportApis {
 
-    @boolean(1, [input, optional], "生成logic客户端使用的apis")
+    @boolean(1, [input, optional], "生成logic客户端使用的api")
     logic: boolean;
 
-    @boolean(2, [input, optional], "生成h5g游戏使用apis")
+    @boolean(2, [input, optional], "生成h5g游戏使用api")
     h5g: boolean;
+
+    @boolean(3, [input, optional], "生成vue项目中使用的api")
+    vue: boolean;
 }
 
 export class Router implements IRouter {
@@ -93,9 +97,15 @@ export class Router implements IRouter {
     @action(ExportApis, [], "生成api接口文件")
     export(trans: Transaction) {
         let m: ExportApis = trans.model;
-        if (!m.logic && !m.h5g) {
+        if (!m.logic && !m.h5g && !m.vue) {
             trans.status = STATUS.PARAMETER_NOT_MATCH;
             trans.submit();
+            return;
+        }
+
+        if (m.vue) {
+            // vue的生成模型由 296963166@qq.com 维护
+            new VueExport(this._cfg).process(trans);
             return;
         }
 
