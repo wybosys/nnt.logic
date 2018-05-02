@@ -33,5 +33,28 @@
     "dbms": [
     ],
     "logger": [
+        {
+            "id": "file",
+            "filter": "all",
+            "entry": "nnt.logger.Log4Ts",
+            "config": {
+                "appenders": {
+                    "multi": {
+                        "type": "multiFile",
+                        "base": "logs/",
+                        "property": "TODAY",
+                        "extension": ".log"
+                    }
+                },
+                "categories": {
+                    "default": {
+                        "appenders": [
+                            "multi"
+                        ],
+                        "level": "debug"
+                    }
+                }
+            }
+        }
     ]
 }
