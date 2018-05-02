@@ -69,7 +69,7 @@ export class VueExport {
                 out = err.toString();
 
             // 输出到客户端
-            trans.output('text/plain', RespFile.Plain(out).asDownload("apis.ts"));
+            trans.output('text/plain', RespFile.Plain(out).asDownload("apis.js"));
         });
     }
 }
