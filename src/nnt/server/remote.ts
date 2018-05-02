@@ -43,12 +43,23 @@ class RpcModel extends Base {
 
 export function Call(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
 export function Call(srvid: string, args: IndexedObject): Promise<IndexedObject>;
+export function Call(url: string): Promise<IndexedObject>;
 
 export function Call(): Promise<IndexedObject> {
     let srvid: string;
     let subpath: string;
     let args: IndexedObject;
     switch (arguments.length) {
+        case 1: {
+            return new Promise<IndexedObject>(resolve => {
+                let m = new RpcModel();
+                m.url = arguments[0];
+                RestSession.Get(m).then(m => {
+                    resolve(m.data);
+                });
+            });
+        }
+            break;
         case 2: {
             srvid = arguments[0];
             args = arguments[1];

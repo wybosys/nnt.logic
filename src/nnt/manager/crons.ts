@@ -2,6 +2,7 @@ import cron = require("cron");
 import {logger} from "../core/logger";
 import {GetObjectClassName} from "../core/core";
 import {Clusters} from "./clusters";
+import {ArrayT} from "../core/kernel";
 
 export abstract class AbstractCronTask {
 
@@ -21,6 +22,7 @@ export abstract class AbstractCronTask {
 }
 
 interface TaskRecord {
+    id: string;
     time: string;
     task: AbstractCronTask;
     job?: cron.CronJob;
@@ -37,9 +39,9 @@ let masteralltasks = new Array<TaskRecord>();
 
 // 添加任务
 // clusters 在集群中添加任务，会保证集群中只有一个运行
-export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean): TaskRecord {
+export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean, id?: string): TaskRecord {
     if (!clusters) {
-        let rcd = doCronAdd(time, task);
+        let rcd = doCronAdd(time, task, id);
         if (rcd) {
             tasks.push(rcd);
             return rcd;
@@ -53,6 +55,7 @@ export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean)
         if (rcd) {
             mastertasks.push(rcd);
             masteralltasks.push({
+                id: id,
                 time: time,
                 task: task
             });
@@ -62,11 +65,23 @@ export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean)
     }
 
     let rcd = {
+        id: id,
         time: time,
         task: task
     };
     masteralltasks.push(rcd);
     return rcd;
+}
+
+// 删除任务
+export function CronRemove(rcd: TaskRecord) {
+    // 停止任务
+    if (rcd.job)
+        rcd.job.stop();
+    // 从集合中移除
+    ArrayT.RemoveObject(tasks, rcd);
+    ArrayT.RemoveObject(mastertasks, rcd);
+    ArrayT.RemoveObject(masteralltasks, rcd);
 }
 
 Clusters.OnBecomeMaster(() => {
@@ -86,7 +101,7 @@ Clusters.OnBecomeSlaver(() => {
     mastertasks.length = 0;
 });
 
-function doCronAdd(time: string, task: AbstractCronTask): TaskRecord {
+function doCronAdd(time: string, task: AbstractCronTask, id?: string): TaskRecord {
     let r: TaskRecord = null;
     try {
         let job = new cron.CronJob(time, () => {
@@ -96,6 +111,7 @@ function doCronAdd(time: string, task: AbstractCronTask): TaskRecord {
             task.stopped();
         }, true, 'Asia/Shanghai');
         r = {
+            id: id,
             time: time,
             task: task,
             job: job
