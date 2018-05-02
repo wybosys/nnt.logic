@@ -12,7 +12,7 @@ import {AcEntity} from "../acl/acl";
 import {Config} from "../manager/config";
 import {expand} from "../core/url";
 import {RespFile} from "./file";
-import {IndexedObject, nonnull1st, ObjectT} from "../core/kernel";
+import {IndexedObject, nonnull1st, ObjectT, StringT} from "../core/kernel";
 import {App} from "../manager/app";
 import {IApiServer} from "./apiserver";
 import {ParseContentToParams} from "./rest/params";
@@ -254,7 +254,10 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         let url = urlparse(req.url, true);
         logger.log("{{=it.url}}", {url: req.url});
 
-        // 需要支持以/分割和以&分割的两种url形式
+        // 支持几种不同的路由格式
+        // ?action=xxx.yyy&params
+        // $$/xxx.yyy$params
+        // xxx/yyy&params
         let params = <IndexedObject>url.query;
         // 为了支持第三方平台通过action同名传递动作
         if (url.pathname.indexOf("/$$/") == 0 ||
@@ -264,6 +267,14 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 let k = p[i++];
                 let v = p[i++];
                 params[k] = v;
+            }
+        }
+        else {
+            let p = StringT.Split(url.pathname, '/');
+            if (p.length >= 2) {
+                let r = p[p.length - 2];
+                let a = p[p.length - 1];
+                params["$$"] = r + '.' + a;
             }
         }
 
