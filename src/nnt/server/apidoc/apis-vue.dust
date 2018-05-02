@@ -4,8 +4,8 @@ import {ApiBase, ApiOutBase} from './ApiBase'
 export class {.name}In extends ApiBase {
 constructor() {
 super()
-this.controller = {.router}
-this.action = {.action}
+this.controller = "{.router|s}"
+this.action = "{.action|s}"
 this.returnData = new {.name}Out()
 }
 {#inputs}
@@ -22,8 +22,8 @@ this.params['{.name}'] = val
 export class {.name}Out extends ApiOutBase {
 constructor() {
 super()
-this.controller = {.router}
-this.action = {.action}
+this.controller = "{.router|s}"
+this.action = "{.action|s}"
 this.returnData = new {.name}Out()
 }
 {#outputs}
