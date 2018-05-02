@@ -274,7 +274,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             if (p.length >= 2) {
                 let r = p[p.length - 2];
                 let a = p[p.length - 1];
-                params["$$"] = r + '.' + a;
+                params["action"] = r + '.' + a;
             }
         }
 
