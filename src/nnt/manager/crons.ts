@@ -94,7 +94,7 @@ function doCronAdd(time: string, task: AbstractCronTask): TaskRecord {
             task.main();
         }, () => {
             task.stopped();
-        }, true);
+        }, true, 'Asia/Shanghai');
         r = {
             time: time,
             task: task,
