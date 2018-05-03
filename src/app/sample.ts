@@ -1,7 +1,8 @@
 import {Rest} from "../nnt/server/rest";
 import {action, IRouter} from "../nnt/core/router";
-import {input, model, output, string} from "../nnt/core/proto";
+import {input, integer, model, output, string} from "../nnt/core/proto";
 import {Transaction} from "../nnt/server/transaction";
+import {DateTime} from "../nnt/core/time";
 
 @model()
 export class Echoo {
@@ -11,6 +12,9 @@ export class Echoo {
 
     @string(2, [output], "输出")
     output: string;
+
+    @integer(3, [output], "服务器时间")
+    time: number;
 }
 
 export class RSample implements IRouter {
@@ -20,6 +24,7 @@ export class RSample implements IRouter {
     echo(trans: Transaction) {
         let m: Echoo = trans.model;
         m.output = m.input;
+        m.time = DateTime.Now();
         trans.submit();
     }
 }
