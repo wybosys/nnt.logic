@@ -13,7 +13,26 @@
             "listen": "*",
             "port": 8090,
             "entry": "app.Sample",
-            "enable": "debug",
+            "enable": "local",
+            "router": {
+                "nnt.server.apidoc.Router": {
+                    "export": {
+                        "router": [
+                            "entry://app/sample"
+                        ],
+                        "model": [
+                            "entry://app/sample"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "id": "sample",
+            "listen": "*",
+            "port": 80,
+            "entry": "app.Sample",
+            "enable": "devops,devops-release",
             "router": {
                 "nnt.server.apidoc.Router": {
                     "export": {
