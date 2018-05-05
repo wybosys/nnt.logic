@@ -3,18 +3,35 @@ import {Node} from "../config/config";
 import {static_cast} from "../core/core";
 import {App} from "../manager/app";
 import {logger} from "../core/logger";
-import {CronAdd} from "../manager/crons";
+import {AbstractCronTask, CronAdd} from "../manager/crons";
+import {Call} from "./remote";
 
 interface TaskConfig {
 
     // 执行的任务
     task: string;
 
+    // 访问的接口
+    url: string;
+
     // 时间设置
     time: string;
 
     // 是否添加到集群中，需要使用Clusters进行集群初始化
     cluster: boolean;
+}
+
+class TaskInvoke extends AbstractCronTask {
+    constructor(url: string) {
+        super();
+        this.url = url;
+    }
+
+    async main() {
+        await Call(this.url);
+    }
+
+    url: string;
 }
 
 interface CronConfig {
@@ -37,12 +54,18 @@ export class Cron extends AbstractServer {
 
     async start(): Promise<void> {
         this.task.forEach(e => {
-            let ent = App.shared().instanceEntry(e.task);
-            if (!ent) {
-                logger.fatal("没有找到对象 " + e.task);
-                return;
+            if (e.task) {
+                let ent = App.shared().instanceEntry(e.task);
+                if (!ent) {
+                    logger.fatal("没有找到对象 " + e.task);
+                    return;
+                }
+                CronAdd(e.time, ent, e.cluster);
             }
-            CronAdd(e.time, ent, e.cluster);
+            else if (e.url) {
+                let ent = new TaskInvoke(e.url);
+                CronAdd(e.time, ent, e.cluster);
+            }
         });
         logger.info("启动 {{=it.id}}@cron", {id: this.id});
     }
