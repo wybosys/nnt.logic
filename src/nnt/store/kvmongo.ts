@@ -526,7 +526,7 @@ export class KvMongo extends AbstractNosql {
         // 执行inc
         this._db.command({
             "findAndModify": "__manfinc",
-            "query": {key: keynm},
+            "query": {_id: keynm},
             "upsert": true,
             "new": true,
             "update": {
