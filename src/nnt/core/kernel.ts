@@ -1015,6 +1015,19 @@ export class ArrayT {
     static EachPermutation<T>(arr: T[], m: number, proc: (e: T[]) => void) {
         this.Permutation(arr, m).forEach(proc);
     }
+
+    // 把数组按照制定索引来排列，proc返回计算后的数组索引
+    static MapIndexIn<T>(arr: T[], indics: number[], proc: (e: T, idx?: number) => number = (e, idx) => idx) {
+        if (arr.length != indics.length)
+            return;
+        let tmp = new Array();
+        arr.forEach((e, idx) => {
+            let t = proc(e, idx);
+            let pos = indics.indexOf(t);
+            tmp[pos] = e;
+        });
+        this.Set(arr, tmp);
+    }
 }
 
 export class SetT {
