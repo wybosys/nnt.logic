@@ -411,7 +411,7 @@ export class KvMongo extends AbstractNosql {
                             name: "qupdate",
                             page: page,
                             iid: iid,
-                            cmd: cmd
+                            cmd: toJson(cmd)
                         });
                     cb(res.value);
                 }
@@ -429,7 +429,7 @@ export class KvMongo extends AbstractNosql {
                             name: "qupdate",
                             page: page,
                             iid: iid,
-                            cmd: cmd
+                            cmd: toJson(cmd)
                         });
                     cb(res.value);
                 }
