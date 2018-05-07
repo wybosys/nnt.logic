@@ -1871,6 +1871,15 @@ export class MapT {
         });
         return r;
     }
+
+    static FromArray<K, V, R>(arr: R[], proc: (map: Map<K, V>, obj: R, idx?: number) => void, inm?: Map<K, V>): Map<K, V> {
+        if (!inm)
+            inm = new Map<K, V>();
+        arr.forEach((e, idx) => {
+            proc(inm, e, idx);
+        });
+        return inm;
+    }
 }
 
 export const MAX_LONG = Number.MAX_SAFE_INTEGER;
