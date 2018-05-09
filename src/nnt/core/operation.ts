@@ -47,3 +47,32 @@ export class AsyncQueue {
     private _store = new Array<QueueCallback>();
     private _done: QueueCallback;
 }
+
+export type ParellelFunc = () => Promise<void>;
+
+class _Parellel {
+
+    add(func: ParellelFunc): this {
+        this._store.push(func);
+        return this;
+    }
+
+    async run() {
+        return new Promise(resolve => {
+            let count = this._store.length;
+            this._store.forEach(e => {
+                e().then(() => {
+                    if (--count == 0) {
+                        resolve();
+                    }
+                });
+            });
+        });
+    }
+
+    private _store = new Array<ParellelFunc>();
+}
+
+export function Parellel(): _Parellel {
+    return new _Parellel();
+}
