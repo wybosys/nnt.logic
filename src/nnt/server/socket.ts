@@ -231,7 +231,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 // 解析请求
                 let obj = dec.decode(data);
                 // 如果不存在客户端模型id，则代表请求非法
-                if (!obj["_cmid"]) {
+                if (!obj || obj["_cmid"]) {
                     logger.log("{{=it.addr}} 提交了非法数据", {addr: addr});
                     return;
                 }
