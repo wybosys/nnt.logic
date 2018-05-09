@@ -1,8 +1,6 @@
 import {action, IRouter} from "../../core/router";
 import {Transaction} from "../transaction";
-import {RestUpdate, STATUS} from "../../core/models";
-import {ProcessListener} from "./listener";
-import {MapT} from "../../core/kernel";
+import {RestUpdate} from "../../core/models";
 
 const WEAK_HEARTBEAT = 30;
 
@@ -20,20 +18,6 @@ export class RestService implements IRouter {
         // 弱心跳的时间
         m.heartbeatTime = WEAK_HEARTBEAT;
 
-        // 处理监听
-        ProcessListener(trans.sessionId(), trans.clientId(), null, result => {
-            if (!result) {
-                // 代表没有查找到监听，需要通知客户端重新监听
-                trans.status = STATUS.REST_NEED_RELISTEN;
-                trans.submit();
-                return;
-            }
-
-            m.models = MapT.Values(result, t => {
-                return t.model;
-            });
-
-            trans.submit();
-        });
+        trans.submit();
     }
 }

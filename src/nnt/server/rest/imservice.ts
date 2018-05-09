@@ -9,7 +9,6 @@ import {action, IRouter} from "../../core/router";
 import {Transaction} from "../transaction";
 import {static_cast} from "../../core/core";
 import {Connector} from "../socket";
-import {InstanceListenerTransaction} from "./listener";
 import {Variant} from "../../core/object";
 
 @model([auth], Message)
@@ -198,18 +197,6 @@ export class ImConnector extends Connector {
     }
 
     post(msg: Message) {
-        if (this.disconnecting)
-            return;
 
-        let transs = InstanceListenerTransaction(this.sessionId, this.clientId, "im.receive");
-        if (!transs.length)
-            return;
-
-        let pl = new Messages();
-        pl.items = [msg];
-        transs.forEach(e => {
-            e.model = pl;
-            this.send(this.render.render(e));
-        });
     }
 }

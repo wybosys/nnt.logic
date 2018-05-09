@@ -8,13 +8,15 @@ import {logger} from "../core/logger";
 import {expand} from "../core/url";
 import {IDecoder} from "./socket/decoder";
 import {JsonDecoder} from "./socket/jsondecoder";
-import {EmptyTransaction, Transaction} from "./transaction";
+import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {ConsoleOutput, ConsoleSubmit} from "../manager/servers";
 import {FindRender, IRender} from "../render/render";
 import {RSocket} from "./socket/router";
-import {ListenMode} from "./rest/listener";
 import {CancelDelay, Delay} from "../core/time";
+import {ListenMode} from "./rest/listener";
+import {Variant} from "../core/object";
+import {Output} from "../core/proto";
 import ws = require("ws");
 import http = require("http");
 import https = require("https");
@@ -44,12 +46,27 @@ export function FindDecoder(url: string): IDecoder {
 
 RegisterDecoder("/json", new JsonDecoder());
 
+export abstract class Transaction extends BaseTransaction {
+
+    modelId(): number {
+        return this.params['_cmid'];
+    }
+}
+
 export class Connector {
+
     sessionId: string;
     clientId: string;
 
     // 输出的渲染器
     render: IRender;
+
+    // 初始化
+    init(trans: Transaction): boolean {
+        this.sessionId = trans.sessionId();
+        this.clientId = trans.clientId();
+        return true;
+    }
 
     // 输出数据
     send(msg: SocketOutputType) {
@@ -72,6 +89,9 @@ export class Connector {
         return this._hdl == null;
     }
 
+    // 是否已经登陆
+    authed: boolean = false;
+
     private _hdl: ws;
 }
 
@@ -79,18 +99,17 @@ function BindHdlToConnector(cnt: Connector, hdl: ws) {
     cnt["_hdl"] = hdl;
 }
 
-export class Socket extends AbstractServer implements IRouterable, IConsoleServer {
+export abstract class Socket extends AbstractServer implements IRouterable, IConsoleServer {
 
     constructor() {
         super();
         this.routers.register(new RSocket());
     }
 
-    // 用来构造请求事物的类型
-    protected instanceTransaction(): Transaction {
-        return new EmptyTransaction();
-    }
+    // 实例事务
+    protected abstract instanceTransaction(): Transaction;
 
+    // 实例连接器
     protected instanceConnector(): Connector {
         return new Connector();
     }
@@ -243,51 +262,80 @@ export class Socket extends AbstractServer implements IRouterable, IConsoleServe
             t.implOutput = ConsoleOutput;
         }
 
-        // 如果发了sid，则坚持当前io的sid，不同则直接返回错误
-        // 如果是第一次发sid，则添加到映射表中
         if (rsp) {
-            // 如果通过Console来调用，rsp==null
-            let sid = t.sessionId();
-            let cursid = ObjectT.Get(rsp, IO_SESSIONKEY);
-            if (cursid) {
-                if (cursid != sid) {
-                    if (params["_listen"] === ListenMode.UNLISTEN) {
-                        this._routers.unlisten(t);
-                    }
-                    else {
-                        t.status = STATUS.FAILED;
-                        t.submit();
-                    }
-                    return;
+            // 判断是否是新连接
+            let connector: Connector = ObjectT.Get(rsp, IO_CONNECTOR);
+            if (!connector) {
+                // 建立全新连接
+                connector = this.instanceConnector();
+
+                let dec = FindDecoder(req.url);
+                connector.render = dec.render;
+
+                BindHdlToConnector(connector, rsp);
+                ObjectT.Set(rsp, IO_CONNECTOR, connector);
+
+                // 如果是listen或者unlisten，则不做任何返回
+                if (params["_listen"] === ListenMode.LISTEN) {
+                    this._routers.listen(t).then(() => {
+                        if (t.status == STATUS.OK) {
+                            this.onListen(connector, t, true);
+                            // 监听成功后，调用一次接口，产生默认数据
+                            this._routers.process(t);
+                        }
+                    });
+                }
+                else if (params["_listen"] === ListenMode.UNLISTEN) {
+                    this._routers.listen(t).then(() => {
+                        if (t.status == STATUS.OK) {
+                            this.onListen(connector, t, false);
+                        }
+                    });
+                }
+                else {
+                    // 新连接执行成功后，作为用户上线的标记
+                    this._routers.process(t).then(() => {
+                        if (!connector.authed && connector.init(t)) {
+                            // 登陆清除timeout
+                            let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
+                            CancelDelay(tmr);
+                            ObjectT.Set(rsp, IO_TIMEOUT, null);
+
+                            // 登陆成功
+                            this.onConnectorAvaliable(connector);
+                        }
+                    });
                 }
             }
             else {
-                ObjectT.Set(rsp, IO_SESSIONKEY, sid);
+                if (params["_listen"] === ListenMode.LISTEN) {
+                    this._routers.listen(t).then(() => {
+                        if (t.status == STATUS.OK) {
+                            this.onListen(connector, t, true);
+                            this._routers.process(t);
+                        }
+                    });
+                }
+                else if (params["_listen"] === ListenMode.UNLISTEN) {
+                    this._routers.listen(t).then(() => {
+                        if (t.status == STATUS.OK)
+                            this.onListen(connector, t, false);
+                    });
+                }
+                else {
+                    this._routers.process(t).then(() => {
+                        if (t.status == STATUS.OK && !connector.authed && connector.init(t)) {
+                            // 登陆清除timeout
+                            let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
+                            CancelDelay(tmr);
+                            ObjectT.Set(rsp, IO_TIMEOUT, null);
 
-                let cnt = this.instanceConnector();
-                cnt.sessionId = sid;
-                cnt.clientId = t.clientId();
-
-                let dec = FindDecoder(req.url);
-                cnt.render = dec.render;
-
-                BindHdlToConnector(cnt, rsp);
-                ObjectT.Set(rsp, IO_CONNECTOR, cnt);
-
-                // 清除timeout
-                let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
-                CancelDelay(tmr);
-                ObjectT.Set(rsp, IO_TIMEOUT, null);
-
-                this.onConnectorAvaliable(cnt);
+                            // 登陆成功
+                            this.onConnectorAvaliable(connector);
+                        }
+                    });
+                }
             }
-        }
-
-        if (params["_listen"] === ListenMode.LISTEN) {
-            this._routers.listen(t);
-        }
-        else if (params["_listen"] === ListenMode.UNLISTEN) {
-            this._routers.unlisten(t);
         }
         else {
             this._routers.process(t);
@@ -299,9 +347,12 @@ export class Socket extends AbstractServer implements IRouterable, IConsoleServe
 
     protected onConnectorUnavaliable(connector: Connector) {
     }
+
+    protected onListen(connector: Connector, tran: Transaction, listen: boolean) {
+        // 处理加监听和取消监听的动作
+    }
 }
 
-const IO_SESSIONKEY = "::nnt::socket::sessionId";
 const IO_CONNECTOR = "::nnt::socket::connector";
 const IO_TIMEOUT = "::nnt::socket::timeout";
 
@@ -315,13 +366,17 @@ interface TransactionPayload {
 function TransactionSubmit() {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
-    let r = FindRender(self.params["render"]);
-    pl.rsp.send(r.render(self));
+    pl.rsp.send(new Variant({
+        d: self.modelId(),
+        p: Output(self.model)
+    }).toBuffer());
 }
 
 function TransactionOutput(type: string, obj: any) {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
-    let r = FindRender(self.params["render"]);
-    pl.rsp.send(r.render(self));
+    pl.rsp.send(new Variant({
+        d: self.modelId(),
+        p: Output(self.model)
+    }).toBuffer());
 }

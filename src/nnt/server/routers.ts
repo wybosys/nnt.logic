@@ -2,7 +2,6 @@ import {IRouter} from "../core/router";
 import {logger} from "../core/logger";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
-import {AddListener, RemoveListener} from "./rest/listener";
 import {MapT} from "../core/kernel";
 
 export interface IRouterable {
@@ -100,6 +99,8 @@ export class Routers {
     }
 
     async listen(trans: Transaction) {
+        trans.timeout(-1);
+
         // 查找router
         let r = this._routers.get(trans.router);
         if (r == null) {
@@ -116,14 +117,12 @@ export class Routers {
             return;
         }
 
-        // 恢复数据上下文
-        await trans.collect();
-
-        trans.status = AddListener(trans) ? STATUS.OK : STATUS.FAILED;
-        trans.submit();
+        trans.status = STATUS.OK;
     }
 
     unlisten(trans: Transaction) {
+        trans.timeout(-1);
+
         // 查找router
         let r = this._routers.get(trans.router);
         if (r == null) {
@@ -140,10 +139,7 @@ export class Routers {
             return;
         }
 
-        RemoveListener(trans);
-
         trans.status = STATUS.OK;
-        trans.submit();
     }
 
 }

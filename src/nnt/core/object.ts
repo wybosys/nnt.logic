@@ -297,7 +297,7 @@ export class Variant implements ISerializableObject {
         if (this._type == VariantType.BUFFER)
             this._str = this._buf.toString();
         else if (this._type == VariantType.OBJECT)
-            this._str = JSON.stringify(this._jsobj);
+            this._str = toJson(this._jsobj);
         else if (this._type == VariantType.BOOLEAN)
             this._str = this._bol ? "true" : "false";
         else if (this._type == VariantType.NUMBER)

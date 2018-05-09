@@ -225,6 +225,26 @@ export class Multimap<K, V> {
         arr.push(v);
     }
 
+    pop(k: K, v: V) {
+        let arr = this._store.get(k);
+        if (arr == null)
+            return;
+        ArrayT.RemoveObject(arr, v);
+        if (arr.length == 0)
+            this._store.delete(k);
+    }
+
+    has(k: K): boolean {
+        return this._store.has(k);
+    }
+
+    contains(k: K, v: V): boolean {
+        let arr = this._store.get(k);
+        if (arr == null || !arr.length)
+            return false;
+        return arr.indexOf(v) != -1;
+    }
+
     forEach(proc: (vs: V[], k: K) => void) {
         this._store.forEach(proc);
     }
