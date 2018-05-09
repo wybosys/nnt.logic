@@ -14,7 +14,7 @@ import {expand} from "../core/url";
 import {RespFile} from "./file";
 import {IndexedObject, nonnull1st, ObjectT, StringT} from "../core/kernel";
 import {App} from "../manager/app";
-import {IApiServer} from "./apiserver";
+import {IApiServer, IHttpServer} from "./apiserver";
 import {ParseContentToParams} from "./rest/params";
 import {DateTime} from "../core/time";
 import {Stream} from "../core/object";
@@ -109,7 +109,7 @@ function TransactionOutput(type: string, obj: any) {
     }
 }
 
-export class Rest extends AbstractServer implements IRouterable, IConsoleServer, IApiServer {
+export class Rest extends AbstractServer implements IRouterable, IConsoleServer, IApiServer, IHttpServer {
 
     constructor() {
         super();
@@ -187,6 +187,10 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     router: string[] | IndexedObject;
 
     protected _hdl: http.Server | https.Server;
+
+    httpserver() {
+        return this._hdl;
+    }
 
     async start(): Promise<void> {
         if (this.https) {

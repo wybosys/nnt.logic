@@ -10,13 +10,15 @@ import {IDecoder} from "./socket/decoder";
 import {JsonDecoder} from "./socket/jsondecoder";
 import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
-import {ConsoleOutput, ConsoleSubmit} from "../manager/servers";
-import {FindRender, IRender} from "../render/render";
+import {ConsoleOutput, ConsoleSubmit, Find} from "../manager/servers";
+import {IRender} from "../render/render";
 import {RSocket} from "./socket/router";
 import {CancelDelay, Delay} from "../core/time";
 import {ListenMode} from "./rest/listener";
 import {Variant} from "../core/object";
 import {Output} from "../core/proto";
+import {IHttpServer} from "./apiserver";
+import {static_cast} from "../core/core";
 import ws = require("ws");
 import http = require("http");
 import https = require("https");
@@ -28,8 +30,17 @@ export type SocketOutputType = string | Buffer | ArrayBuffer;
 const TIMEOUT = 10;
 
 interface WsNode extends Node {
+
+    // 监听的地址
     listen: string;
+
+    // 端口
     port: number;
+
+    // 绑定到当前已经存在的http服务
+    attach: string;
+
+    // 是否加密
     wss?: boolean;
 }
 
@@ -118,23 +129,29 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
         if (!super.config(cfg))
             return false;
         let c = <WsNode>cfg;
-        if (!c.port)
-            return false;
-        this.listen = null;
-        if (c.listen && c.listen != "*")
-            this.listen = c.listen;
-        this.port = c.port;
-        this.wss = nonnull1st(false, c.wss, Config.HTTPS);
-        if (this.wss) {
-            if (Config.HTTPS_PFX) {
-                // pass
-            }
-            else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
-                // pass
-            }
-            else {
-                logger.warn("没有配置https的证书");
+        if (c.attach) {
+            // 如果设置了attach，就不能再监听到独立端口
+            this.attach = c.attach;
+        }
+        else {
+            if (!c.port)
                 return false;
+            this.listen = null;
+            if (c.listen && c.listen != "*")
+                this.listen = c.listen;
+            this.port = c.port;
+            this.wss = nonnull1st(false, c.wss, Config.HTTPS);
+            if (this.wss) {
+                if (Config.HTTPS_PFX) {
+                    // pass
+                }
+                else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
+                    // pass
+                }
+                else {
+                    logger.warn("没有配置https的证书");
+                    return false;
+                }
             }
         }
         return true;
@@ -143,35 +160,43 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
     listen: string;
     port: number;
     wss: boolean;
+    attach: string;
 
     protected _srv: http.Server | https.Server;
     protected _hdl: ws.Server;
 
     async start(): Promise<void> {
-        if (this.wss) {
-            let cfg: IndexedObject = {};
-            if (Config.HTTPS_PFX) {
-                cfg["pfx"] = fs.readFileSync(expand(Config.HTTPS_PFX));
+        if (!this.attach) {
+            if (this.wss) {
+                let cfg: IndexedObject = {};
+                if (Config.HTTPS_PFX) {
+                    cfg["pfx"] = fs.readFileSync(expand(Config.HTTPS_PFX));
+                }
+                else {
+                    cfg["key"] = fs.readFileSync(expand(Config.HTTPS_KEY));
+                    cfg["cert"] = fs.readFileSync(expand(Config.HTTPS_CERT));
+                }
+                if (Config.HTTPS_PASSWD)
+                    cfg["passphrase"] = Config.HTTPS_PASSWD;
+                this._srv = https.createServer(cfg, (req, rsp) => {
+                    rsp.writeHead(200);
+                    rsp.end();
+                });
             }
             else {
-                cfg["key"] = fs.readFileSync(expand(Config.HTTPS_KEY));
-                cfg["cert"] = fs.readFileSync(expand(Config.HTTPS_CERT));
+                this._srv = http.createServer((req, rsp) => {
+                    rsp.writeHead(200);
+                    rsp.end();
+                });
             }
-            if (Config.HTTPS_PASSWD)
-                cfg["passphrase"] = Config.HTTPS_PASSWD;
-            this._srv = https.createServer(cfg, (req, rsp) => {
-                rsp.writeHead(200);
-                rsp.end();
-            });
+            this._srv.listen(this.port, this.listen ? this.listen : "0.0.0.0");
         }
         else {
-            this._srv = http.createServer((req, rsp) => {
-                rsp.writeHead(200);
-                rsp.end();
-            });
+            // ws服务服用http的连接
+            let srv = static_cast<IHttpServer>(Find(this.attach));
+            this._srv = srv.httpserver();
         }
 
-        this._srv.listen(this.port, this.listen ? this.listen : "0.0.0.0");
         this._hdl = new ws.Server({server: this._srv});
         this.doWorker();
         logger.info("启动 {{=it.id}}@socket", {id: this.id});
