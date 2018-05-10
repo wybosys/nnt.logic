@@ -14,6 +14,15 @@ export module Config {
     // 正式版模式
     export let DISTRIBUTION: boolean = true;
 
+    // 本地模式
+    export let LOCAL: boolean = false;
+
+    // 内网部署
+    export let DEVOPS: boolean = false;
+
+    // 外网部署
+    export let DEVOPS_RELEASE: boolean = true;
+
     // sid过期时间，此框架中时间最小单位为秒
     export let SID_EXPIRE: number = 86400;
 
@@ -80,10 +89,3 @@ export function IsDevopsRelease(): boolean {
 export function IsLocal(): boolean {
     return !('DEVOPS' in process.env) && !('DEVOPS_RELEASE' in process.env);
 }
-
-if (IsDevopsRelease())
-    logger.info("DEVOPS RELEASE 环境");
-else if (IsDevops())
-    logger.info("DEVOPS 环境");
-else
-    logger.info("LOCAL 环境");

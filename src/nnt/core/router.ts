@@ -13,6 +13,9 @@ export interface IRouter {
 // action可用的模式
 export const debug = "debug";
 export const develop = "develop";
+export const local = "local";
+export const devops = "devops";
+export const devopsrelease = "devopsrelease";
 
 // 打开频控
 export const frqctl = "frqctl";
@@ -27,6 +30,15 @@ export interface ActionProto {
 
     // 限制develop可用
     develop?: boolean;
+
+    // 限制local可用
+    local?: boolean;
+
+    // 限制devops可用
+    devops?: boolean;
+
+    // 限制devopsrelease可用
+    devopsrelease?: boolean;
 
     // 注释
     comment: string;
@@ -72,25 +84,41 @@ export function action<T>(model: Class<T>, options?: string[], comment?: string)
     };
     if (options) {
         options.forEach(e => {
-            let io: IndexedObject = ap;
-            if (e == debug)
-                io["debug"] = true;
-            else if (e == develop)
-                io["develop"] = true;
-            else if (e == frqctl)
-                io["frqctl"] = true;
-            else
-                io[e] = true;
+            (<IndexedObject>ap)[e] = true;
         });
     }
     return (target: any, key: string) => {
-        let pass = false;
-        if (ap.debug && Config.DEBUG)
-            pass = true;
-        else if (ap.develop && Config.DEVELOP)
-            pass = true;
-        else if (!ap.debug && !ap.develop)
-            pass = true;
+        let pass = true;
+        // 判断是否需要判断可用性
+        if (debug in ap ||
+            develop in ap ||
+            local in ap ||
+            devops in ap ||
+            devopsrelease in ap) {
+            // 挨个判断
+            pass = false;
+            if (!pass && ap.debug) {
+                if (Config.DEBUG)
+                    pass = true;
+            }
+            if (!pass && ap.develop) {
+                if (Config.DEVELOP)
+                    pass = true;
+            }
+            if (!pass && ap.local) {
+                if (Config.LOCAL)
+                    pass = true;
+            }
+            if (!pass && ap.devops) {
+                if (Config.DEVOPS)
+                    pass = true;
+            }
+            if (!pass && ap.devopsrelease) {
+                if (Config.DEVOPS_RELEASE)
+                    pass = true;
+            }
+        }
+        // 测试通过，该action生效
         if (pass)
             DefineAp(target, key, ap);
     };

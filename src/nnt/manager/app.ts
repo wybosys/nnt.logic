@@ -9,7 +9,7 @@ import {sep} from "path";
 import {assets} from "./assets";
 import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
-import {Config, IsDebug} from "./config";
+import {Config, IsDebug, IsDevops, IsDevopsRelease, IsLocal} from "./config";
 
 export class App {
 
@@ -55,6 +55,12 @@ export class App {
                 logger.log("publish模式启动");
             if (Config.DISTRIBUTION = !IsDebug())
                 logger.log("distribution模式启动");
+            if (Config.LOCAL = IsLocal())
+                logger.info("LOCAL 环境");
+            if (Config.DEVOPS = IsDevops())
+                logger.info("DEVOPS 环境");
+            if (Config.DEVOPS_RELEASE = IsDevopsRelease())
+                logger.info("DEVOPS RELEASE 环境");
             Config.FORCE_MASTER = argv.indexOf("--master") != -1;
             Config.FORCE_SLAVER = argv.indexOf("--slaver") != -1;
 
