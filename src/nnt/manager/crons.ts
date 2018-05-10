@@ -1,10 +1,20 @@
 import cron = require("cron");
 import {logger} from "../core/logger";
-import {GetObjectClassName} from "../core/core";
+import {GetObjectClassName, static_cast} from "../core/core";
 import {Clusters} from "./clusters";
 import {ArrayT} from "../core/kernel";
 
 export abstract class AbstractCronTask {
+
+    // 绑定的任务id
+    get id(): string {
+        return this._id;
+    }
+
+    // 执行依赖的时间
+    get time(): string {
+        return this._time;
+    }
 
     // 主执行函数
     abstract main(): void;
@@ -18,77 +28,70 @@ export abstract class AbstractCronTask {
         return this._job && this._job.running;
     }
 
+    protected _id: string;
+    private _time: string;
     private _job: cron.CronJob;
 }
 
-interface TaskRecord {
-    id: string;
-    time: string;
-    task: AbstractCronTask;
-    job?: cron.CronJob;
+interface IAbstractCronTask {
+    _id: string;
+    _time: string;
+    _job: cron.CronJob;
 }
 
 // 普通任务
-let tasks = new Array<TaskRecord>();
+let tasks = new Array<AbstractCronTask>();
 
 // 集群任务
-let mastertasks = new Array<TaskRecord>();
+let mastertasks = new Array<AbstractCronTask>();
 
 // 没有跑起来的集群任务
-let masteralltasks = new Array<TaskRecord>();
+let masteralltasks = new Array<AbstractCronTask>();
 
 // 添加任务
 // clusters 在集群中添加任务，会保证集群中只有一个运行
-export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean, id?: string): TaskRecord {
+export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean, id?: string): boolean {
     if (!clusters) {
-        let rcd = doCronAdd(time, task, id);
-        if (rcd) {
-            tasks.push(rcd);
-            return rcd;
+        if (doCronAdd(time, task, id)) {
+            tasks.push(task);
+            return true;
         }
-        return null;
+        return false;
     }
 
     // 只有集群中的主服务可以添加任务
     if (Clusters.IsMaster) {
-        let rcd = doCronAdd(time, task);
-        if (rcd) {
-            mastertasks.push(rcd);
-            masteralltasks.push({
-                id: id,
-                time: time,
-                task: task
-            });
-            return rcd;
+        if (doCronAdd(time, task)) {
+            mastertasks.push(task);
+            masteralltasks.push(task);
+            return true;
         }
-        return null;
+        return false;
     }
 
-    let rcd = {
-        id: id,
-        time: time,
-        task: task
-    };
-    masteralltasks.push(rcd);
-    return rcd;
+    let itask = static_cast<IAbstractCronTask>(task);
+    itask._id = id;
+    itask._time = time;
+    masteralltasks.push(task);
+    return true;
 }
 
 // 删除任务
-export function CronRemove(rcd: TaskRecord) {
+export function CronRemove(task: AbstractCronTask) {
+    let itask = static_cast<IAbstractCronTask>(task);
     // 停止任务
-    if (rcd.job)
-        rcd.job.stop();
+    if (itask._job)
+        itask._job.stop();
     // 从集合中移除
-    ArrayT.RemoveObject(tasks, rcd);
-    ArrayT.RemoveObject(mastertasks, rcd);
-    ArrayT.RemoveObject(masteralltasks, rcd);
+    ArrayT.RemoveObject(tasks, task);
+    ArrayT.RemoveObject(mastertasks, task);
+    ArrayT.RemoveObject(masteralltasks, task);
 }
 
 Clusters.OnBecomeMaster(() => {
     masteralltasks.forEach(e => {
-        let rcd = doCronAdd(e.time, e.task);
-        if (rcd) {
-            mastertasks.push(rcd);
+        if (doCronAdd(e.time, e, e.id)) {
+            mastertasks.push(e);
         }
     });
 });
@@ -96,31 +99,29 @@ Clusters.OnBecomeMaster(() => {
 Clusters.OnBecomeSlaver(() => {
     // 停掉所有的集群任务
     mastertasks.forEach(e => {
-        e.job.stop();
+        let itask = static_cast<IAbstractCronTask>(e);
+        itask._job.stop();
     });
     mastertasks.length = 0;
 });
 
-function doCronAdd(time: string, task: AbstractCronTask, id?: string): TaskRecord {
-    let r: TaskRecord = null;
+function doCronAdd(time: string, task: AbstractCronTask, id?: string): boolean {
+    let itask = static_cast<IAbstractCronTask>(task);
     try {
-        let job = new cron.CronJob(time, () => {
+        itask._id = id;
+        itask._time = time;
+        itask._job = new cron.CronJob(time, () => {
             logger.log("执行一次计划任务 {{=it.name}}", {name: GetObjectClassName(task)});
             task.main();
         }, () => {
             task.stopped();
         }, true, 'Asia/Shanghai');
-        r = {
-            id: id,
-            time: time,
-            task: task,
-            job: job
-        };
     }
     catch (err) {
         logger.error(err);
+        return false;
     }
-    return r;
+    return true;
 }
 
 // 生成配置
