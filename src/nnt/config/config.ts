@@ -34,6 +34,9 @@ export function NodeIsEnable(node: Node): boolean {
     let conds = node.enable.split(",");
     // 找到一个满足的即为满足
     let fnd = ArrayT.QueryObject(conds, e => {
+        if (e === null)
+            return false;
+
         if (e == "debug")
             return Config.DEBUG;
         if (e == "develop")
@@ -59,7 +62,6 @@ export function NodeIsEnable(node: Node): boolean {
         if (argv.indexOf('--' + e) != -1)
             return true;
 
-        logger.fatal("配置遇到一个不支持的节点开关：{{=it.cond}}@{{=it.id}}", {id: node.id, cond: e});
         return false;
     });
     return fnd != null;

@@ -51,7 +51,7 @@
             "entry": "nnt.server.XlsxConfig",
             "dir": "~/src/app",
             "output": "~/src/app/data.ts",
-            "enable": "data"
+            "enable": null
         }
     ],
     "container": [

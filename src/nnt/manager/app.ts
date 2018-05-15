@@ -10,7 +10,7 @@ import {assets} from "./assets";
 import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
 import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
-import {toJsonObject} from "../core/kernel";
+import {ArrayT, toJsonObject} from "../core/kernel";
 
 export class App {
 
@@ -48,6 +48,23 @@ export class App {
 
         // 处理输入参数
         let argv = process.argv;
+
+        // 判断是否直接执行指定服务
+        let directserveridx = argv.indexOf('--server');
+        if (directserveridx != -1) {
+            let directserver = argv[directserveridx + 1];
+            // 运行制定的server
+            if (cfg.server) {
+                // 查找制定id的server
+                cfg.server = ArrayT.QueryObjects(cfg.server, e => {
+                    return e.id == directserver;
+                });
+            }
+            // 其他配置清空
+            cfg.container = [];
+            cfg.dbms = [];
+        }
+
         if (Config.DEBUG = argv.indexOf("--debug") != -1)
             logger.log("debug模式启动");
         else if (Config.DEVELOP = argv.indexOf("--develop") != -1)
