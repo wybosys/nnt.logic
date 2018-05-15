@@ -176,7 +176,7 @@ export class Routers {
         // 和php等一样的规则
         if (Config.DEVOPS_DEVELOP) {
             // 如果访问的是api.doc，则不进行判定
-            if (trans.router == 'api.doc')
+            if (trans.action == 'api.doc')
                 return true;
             let skip = trans.params[KEY_SKIPPERMISSION];
             if (skip)
