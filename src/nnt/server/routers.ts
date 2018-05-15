@@ -3,6 +3,10 @@ import {logger} from "../core/logger";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {MapT} from "../core/kernel";
+import {Config} from "../manager/config";
+import {KvRedis} from "../store/kvredis";
+import {Find} from "../manager/dbmss";
+import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 
 export interface IRouterable {
     routers: Routers;
@@ -42,6 +46,13 @@ export class Routers {
 
     async process(trans: Transaction) {
         let ac = trans.ace;
+
+        // 检查devops
+        if (!await this.devopscheck(trans)) {
+            trans.status = STATUS.PERMISSIO_FAILED;
+            trans.submit();
+            return;
+        }
 
         // 查找router
         let r = this._routers.get(trans.router);
@@ -99,6 +110,12 @@ export class Routers {
     }
 
     async listen(trans: Transaction) {
+        if (!await this.devopscheck(trans)) {
+            trans.status = STATUS.PERMISSIO_FAILED;
+            trans.submit();
+            return;
+        }
+
         trans.timeout(-1);
 
         // 查找router
@@ -120,7 +137,13 @@ export class Routers {
         trans.status = STATUS.OK;
     }
 
-    unlisten(trans: Transaction) {
+    async unlisten(trans: Transaction) {
+        if (!await this.devopscheck(trans)) {
+            trans.status = STATUS.PERMISSIO_FAILED;
+            trans.submit();
+            return;
+        }
+
         trans.timeout(-1);
 
         // 查找router
@@ -142,4 +165,22 @@ export class Routers {
         trans.status = STATUS.OK;
     }
 
+    // devops下的权限判断
+    protected async devopscheck(trans: Transaction): Promise<boolean> {
+        // devops环境下才进行权限判定
+        if (Config.LOCAL)
+            return true;
+        // 允许客户端访的将无法进行服务端权限判定
+        if (Config.CLIENT_ALLOW)
+            return true;
+        // 和php等一样的规则
+        if (Config.DEVOPS_DEVELOP) {
+            let skip = trans.params[KEY_SKIPPERMISSION];
+            if (skip)
+                return true;
+        }
+        let permid = trans.params[KEY_PERMISSIONID];
+        let cfg = await Permissions.locate(permid);
+        return cfg != null;
+    }
 }

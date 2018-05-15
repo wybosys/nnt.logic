@@ -4,12 +4,13 @@ import dbmss = require("./dbmss");
 import servers = require("./servers");
 import containers = require("./containers");
 import events = require("events");
-import {AppNodes} from "../config/app";
+import {AppNodes, DevopsNodes} from "../config/app";
 import {sep} from "path";
 import {assets} from "./assets";
 import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
-import {Config, IsDebug, IsDevops, IsDevopsRelease, IsLocal} from "./config";
+import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
+import {toJsonObject} from "../core/kernel";
 
 export class App {
 
@@ -26,79 +27,87 @@ export class App {
     }
 
     // 加载程序配置
-    static LoadConfig(file: string): AppNodes {
-        file = expand(file);
+    static LoadConfig(appcfg: string = "~/app.json", devcfg: string = "~/devops.json"): AppNodes {
+        appcfg = expand(appcfg);
 
         // 读取配置信息
-        if (!fs.existsSync(file)) {
+        if (!fs.existsSync(appcfg)) {
             console.error("读取配置文件失败");
             return null;
         }
 
+        if (devcfg && !fs.existsSync(devcfg)) {
+            console.error("读取DEVOPS配置文件失败");
+            return null;
+        }
+
         // 通过配置文件来启动服务端
-        let cfg: AppNodes;
-        try {
-            cfg = JSON.parse(fs.readFileSync(file, "utf8"));
-        }
-        catch (err) {
-            logger.exception(err);
+        let cfg: AppNodes = toJsonObject(fs.readFileSync(appcfg, "utf8"));
+
+        // 处理输入参数
+        let argv = process.argv;
+        if (Config.DEBUG = argv.indexOf("--debug") != -1)
+            logger.log("debug模式启动");
+        else if (Config.DEVELOP = argv.indexOf("--develop") != -1)
+            logger.log("develop模式启动");
+        else if (Config.PUBLISH = argv.indexOf("--publish") != -1)
+            logger.log("publish模式启动");
+        if (Config.DISTRIBUTION = !IsDebug())
+            logger.log("distribution模式启动");
+        if (Config.LOCAL = IsLocal())
+            logger.info("LOCAL 环境");
+        if (Config.DEVOPS_DEVELOP = IsDevopsDevelop())
+            logger.info("DEVOPS DEVELOP 环境");
+        if (Config.DEVOPS_RELEASE = IsDevopsRelease())
+            logger.info("DEVOPS RELEASE 环境");
+        Config.FORCE_MASTER = argv.indexOf("--master") != -1;
+        Config.FORCE_SLAVER = argv.indexOf("--slaver") != -1;
+
+        // 设置为当前参数
+        App.CurrentConfig = cfg;
+
+        // 读取系统配置
+        let c = cfg.config;
+        if (c.sidexpire)
+            Config.SID_EXPIRE = c.sidexpire;
+        if (c.cidexpire)
+            Config.CID_EXPIRE = c.cidexpire;
+        if (c.cache)
+            Config.CACHE = expand(c.cache);
+        if (c.https)
+            Config.HTTPS = c.https;
+        if (c.http2)
+            Config.HTTP2 = c.http2;
+        if (c.httpskey)
+            Config.HTTPS_KEY = c.httpskey;
+        if (c.httpscert)
+            Config.HTTPS_CERT = c.httpscert;
+        if (c.httpspfx)
+            Config.HTTPS_PFX = c.httpspfx;
+        if (c.httpspasswd)
+            Config.HTTPS_PASSWD = c.httpspasswd;
+        if (c.deskey)
+            Config.DES_KEY = c.deskey;
+        if (c.cluster != null) {
+            Config.CLUSTER = true;
+            if (c.cluster === true)
+                Config.CLUSTER_PARALLEL = -1;
+            else
+                Config.CLUSTER_PARALLEL = c.cluster;
         }
 
-        if (cfg) {
-            // 处理输入参数
-            let argv = process.argv;
-            if (Config.DEBUG = argv.indexOf("--debug") != -1)
-                logger.log("debug模式启动");
-            else if (Config.DEVELOP = argv.indexOf("--develop") != -1)
-                logger.log("develop模式启动");
-            else if (Config.PUBLISH = argv.indexOf("--publish") != -1)
-                logger.log("publish模式启动");
-            if (Config.DISTRIBUTION = !IsDebug())
-                logger.log("distribution模式启动");
-            if (Config.LOCAL = IsLocal())
-                logger.info("LOCAL 环境");
-            if (Config.DEVOPS = IsDevops())
-                logger.info("DEVOPS 环境");
-            if (Config.DEVOPS_RELEASE = IsDevopsRelease())
-                logger.info("DEVOPS RELEASE 环境");
-            Config.FORCE_MASTER = argv.indexOf("--master") != -1;
-            Config.FORCE_SLAVER = argv.indexOf("--slaver") != -1;
-
-            // 设置为当前参数
-            App.CurrentConfig = cfg;
-
-            // 读取系统配置
-            let c = cfg.config;
-            if (c.sidexpire)
-                Config.SID_EXPIRE = c.sidexpire;
-            if (c.cidexpire)
-                Config.CID_EXPIRE = c.cidexpire;
-            if (c.cache)
-                Config.CACHE = expand(c.cache);
-            if (c.https)
-                Config.HTTPS = c.https;
-            if (c.http2)
-                Config.HTTP2 = c.http2;
-            if (c.httpskey)
-                Config.HTTPS_KEY = c.httpskey;
-            if (c.httpscert)
-                Config.HTTPS_CERT = c.httpscert;
-            if (c.httpspfx)
-                Config.HTTPS_PFX = c.httpspfx;
-            if (c.httpspasswd)
-                Config.HTTPS_PASSWD = c.httpspasswd;
-            if (c.deskey)
-                Config.DES_KEY = c.deskey;
-            if (c.cluster != null) {
-                Config.CLUSTER = true;
-                if (c.cluster === true)
-                    Config.CLUSTER_PARALLEL = -1;
-                else
-                    Config.CLUSTER_PARALLEL = c.cluster;
-            }
-            if (!fs.existsSync(Config.CACHE))
-                fs.mkdirSync(Config.CACHE);
+        // 读取devops的配置
+        if (devcfg) {
+            devcfg = expand(devcfg);
+            let cfg: DevopsNodes = toJsonObject(fs.readFileSync(devcfg, "utf8"));
+            if (cfg.client != null)
+                Config.CLIENT_ALLOW = cfg.client;
+            if (cfg.server != null)
+                Config.SERVER_ALLOW = cfg.server;
         }
+
+        if (!fs.existsSync(Config.CACHE))
+            fs.mkdirSync(Config.CACHE);
 
         return cfg;
     }
@@ -133,6 +142,7 @@ export class App {
         if (cfg.container)
             await containers.Start(cfg.container);
 
+        // 启动成功
         RunHooks(STARTED);
         this.signals.emit(App.EVENT_START);
     }

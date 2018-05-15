@@ -7,7 +7,7 @@ import {DbExecuteStat} from "./store";
 import {Variant} from "../core/object";
 import redis = require("redis");
 
-interface RedisNode extends Node {
+export interface RedisNode extends Node {
     // 是否是集群模式
     cluster?: boolean;
 
@@ -79,6 +79,17 @@ export class KvRedis extends AbstractKv {
     async close(): Promise<void> {
         this._hdl.end(true);
         this._hdl = null;
+    }
+
+    select(dbid: number, cb?: (suc: boolean) => void) {
+        this._hdl.select(dbid, (err, res) => {
+            if (err) {
+                logger.error(err);
+                cb && cb(null);
+                return;
+            }
+            cb && cb(true);
+        });
     }
 
     get(key: string, cb: (res: Variant) => void) {

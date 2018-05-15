@@ -17,10 +17,13 @@ export module Config {
     // 本地模式
     export let LOCAL: boolean = false;
 
-    // 内网部署
+    // 容器部署
     export let DEVOPS: boolean = false;
 
-    // 外网部署
+    // 内网测试容器部署
+    export let DEVOPS_DEVELOP: boolean = false;
+
+    // 外网容器部署
     export let DEVOPS_RELEASE: boolean = true;
 
     // sid过期时间，此框架中时间最小单位为秒
@@ -34,6 +37,12 @@ export module Config {
 
     // transaction超时时间
     export let TRANSACTION_TIMEOUT: number = 20;
+
+    // 是否允许客户端访问
+    export let CLIENT_ALLOW: boolean = false;
+
+    // 是否允许服务端访问
+    export let SERVER_ALLOW: boolean = true;
 
     // 默认的https证书配置
     export let HTTPS: boolean;
@@ -79,6 +88,10 @@ export function DebugValue<T>(d: T, r: T): T {
 
 // 支持DEVOPS的架构判断
 export function IsDevops(): boolean {
+    return 'DEVOPS' in process.env;
+}
+
+export function IsDevopsDevelop(): boolean {
     return 'DEVOPS' in process.env && !('DEVOPS_RELEASE' in process.env);
 }
 
@@ -87,5 +100,5 @@ export function IsDevopsRelease(): boolean {
 }
 
 export function IsLocal(): boolean {
-    return !('DEVOPS' in process.env) && !('DEVOPS_RELEASE' in process.env);
+    return !('DEVOPS' in process.env);
 }

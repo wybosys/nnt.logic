@@ -18,3 +18,9 @@ export interface AppNodes {
     // 容器节点
     container?: Node[];
 }
+
+export interface DevopsNodes {
+
+    client?: boolean; // 是否允许客户端访问本服务
+    server?: boolean; // 是否允许服务端访问本服务
+}

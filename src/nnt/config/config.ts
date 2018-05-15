@@ -1,4 +1,4 @@
-import {Config, IsDebug, IsDevops, IsDevopsRelease, IsLocal, IsRelease} from "../manager/config";
+import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal, IsRelease} from "../manager/config";
 import {ArrayT} from "../core/kernel";
 import {logger} from "../core/logger";
 
@@ -48,6 +48,8 @@ export function NodeIsEnable(node: Node): boolean {
             return IsRelease();
         if (e == "devops")
             return IsDevops();
+        if (e == "devops-develop")
+            return IsDevopsDevelop();
         if (e == "devops-release")
             return IsDevopsRelease();
         if (e == "local")
