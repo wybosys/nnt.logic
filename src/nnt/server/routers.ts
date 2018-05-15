@@ -180,6 +180,8 @@ export class Routers {
                 return true;
         }
         let permid = trans.params[KEY_PERMISSIONID];
+        if (!permid)
+            return false;
         let cfg = await Permissions.locate(permid);
         return cfg != null;
     }
