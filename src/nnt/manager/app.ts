@@ -58,6 +58,8 @@ export class App {
             logger.log("distribution模式启动");
         if (Config.LOCAL = IsLocal())
             logger.info("LOCAL 环境");
+        if (Config.DEVOPS = IsDevops())
+            logger.info("DEVOPS 环境");
         if (Config.DEVOPS_DEVELOP = IsDevopsDevelop())
             logger.info("DEVOPS DEVELOP 环境");
         if (Config.DEVOPS_RELEASE = IsDevopsRelease())

@@ -43,17 +43,17 @@ export function NodeIsEnable(node: Node): boolean {
         if (e == "distribution")
             return Config.DISTRIBUTION;
         if (e == "local")
-            return IsDebug();
+            return Config.DEBUG;
         if (e == "release")
-            return IsRelease();
+            return Config.PUBLISH;
         if (e == "devops")
-            return IsDevops();
+            return Config.DEVOPS;
         if (e == "devops-develop")
-            return IsDevopsDevelop();
+            return Config.DEVOPS_DEVELOP;
         if (e == "devops-release")
-            return IsDevopsRelease();
+            return Config.DEVOPS_RELEASE;
         if (e == "local")
-            return IsLocal();
+            return Config.LOCAL;
 
         logger.fatal("配置遇到一个不支持的节点开关：{{=it.cond}}@{{=it.id}}", {id: node.id, cond: e});
         return false;
