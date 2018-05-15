@@ -11,8 +11,7 @@ class _Permissions {
         this._db.config(<RedisNode>{
             id: "devops-redis",
             entry: "nnt.store.KvRedis",
-            host: 'localhost',
-            port: 26379
+            host: 'localhost:26379'
         });
         this._db.open().then(() => {
             this._db.select(REDIS_PERMISSIONIDS);
