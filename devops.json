@@ -1,4 +1,4 @@
 {
     "path": "/devops/service/framework/nntlogic",
-    "client": true
+    "client": false
 }
