@@ -29,6 +29,8 @@ export class App {
     // 加载程序配置
     static LoadConfig(appcfg: string = "~/app.json", devcfg: string = "~/devops.json"): AppNodes {
         appcfg = expand(appcfg);
+        if (devcfg)
+            devcfg = expand(devcfg);
 
         // 读取配置信息
         if (!fs.existsSync(appcfg)) {
@@ -98,7 +100,6 @@ export class App {
 
         // 读取devops的配置
         if (devcfg) {
-            devcfg = expand(devcfg);
             let cfg: DevopsNodes = toJsonObject(fs.readFileSync(devcfg, "utf8"));
             if (cfg.client != null)
                 Config.CLIENT_ALLOW = cfg.client;
