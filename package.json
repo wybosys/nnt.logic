@@ -7,7 +7,8 @@
         "devops": "pm2 start ./index.js -i max --name nntlogic --watch ./bin",
         "develop": "node ./index.js --develop",
         "develop-cluster": "pm2 start ./index.js -i max --name nntlogic --watch ./bin -- --develop",
-        "distribution": "pm2 start ./index.js -i max --name nntlogic --watch ./bin"
+        "distribution": "pm2 start ./index.js -i max --name nntlogic --watch ./bin",
+        "data": "node ./index.js --data"
     },
     "author": "wybosys@gmail.com",
     "devDependencies": {},

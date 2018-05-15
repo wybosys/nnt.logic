@@ -32,7 +32,7 @@
             "listen": "*",
             "port": 80,
             "entry": "app.Sample",
-            "enable": "devops,devops-release",
+            "enable": "devops-develop,devops-release",
             "router": {
                 "nnt.server.apidoc.Router": {
                     "export": {
@@ -45,6 +45,13 @@
                     }
                 }
             }
+        },
+        {
+            "id": "gendata",
+            "entry": "nnt.server.XlsxConfig",
+            "dir": "~/src/app",
+            "output": "~/src/app/data.ts",
+            "enable": "data"
         }
     ],
     "container": [

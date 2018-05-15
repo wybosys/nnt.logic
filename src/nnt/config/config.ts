@@ -55,6 +55,10 @@ export function NodeIsEnable(node: Node): boolean {
         if (e == "local")
             return Config.LOCAL;
 
+        let argv = process.argv;
+        if (argv.indexOf('--' + e) != -1)
+            return true;
+
         logger.fatal("配置遇到一个不支持的节点开关：{{=it.cond}}@{{=it.id}}", {id: node.id, cond: e});
         return false;
     });
