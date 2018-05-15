@@ -6,3 +6,4 @@ package-lock.json
 tmp
 logs
 cache
+run
