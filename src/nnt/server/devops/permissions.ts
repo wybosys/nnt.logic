@@ -3,6 +3,7 @@ import {Config} from "../../manager/config";
 import {KvRedis, RedisNode} from "../../store/kvredis";
 import {IndexedObject, toJsonObject} from "../../core/kernel";
 import fs = require("fs");
+import {logger} from "../../core/logger";
 
 ;
 
@@ -35,6 +36,9 @@ class _Permissions {
             if (fs.existsSync('/work/run/permission.cfg')) {
                 let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
                 this._id = jsobj['id'];
+            }
+            else {
+                logger.warn("没有获取到permissionid");
             }
         }
         return this._id;
