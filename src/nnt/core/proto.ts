@@ -387,7 +387,7 @@ export function CheckInput(proto: any, params: any): boolean {
     return sta == STATUS_OK;
 }
 
-export function DecodeValue(fp: FieldOption, val: any): any {
+export function DecodeValue(fp: FieldOption, val: any, input = true, output = false): any {
     if (fp.valtype) {
         if (fp.array) {
             let arr = new Array();
@@ -424,7 +424,7 @@ export function DecodeValue(fp: FieldOption, val: any): any {
                         let clz: any = fp.valtype;
                         val.forEach((e: any) => {
                             let t = new clz();
-                            Decode(t, e);
+                            Decode(t, e, input, output);
                             arr.push(t);
                         });
                     }
@@ -467,7 +467,7 @@ export function DecodeValue(fp: FieldOption, val: any): any {
                 for (let ek in val) {
                     let ev = val[ek];
                     let t = new clz();
-                    Decode(t, ev);
+                    Decode(t, ev, input, output);
                     map.set(ek, t);
                 }
             }
@@ -518,14 +518,14 @@ export function DecodeValue(fp: FieldOption, val: any): any {
                         let ev = val[ek];
                         mmap.set(ek, ArrayT.Convert(ev, e => {
                             let t = new clz();
-                            Decode(t, e);
+                            Decode(t, e, input, output);
                             return t;
                         }));
                     }
                     ;
                 }
             }
-            return map;
+            return mmap;
         }
         else if (fp.enum) {
             return toInt(val);
@@ -537,7 +537,7 @@ export function DecodeValue(fp: FieldOption, val: any): any {
                 return val;
             let clz: any = fp.valtype;
             let t = new clz();
-            Decode(t, val);
+            Decode(t, val, input, output);
             return t;
         }
     }
@@ -559,16 +559,20 @@ export function DecodeValue(fp: FieldOption, val: any): any {
     }
 }
 
-// 将数据从参数集写入到模型中的input字段
-export function Decode(mdl: any, params: any) {
+// 将数据从参数集写入到模型中的字段
+export function Decode(mdl: any, params: any, input = true, output = false) {
     let fps = mdl[FP_KEY];
     if (fps == null)
         return;
     for (let key in params) {
         let fp: FieldOption = fps[key];
-        if (fp == null || !fp.input)
+        if (fp == null)
             continue;
-        mdl[key] = DecodeValue(fp, params[key]);
+        if (input && !fp.input)
+            continue;
+        if (output && !fp.output)
+            continue;
+        mdl[key] = DecodeValue(fp, params[key], input, output);
     }
 }
 
