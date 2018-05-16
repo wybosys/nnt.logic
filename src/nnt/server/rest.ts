@@ -23,6 +23,7 @@ import https = require("https");
 import spdy = require("spdy");
 import fs = require("fs");
 import formidable = require("formidable");
+import {DevopsService} from "./devops/service";
 
 export interface RestResponseData {
     contentType: string;
@@ -114,6 +115,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     constructor() {
         super();
         this._routers.register(new RestService());
+        if (!Config.DISTRIBUTION)
+            this._routers.register(new DevopsService());
     }
 
     // 用来构造请求事物的类型
