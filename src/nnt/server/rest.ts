@@ -115,7 +115,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     constructor() {
         super();
         this._routers.register(new RestService());
-        if (!Config.DISTRIBUTION)
+        if (!Config.DEVOPS_RELEASE)
             this._routers.register(new DevopsService());
     }
 
