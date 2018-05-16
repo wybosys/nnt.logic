@@ -1,7 +1,11 @@
 import {Hook, STARTED} from "../../manager/app";
 import {Config} from "../../manager/config";
 import {KvRedis, RedisNode} from "../../store/kvredis";
-import {IndexedObject} from "../../core/kernel";
+import {IndexedObject, toJsonObject} from "../../core/kernel";
+import fs = require("fs");
+
+;
+
 
 class _Permissions {
 
@@ -16,7 +20,15 @@ class _Permissions {
         this._db.open().then(() => {
             this._db.select(REDIS_PERMISSIONIDS);
         });
+
+        // 监听cfg中的id改变
+        fs.watchFile('/work/run/permission.cfg', (cur, prev) => {
+            let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
+            this.id = jsobj['id'];
+        });
     }
+
+    id: string;
 
     locate(permid: string): Promise<IndexedObject> {
         return new Promise<IndexedObject>(resolve => {

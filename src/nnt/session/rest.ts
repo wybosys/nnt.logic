@@ -27,6 +27,8 @@ export class RestSession extends Session {
             let p = [];
             for (let k in params.fields) {
                 let f = params.fields[k];
+                if (typeof f == 'object')
+                    f = toJson(f);
                 p.push(k + "=" + encodeURIComponent(f));
             }
             if (p.length)

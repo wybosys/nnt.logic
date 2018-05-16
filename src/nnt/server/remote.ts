@@ -5,6 +5,7 @@ import {IndexedObject} from "../core/kernel";
 import {Find} from "../manager/servers";
 import {Base} from "../session/model";
 import {RestSession} from "../session/rest";
+import {KEY_PERMISSIONID, Permissions} from "./devops/permissions";
 
 interface RemoteConfig extends Node {
     // 远端服务器地址
@@ -85,6 +86,11 @@ export function Call(): Promise<IndexedObject> {
             logger.fatal("服务类型错误 " + srvid);
             resolve(null);
             return;
+        }
+
+        // 如果是devops，则需要增加服务端授权id
+        if (Permissions) {
+            args[KEY_PERMISSIONID] = Permissions.id;
         }
 
         let m = new RpcModel();
