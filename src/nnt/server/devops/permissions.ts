@@ -24,7 +24,7 @@ class _Permissions {
 
         // 监听cfg中的id改变
         fs.watchFile('/work/run/permission.cfg', (cur, prev) => {
-            let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
+            let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg', "utf8"));
             this._id = jsobj['id'];
         });
     }
@@ -34,7 +34,7 @@ class _Permissions {
     get id(): string {
         if (!this._id) {
             if (fs.existsSync('/work/run/permission.cfg')) {
-                let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
+                let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg', "utf8"));
                 this._id = jsobj['id'];
             }
             else {
