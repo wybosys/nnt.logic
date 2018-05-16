@@ -24,11 +24,21 @@ class _Permissions {
         // 监听cfg中的id改变
         fs.watchFile('/work/run/permission.cfg', (cur, prev) => {
             let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
-            this.id = jsobj['id'];
+            this._id = jsobj['id'];
         });
     }
 
-    id: string;
+    private _id: string;
+
+    get id(): string {
+        if (!this._id) {
+            if (fs.existsSync('/work/run/permission.cfg')) {
+                let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg'));
+                this._id = jsobj['id'];
+            }
+        }
+        return this.id;
+    }
 
     locate(permid: string): Promise<IndexedObject> {
         return new Promise<IndexedObject>(resolve => {
