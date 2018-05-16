@@ -37,7 +37,7 @@ class _Permissions {
                 this._id = jsobj['id'];
             }
         }
-        return this.id;
+        return this._id;
     }
 
     locate(permid: string): Promise<IndexedObject> {
