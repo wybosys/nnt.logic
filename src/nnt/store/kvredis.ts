@@ -172,15 +172,27 @@ export class KvRedis extends AbstractKv {
         });
     }
 
-    autoinc(key: string, cb: (id: number) => void) {
-        this._hdl.incr(key, (err, res: any) => {
-            if (err) {
-                logger.error(err);
-                cb(null);
-                return;
-            }
-            cb(toInt(res[0]));
-        });
+    autoinc(key: string, delta: number, cb: (id: number) => void) {
+        if (delta == 1) {
+            this._hdl.incr(key, (err, res: any) => {
+                if (err) {
+                    logger.error(err);
+                    cb(null);
+                    return;
+                }
+                cb(toInt(res[0]));
+            });
+        }
+        else {
+            this._hdl.incrby(key, delta, (err, res: any) => {
+                if (err) {
+                    logger.error(err);
+                    cb(null);
+                    return;
+                }
+                cb(toInt(res[0]));
+            });
+        }
     }
 
     inc(key: string, delta: number, cb: (id: number) => void) {

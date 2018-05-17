@@ -13,7 +13,7 @@ export abstract class AbstractKv extends AbstractDbms {
     abstract del(key: string, cb: (res: DbExecuteStat) => void): void;
 
     // kv数据库通常没有自增函数，所以需要各个业务类自己实现
-    abstract autoinc(key: string, cb: (id: number) => void): void;
+    abstract autoinc(key: string, delta: number, cb: (id: number) => void): void;
 
     // 增加
     abstract inc(key: string, delta: number, cb: (id: number) => void): void;

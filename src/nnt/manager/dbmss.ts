@@ -423,29 +423,29 @@ export async function Delete<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): P
 }
 
 // 获得数据段的自增id
-export async function AutoInc<T>(clz: TransactionDef<T>, key: string, time?: number): Promise<number> {
+export async function AutoInc<T>(clz: TransactionDef<T>, key: string, delta = 1, time: number = null): Promise<number> {
     let t = new Transaction<T, number>(clz);
     t.nosqlproc = db => {
         // 此处 "." 不能修改
         if (time) {
-            db.autoinc(t.table + "." + key + "." + time, res => {
+            db.autoinc(t.table + "." + key + "." + time, delta, res => {
                 t.resolve(res);
             });
         }
         else {
-            db.autoinc(t.table + "." + key, res => {
+            db.autoinc(t.table + "." + key, delta, res => {
                 t.resolve(res);
             });
         }
     };
     t.kvproc = db => {
         if (time) {
-            db.autoinc(t.table + "." + key + "." + time, res => {
+            db.autoinc(t.table + "." + key + "." + time, delta, res => {
                 t.resolve(res);
             });
         }
         else {
-            db.autoinc(t.table + "." + key, res => {
+            db.autoinc(t.table + "." + key, delta, res => {
                 t.resolve(res);
             });
         }

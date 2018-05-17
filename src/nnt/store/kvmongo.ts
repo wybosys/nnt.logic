@@ -473,7 +473,7 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    autoinc(key: string, cb: (id: number) => void) {
+    autoinc(key: string, delta: number, cb: (id: number) => void) {
         // 使用一个临时的collection纪录每一个page的计数，page参数就变成 collection.field
         let ps = key.split(".");
         let keynm: string;
@@ -498,7 +498,7 @@ export class KvMongo extends AbstractNosql {
             "upsert": true,
             "new": true,
             "update": {
-                $inc: {val: 1}
+                $inc: {val: delta}
             }
         }, (err, res) => {
             cb(res.value.val);
