@@ -233,7 +233,8 @@ export class KvMongo extends AbstractNosql {
             '$match' in cmd ||
             "$project" in cmd ||
             "$sort" in cmd ||
-            "$limit" in cmd
+            "$limit" in cmd ||
+            "$project" in cmd
         ) {
             pipes = [];
             for (let k in cmd) {
