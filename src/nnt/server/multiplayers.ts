@@ -49,6 +49,9 @@ export abstract class Transaction extends BaseTransaction {
     }
 }
 
+export const PREFIX_USER = "user.";
+export const PREFIX_USER_ONLINE = "user.online.";
+
 export class Connector extends BaseConnector {
 
     // 用户标记
@@ -135,6 +138,11 @@ export class Connector extends BaseConnector {
         // 制定了class，遍历所有的监听
         let arr = this._listenings.get(jsobj.c);
         if (arr && arr.length) {
+            if (jsobj.f) {
+                let info = this._modelinfos.get(jsobj.d);
+                if (!this.checkfilter(info.f, jsobj.f))
+                    return;
+            }
             // 转发独立通道
             arr.forEach(e => {
                 let t = {
