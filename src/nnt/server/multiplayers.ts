@@ -2,7 +2,7 @@ import {Connector as BaseConnector, Socket, Transaction as BaseTransaction} from
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {GetObjectClassName} from "../core/core";
-import {IndexedObject, Multimap} from "../core/kernel";
+import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient} from "./mq";
 import {Variant} from "../core/object";
 import {Encode} from "../core/proto";
@@ -98,13 +98,34 @@ export class Connector extends BaseConnector {
         });
     }
 
+    protected checkfilter(l: IndexedObject, r: IndexedObject): boolean {
+        if (!l || !r)
+            return false;
+        let lkeys = Object.keys(l);
+        let rkeys = Object.keys(r);
+        if (lkeys.length != rkeys.length)
+            return false;
+        let fnd = ArrayT.QueryObject(lkeys, e => {
+            let lv = l[e];
+            let rv = r[e];
+            return lv != rv;
+        });
+        return fnd == null;
+    }
+
     protected processData(data: Variant) {
         let jsobj: IMPMessage = <any>data.toJsObj();
-        if (jsobj.i)
+        if (!jsobj || jsobj.i)
             return;
         // 指定了modelid，如果查找到，则直接发送
         if (jsobj.d) {
             if (this._listenings.contains(jsobj.c, jsobj.d)) {
+                // 判断是否符合过滤规则
+                if (jsobj.f) {
+                    let info = this._modelinfos.get(jsobj.d);
+                    if (!this.checkfilter(info.f, jsobj.f))
+                        return;
+                }
                 this.send(data.toBuffer());
             } else {
                 logger.warn("没有找到客户端对modelid的监听");
@@ -114,10 +135,12 @@ export class Connector extends BaseConnector {
         // 制定了class，遍历所有的监听
         let arr = this._listenings.get(jsobj.c);
         if (arr && arr.length) {
+            // 转发独立通道
             arr.forEach(e => {
                 let t = {
                     d: e,
-                    p: jsobj.p
+                    p: jsobj.p,
+                    f: jsobj.f
                 };
                 this.send(new Variant(t).toBuffer());
             });
@@ -152,7 +175,7 @@ export class Connector extends BaseConnector {
         let name = GetObjectClassName(model);
         let inputs = Encode(model);
         this._listenings.push(name, mid);
-        this._modelinfos.set(mid, inputs);
+        this._modelinfos.set(mid, {f: inputs});
         return true;
     }
 
@@ -168,7 +191,7 @@ export class Connector extends BaseConnector {
     // 保存所有listen的modelclazz和cmid的对照表
     private _listenings = new Multimap<string, number>();
     // cmid和输入参数对照
-    private _modelinfos = new Map<number, IndexedObject>();
+    private _modelinfos = new Map<number, { f: IndexedObject }>();
 }
 
 interface MpNode extends Node {
