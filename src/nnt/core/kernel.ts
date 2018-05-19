@@ -680,14 +680,14 @@ export class ArrayT {
         if (!arr || arr.length == 0)
             return null;
         if (rand)
-            return arr[rand.integer(0, arr.length)];
+            return arr[rand.rangei(0, arr.length)];
         return arr[Random.Rangei(0, arr.length)];
     }
 
     static RandomPop<T>(arr: T[], rand?: Random): T {
         if (!arr || arr.length == 0)
             return null;
-        let idx = rand ? rand.integer(0, arr.length) : Random.Rangei(0, arr.length);
+        let idx = rand ? rand.rangei(0, arr.length) : Random.Rangei(0, arr.length);
         let r = arr[idx];
         this.RemoveObjectAtIndex(arr, idx);
         return r;
