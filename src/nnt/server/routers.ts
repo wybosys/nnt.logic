@@ -102,11 +102,6 @@ export class Routers {
         // 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
         trans.status = STATUS.OK;
         func.call(r, trans);
-        if (trans.status == STATUS.OK && trans.async()) {
-            // 异步模式下，需要先respond，计算的结果再通过其他渠道返回给客户端
-            trans.status = STATUS.DELAY_RESPOND;
-            trans.submit();
-        }
     }
 
     async listen(trans: Transaction) {
