@@ -5,8 +5,7 @@ import {GetObjectClassName} from "../core/core";
 import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient} from "./mq";
 import {Variant} from "../core/object";
-import {Encode} from "../core/proto";
-import {Output} from "../store/proto";
+import {Encode, Output} from "../core/proto";
 
 export interface IMPMessage {
 
@@ -139,19 +138,28 @@ export class Connector extends BaseConnector {
         let arr = this._listenings.get(jsobj.c);
         if (arr && arr.length) {
             if (jsobj.f) {
-                let info = this._modelinfos.get(jsobj.d);
-                if (!this.checkfilter(info.f, jsobj.f))
-                    return;
+                arr.forEach(e => {
+                    let info = this._modelinfos.get(e);
+                    if (!this.checkfilter(info.f, jsobj.f))
+                        return;
+                    let t = {
+                        d: e,
+                        p: jsobj.p
+                    };
+                    this.send(new Variant(t).toBuffer());
+                });
             }
-            // 转发独立通道
-            arr.forEach(e => {
-                let t = {
-                    d: e,
-                    p: jsobj.p,
-                    f: jsobj.f
-                };
-                this.send(new Variant(t).toBuffer());
-            });
+            else {
+                // 转发独立通道
+                arr.forEach(e => {
+                    let t = {
+                        d: e,
+                        p: jsobj.p,
+                        f: jsobj.f
+                    };
+                    this.send(new Variant(t).toBuffer());
+                });
+            }
         }
         else {
             logger.warn("客户端没有对model的监听");
