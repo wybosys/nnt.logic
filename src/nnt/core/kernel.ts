@@ -694,9 +694,7 @@ export class ArrayT {
     }
 
     static Randoms<T>(arr: T[], len: number, rand?: Random): T[] {
-        if (arr.length == 0 || arr.length < len)
-            return [];
-        if (arr.length == len)
+        if (arr.length <= len)
             return arr;
         let r = new Array();
         while (r.length != len) {
