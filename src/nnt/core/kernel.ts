@@ -2,6 +2,7 @@ import fs = require("fs");
 import dotpl = require("dot");
 import async = require("async");
 import G = require("generatorics");
+import seedrandom = require("seed-random");
 import {logger} from "./logger";
 import {vsprintf} from "sprintf-js";
 
@@ -551,7 +552,7 @@ export class ArrayT {
         return true;
     }
 
-    static Sum<T>(arr: T[], proc: (e: T, idx: number) => number): number {
+    static Sum<T>(arr: T[], proc: (e: T, idx: number) => number = (e: any) => e): number {
         let r = 0;
         arr.forEach((e, idx) => {
             let v = proc(e, idx);
@@ -565,7 +566,7 @@ export class ArrayT {
         return r;
     }
 
-    static Max<T, V>(arr: T[], proc: (e: T, idx: number) => V): T {
+    static Max<T, V>(arr: T[], proc: (e: T, idx: number) => V = (e: any) => e): T {
         let cur: V;
         let obj: T;
         arr.forEach((e, idx) => {
@@ -583,7 +584,7 @@ export class ArrayT {
         return obj;
     }
 
-    static Min<T, V>(arr: T[], proc: (e: T, idx: number) => V): T {
+    static Min<T, V>(arr: T[], proc: (e: T, idx: number) => V = (e: any) => e): T {
         let cur: V;
         let obj: T;
         arr.forEach((e, idx) => {
@@ -675,29 +676,31 @@ export class ArrayT {
         return r;
     }
 
-    static Random<T>(arr: T[]): T {
+    static Random<T>(arr: T[], rand?: Random): T {
         if (!arr || arr.length == 0)
             return null;
+        if (rand)
+            return arr[rand.integer(0, arr.length)];
         return arr[Random.Rangei(0, arr.length)];
     }
 
-    static RandomPop<T>(arr: T[]): T {
+    static RandomPop<T>(arr: T[], rand?: Random): T {
         if (!arr || arr.length == 0)
             return null;
-        let idx = Random.Rangei(0, arr.length);
+        let idx = rand ? rand.integer(0, arr.length) : Random.Rangei(0, arr.length);
         let r = arr[idx];
         this.RemoveObjectAtIndex(arr, idx);
         return r;
     }
 
-    static Randoms<T>(arr: T[], len: number): T[] {
+    static Randoms<T>(arr: T[], len: number, rand?: Random): T[] {
         if (arr.length == 0 || arr.length < len)
             return [];
         if (arr.length == len)
             return arr;
         let r = new Array();
         while (r.length != len) {
-            let t = ArrayT.Random(arr);
+            let t = ArrayT.Random(arr, rand);
             if (r.indexOf(t) == -1)
                 r.push(t);
         }
@@ -1376,6 +1379,51 @@ export class Range<T> {
 
 export class Random {
 
+    constructor(sd?: string) {
+        this._seed = sd;
+    }
+
+    valueOf(): number {
+        return this.value;
+    }
+
+    get value(): number {
+        if (!this._hdl) {
+            this._hdl = seedrandom(this._seed, {entropy: this._entropy});
+        }
+        return this._hdl();
+    }
+
+    toString(): string {
+        return this.value.toString();
+    }
+
+    get entropy(): boolean {
+        return this._entropy;
+    }
+
+    set entropy(v: boolean) {
+        if (this._entropy == v)
+            return;
+        this._hdl = null;
+        this._entropy = v;
+    }
+
+    get seed(): string {
+        return this._seed;
+    }
+
+    set seed(s: string) {
+        if (this._seed == s)
+            return;
+        this._hdl = null;
+        this._seed = s;
+    }
+
+    private _seed: string;
+    private _hdl: any;
+    private _entropy: boolean;
+
     static Rangef(from: number, to: number): number {
         return Math.random() * (to - from) + from;
     }
@@ -1385,6 +1433,16 @@ export class Random {
         if (close)
             return Math.round(Random.Rangef(from, to));
         return Math.floor(Random.Rangef(from, to));
+    }
+
+    float(from: number, to: number): number {
+        return this.value * (to - from) + from;
+    }
+
+    integer(from: number, to: number, close = false): number {
+        if (close)
+            return Math.round(this.float(from, to));
+        return Math.floor(this.float(from, to));
     }
 }
 
