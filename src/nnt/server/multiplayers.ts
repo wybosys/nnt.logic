@@ -5,11 +5,16 @@ import {GetObjectClassName} from "../core/core";
 import {IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient} from "./mq";
 import {Variant} from "../core/object";
+import {Encode} from "../core/proto";
+import {Output} from "../store/proto";
 
 export interface IMPMessage {
 
     // 用户的标识
     u: string;
+
+    // 条件，对于model，就是所有input的集合，服务端发消息时会严格比对，一样后才发送
+    f?: IndexedObject;
 
     // model的类名
     c: string;
@@ -29,6 +34,19 @@ export abstract class Transaction extends BaseTransaction {
 
     // 用户标记
     abstract userIdentifier(): string;
+
+    // 打包model到variant
+    static Encode(model: Object): Variant {
+        return new Variant({
+            c: GetObjectClassName(model),
+            p: Output(model),
+            f: Encode(model)
+        });
+    }
+
+    encode(model?: Object): Variant {
+        return Transaction.Encode(model ? model : this.model);
+    }
 }
 
 export class Connector extends BaseConnector {
@@ -121,20 +139,36 @@ export class Connector extends BaseConnector {
             this._mqB.close();
             this._mqB = null;
         }
+
+        this._listenings.clear();
+        this._modelinfos.clear();
     }
 
-    listen(model: any, mid: number) {
+    listen(model: any, mid: number): boolean {
+        // 已经监听
+        if (this._modelinfos.has(mid))
+            return false;
+
         let name = GetObjectClassName(model);
+        let inputs = Encode(model);
         this._listenings.push(name, mid);
+        this._modelinfos.set(mid, inputs);
+        return true;
     }
 
-    unlisten(model: any, mid: number) {
+    unlisten(model: any, mid: number): boolean {
+        if (!this._modelinfos.has(mid))
+            return false;
         let name = GetObjectClassName(model);
         this._listenings.pop(name, mid);
+        this._modelinfos.delete(mid);
+        return true;
     }
 
     // 保存所有listen的modelclazz和cmid的对照表
     private _listenings = new Multimap<string, number>();
+    // cmid和输入参数对照
+    private _modelinfos = new Map<number, IndexedObject>();
 }
 
 interface MpNode extends Node {
