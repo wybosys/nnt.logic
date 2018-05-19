@@ -1435,14 +1435,14 @@ export class Random {
         return Math.floor(Random.Rangef(from, to));
     }
 
-    float(from: number, to: number): number {
+    rangef(from: number, to: number): number {
         return this.value * (to - from) + from;
     }
 
-    integer(from: number, to: number, close = false): number {
+    rangei(from: number, to: number, close = false): number {
         if (close)
-            return Math.round(this.float(from, to));
-        return Math.floor(this.float(from, to));
+            return Math.round(this.rangef(from, to));
+        return Math.floor(this.rangef(from, to));
     }
 }
 
