@@ -504,9 +504,9 @@ export class KeysMap<V> {
 
 export class ArrayT {
 
-    static Allocate<T>(len: number, obj: () => T): T[] {
+    static Allocate<T>(len: number, obj: (idx?: number) => T): T[] {
         let r = new Array<T>();
-        while (len--) {
+        for (let i = 0; i < len; ++i) {
             r.push(obj());
         }
         return r;
