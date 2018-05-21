@@ -695,7 +695,7 @@ export class ArrayT {
 
     static Randoms<T>(arr: T[], len: number, rand?: Random): T[] {
         if (arr.length <= len)
-            return arr;
+            return arr.concat();
         let r = new Array();
         while (r.length != len) {
             let t = ArrayT.Random(arr, rand);
