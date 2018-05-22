@@ -1,8 +1,9 @@
-import {AbstractLogger, Filter} from "../logger/logger"
+import {AbstractLogger, Filter, LoggerNode} from "../logger/logger"
 import {Node, NodeIsEnable} from "../config/config"
 import {logger} from "../core/logger"
 import {App} from "./app";
 import {SyncArray, template} from "../core/kernel";
+import {Config} from "./config";
 
 let loggers = new Array<AbstractLogger>();
 
@@ -93,6 +94,16 @@ export async function Start(cfg: Node[]): Promise<void> {
                 loggers.push(t);
             }
         });
+
+        // 额外如果位于devops环境中，需要自动初始化devops的日志
+        if (Config.DEVELOP) {
+            let t: AbstractLogger = App.shared().instanceEntry("nnt.logger.Log4devops");
+            t.config(<LoggerNode>{
+                id: "::devops::log",
+                filter: "all"
+            });
+            loggers.push(t);
+        }
     }
     else {
         await Stop();

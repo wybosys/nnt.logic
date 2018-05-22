@@ -29,7 +29,7 @@ export class Filter {
     }
 }
 
-interface LoggerNode extends Node {
+export interface LoggerNode extends Node {
     filter: string;
 }
 

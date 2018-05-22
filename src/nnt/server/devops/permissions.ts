@@ -5,9 +5,6 @@ import {IndexedObject, toJsonObject} from "../../core/kernel";
 import fs = require("fs");
 import {logger} from "../../core/logger";
 
-;
-
-
 class _Permissions {
 
     constructor() {
