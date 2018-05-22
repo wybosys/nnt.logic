@@ -99,7 +99,7 @@ export async function Start(cfg: Node[]): Promise<void> {
         if (Config.DEVELOP) {
             let t: AbstractLogger = App.shared().instanceEntry("nnt.logger.Log4devops");
             t.config(<LoggerNode>{
-                id: "::devops::log",
+                id: "devops-logs",
                 filter: "all"
             });
             loggers.push(t);

@@ -31,6 +31,7 @@ export class Log4devops extends AbstractLogger {
         });
         hdl.on('ready', () => {
             this._hdl = hdl;
+            console.log("连接 devops-logs@redis");
         });
     }
 
