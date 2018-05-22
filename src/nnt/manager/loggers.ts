@@ -96,7 +96,7 @@ export async function Start(cfg: Node[]): Promise<void> {
         });
 
         // 额外如果位于devops环境中，需要自动初始化devops的日志
-        if (Config.DEVELOP) {
+        if (Config.DEVOPS) {
             let t: AbstractLogger = App.shared().instanceEntry("nnt.logger.Log4devops");
             t.config(<LoggerNode>{
                 id: "devops-logs",
