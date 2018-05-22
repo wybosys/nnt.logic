@@ -275,12 +275,14 @@ export class STATUS {
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
 
+    static SOCK_WRONG_PORTOCOL  = -860; // SOCKET请求了错误的通讯协议
+    static SOCK_AUTH_TIMEOUT = -859; // 因为连接后长期没有登录，所以服务端主动断开了链接
+    static SOCK_SERVER_CLOSED = -858; // 服务器关闭
+
     static THIRD_FAILED = -5; // 第三方出错
     static MULTIDEVICE = -4; // 多端登陆
     static HFDENY = -3; // 高频调用被拒绝（之前的访问还没有结束) high frequency deny
     static TIMEOUT = -2; // 超时
     static FAILED = -1; // 一般失败
     static OK = 0; // 成功
-    static DELAY_RESPOND = 10000; // 延迟响应
-    static REST_NEED_RELISTEN = 10001; // rest访问需要重新启动监听
 }

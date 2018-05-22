@@ -92,7 +92,7 @@ export class Connector {
     }
 
     close(retcode: number, msg?: string) {
-        this._hdl.close(1000, toJson({code: retcode, message: msg})); // code必须是websocket支持的，1000代表普通关闭
+        Connector.CloseHandle(this._hdl, retcode, msg);
         this._hdl = null;
     }
 
@@ -104,6 +104,18 @@ export class Connector {
     authed: boolean = false;
 
     private _hdl: ws;
+
+    static CloseHandle(hdl: ws, code?: number, msg?: string) {
+        if (code) {
+            hdl.close(1000, toJson({
+                code: code,
+                message: msg
+            }));
+        }
+        else {
+            hdl.close(1000);
+        }
+    }
 }
 
 function BindHdlToConnector(cnt: Connector, hdl: ws) {
@@ -209,7 +221,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             let dec = FindDecoder(req.url);
             if (!dec) {
                 logger.log("{{=it.addr}} 请求了错误的连接格式 {{=it.url}}", {addr: addr, url: req.url});
-                io.close();
+                Connector.CloseHandle(io, STATUS.SOCK_WRONG_PORTOCOL);
                 return;
             }
 
@@ -242,7 +254,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             // 如果长期不登录，则断开连接
             let tmr = Delay(TIMEOUT, () => {
                 logger.log("{{=it.addr}} 断开无效连接", {addr: addr});
-                io.close();
+                Connector.CloseHandle(io, STATUS.SOCK_AUTH_TIMEOUT);
             });
             ObjectT.Set(io, IO_TIMEOUT, tmr);
         });
