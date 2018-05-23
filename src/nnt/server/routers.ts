@@ -4,8 +4,6 @@ import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {MapT} from "../core/kernel";
 import {Config} from "../manager/config";
-import {KvRedis} from "../store/kvredis";
-import {Find} from "../manager/dbmss";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 
 export interface IRouterable {
@@ -165,9 +163,11 @@ export class Routers {
         // devops环境下才进行权限判定
         if (Config.LOCAL)
             return true;
+
         // 允许客户端访的将无法进行服务端权限判定
         if (Config.CLIENT_ALLOW)
             return true;
+
         // 和php等一样的规则
         if (Config.DEVOPS_DEVELOP) {
             // 如果访问的是api.doc，则不进行判定
@@ -177,9 +177,15 @@ export class Routers {
             if (skip)
                 return true;
         }
+
+        let clientip = trans.clientAddress;
+        if (!Permissions.allowClient(clientip))
+            return false;
+
         let permid = trans.params[KEY_PERMISSIONID];
         if (!permid)
             return false;
+
         let cfg = await Permissions.locate(permid);
         return cfg != null;
     }

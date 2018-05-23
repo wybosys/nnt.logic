@@ -1,9 +1,10 @@
 import {Hook, STARTED} from "../../manager/app";
 import {Config} from "../../manager/config";
 import {KvRedis, RedisNode} from "../../store/kvredis";
-import {IndexedObject, toJsonObject} from "../../core/kernel";
-import fs = require("fs");
+import {ArrayT, IndexedObject, toJsonObject} from "../../core/kernel";
 import {logger} from "../../core/logger";
+import fs = require("fs");
+import mask = require("netmask");
 
 class _Permissions {
 
@@ -24,9 +25,20 @@ class _Permissions {
             let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg', "utf8"));
             this._id = jsobj['id'];
         });
+
+        // 初始化配置
+        this._allow = ArrayT.Convert(Config.ACCESS_ALLOW, e => {
+            return new mask.Netmask(e);
+        });
+
+        this._deny = ArrayT.Convert(Config.ACCESS_DENY, e => {
+            return new mask.Netmask(e);
+        });
     }
 
     private _id: string;
+    private _allow: mask.Netmask[];
+    private _deny: mask.Netmask[];
 
     get id(): string {
         if (!this._id) {
@@ -47,6 +59,26 @@ class _Permissions {
                 resolve(res ? res.toJsObj() : null);
             });
         });
+    }
+
+    allowClient(clientip: string): boolean {
+        if (this._allow.length) {
+            let fnd = ArrayT.QueryObject(this._allow, e => {
+                return e.contains(clientip);
+            });
+            if (!fnd)
+                return false;
+        }
+
+        if (this._deny.length) {
+            let fnd = ArrayT.QueryObject(this._deny, e => {
+                return e.contains(clientip);
+            });
+            if (fnd)
+                return false;
+        }
+
+        return true;
     }
 
     private _db: KvRedis;
