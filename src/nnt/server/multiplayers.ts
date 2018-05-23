@@ -261,6 +261,6 @@ export abstract class Multiplayers extends Socket {
         if (listen)
             connector.listen(model, trans.modelId());
         else
-            connector.listen(model, trans.modelId());
+            connector.unlisten(model, trans.modelId());
     }
 }
