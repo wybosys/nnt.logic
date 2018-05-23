@@ -15,6 +15,7 @@ export const debug = "debug";
 export const develop = "develop";
 export const local = "local";
 export const devops = "devops";
+export const devopsdevelop = "devopsdevelop";
 export const devopsrelease = "devopsrelease";
 
 // 打开频控
@@ -36,6 +37,9 @@ export interface ActionProto {
 
     // 限制devops可用
     devops?: boolean;
+
+    // 限制devopsdevelop可用
+    devopsdevelop?: boolean;
 
     // 限制devopsrelease可用
     devopsrelease?: boolean;
@@ -111,6 +115,10 @@ export function action<T>(model: Class<T>, options?: string[], comment?: string)
             }
             if (!pass && ap.devops) {
                 if (Config.DEVOPS)
+                    pass = true;
+            }
+            if (!pass && ap.devopsdevelop) {
+                if (Config.DEVOPS_DEVELOP)
                     pass = true;
             }
             if (!pass && ap.devopsrelease) {
