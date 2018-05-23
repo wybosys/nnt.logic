@@ -14,12 +14,16 @@ export class Json implements IRender {
             if (opt.raw)
                 return asString(trans.model);
             r = Output(trans.model);
+            if (trans.model && r === null)
+                r = {};
         }
         else {
             r = {
                 code: trans.status,
                 data: (opt && opt.raw) ? trans.model : Output(trans.model)
             };
+            if (trans.model && r.data === null)
+                r.data = {};
         }
         let cmid = trans.params["_cmid"];
         if (cmid != null)
