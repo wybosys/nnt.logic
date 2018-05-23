@@ -1,5 +1,3 @@
-import {logger} from "../core/logger";
-
 export module Config {
 
     // DEBUG模式
@@ -43,6 +41,12 @@ export module Config {
 
     // 是否允许服务端访问
     export let SERVER_ALLOW: boolean = true;
+
+    // 白名单
+    export let ACCESS_ALLOW: string[] = [];
+
+    // 黑名单
+    export let ACCESS_DENY: string[] = [];
 
     // 默认的https证书配置
     export let HTTPS: boolean;

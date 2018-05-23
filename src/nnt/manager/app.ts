@@ -124,6 +124,10 @@ export class App {
                 Config.CLIENT_ALLOW = cfg.client;
             if (cfg.server != null)
                 Config.SERVER_ALLOW = cfg.server;
+            if (cfg.allow != null)
+                Config.ACCESS_ALLOW = cfg.allow;
+            if (cfg.deny != null)
+                Config.ACCESS_DENY = cfg.deny;
         }
 
         if (!fs.existsSync(Config.CACHE))
