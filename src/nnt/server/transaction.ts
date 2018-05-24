@@ -107,6 +107,9 @@ export abstract class Transaction {
     // 需要打开频控
     frqctl: boolean;
 
+    // 是否暴露接口（通常只有登录会设置为true)
+    expose: boolean;
+
     // 此次的时间
     time = DateTime.Now();
 
@@ -117,6 +120,7 @@ export abstract class Transaction {
         if (!ap)
             return STATUS.ACTION_NOT_FOUND;
         this.frqctl = ap.frqctl;
+        this.expose = ap.expose;
 
         let clz = ap.clazz;
 

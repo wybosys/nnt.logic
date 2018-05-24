@@ -14,6 +14,7 @@ export interface IRouter {
 export const debug = "debug";
 export const develop = "develop";
 export const local = "local";
+export const expose = "expose";
 export const devops = "devops";
 export const devopsdevelop = "devopsdevelop";
 export const devopsrelease = "devopsrelease";
@@ -49,6 +50,9 @@ export interface ActionProto {
 
     // 打开频控
     frqctl?: boolean;
+
+    // 暴露接口
+    expose?: boolean;
 }
 
 let AP_KEY = "__actionproto";
