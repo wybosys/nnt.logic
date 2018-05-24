@@ -65,7 +65,7 @@ export function Call(): Promise<IndexedObject> {
                 m.url = arguments[0];
                 m.additionParams = args;
                 RestSession.Get(m).then(m => {
-                    resolve(m.data);
+                    resolve(m ? m.data : null);
                 });
             });
         }
