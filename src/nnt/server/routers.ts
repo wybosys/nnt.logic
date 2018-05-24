@@ -75,7 +75,8 @@ export class Routers {
         if (ac && ac.ignore) {
             // 不做权限判断
         }
-        else {
+        else if (!trans.expose) {
+            // 访问权限判断
             if (trans.needAuth()) {
                 if (!trans.auth()) {
                     trans.status = STATUS.NEED_AUTH;
