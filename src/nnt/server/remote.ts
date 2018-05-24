@@ -53,8 +53,17 @@ export function Call(): Promise<IndexedObject> {
     switch (arguments.length) {
         case 1: {
             return new Promise<IndexedObject>(resolve => {
+                // 直接调用
+                args = [];
+
+                // 如果是devops，则需要增加服务端授权id
+                if (Permissions) {
+                    args[KEY_PERMISSIONID] = Permissions.id;
+                }
+
                 let m = new RpcModel();
                 m.url = arguments[0];
+                m.additionParams = args;
                 RestSession.Get(m).then(m => {
                     resolve(m.data);
                 });
