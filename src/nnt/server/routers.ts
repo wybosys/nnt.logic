@@ -168,11 +168,12 @@ export class Routers {
         if (Config.CLIENT_ALLOW)
             return true;
 
+        // 如果访问的是api.doc，则不进行判定
+        if (trans.action == 'api.doc')
+            return true;
+
         // 和php等一样的规则
         if (Config.DEVOPS_DEVELOP) {
-            // 如果访问的是api.doc，则不进行判定
-            if (trans.action == 'api.doc')
-                return true;
             let skip = trans.params[KEY_SKIPPERMISSION];
             if (skip)
                 return true;
