@@ -103,6 +103,17 @@ export class KvRedis extends AbstractKv {
         });
     }
 
+    getraw(key: string, cb: (res: string) => void) {
+        this._hdl.get(key, (err: Error, res: any) => {
+            if (err) {
+                logger.error(err);
+                cb(null);
+                return;
+            }
+            cb(res);
+        });
+    }
+
     set(key: string, val: Variant, cb: (res: boolean) => void) {
         // 判断val是不是store，如果是的话，提取key，分别生成对照
         // 否则直接设置字段
@@ -115,6 +126,17 @@ export class KvRedis extends AbstractKv {
         else {
             this.doSet(key, jsstr, null, cb);
         }
+    }
+
+    setraw(key: string, val: string, cb: (res: boolean) => void) {
+        this._hdl.set(key, val, (err, res) => {
+            if (err) {
+                logger.error(err);
+                cb(false);
+                return;
+            }
+            cb(true);
+        });
     }
 
     protected doSet(key: string, val: string, ts: TableSetting, cb: (res: boolean) => void) {
@@ -143,6 +165,18 @@ export class KvRedis extends AbstractKv {
         else {
             this.doGetSet(key, jsstr, null, cb);
         }
+    }
+
+    getsetraw(key: string, val: string, cb: (pre: string) => void) {
+        this._hdl.getset(key, val, (err, res) => {
+            if (err) {
+                logger.error(err);
+                cb(null);
+                return;
+            }
+
+            cb(res);
+        });
     }
 
     protected doGetSet(key: string, val: string, ts: TableSetting, cb: (res: IndexedObject) => void) {

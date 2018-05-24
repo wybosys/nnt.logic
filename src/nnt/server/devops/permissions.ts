@@ -55,8 +55,8 @@ class _Permissions {
 
     locate(permid: string): Promise<IndexedObject> {
         return new Promise<IndexedObject>(resolve => {
-            this._db.get(permid, res => {
-                resolve(res ? res.toJsObj() : null);
+            this._db.getraw(permid, res => {
+                resolve(toJsonObject(res));
             });
         });
     }
