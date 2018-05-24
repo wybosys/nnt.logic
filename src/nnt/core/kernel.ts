@@ -507,7 +507,7 @@ export class ArrayT {
     static Allocate<T>(len: number, obj: (idx?: number) => T): T[] {
         let r = new Array<T>();
         for (let i = 0; i < len; ++i) {
-            r.push(obj());
+            r.push(obj(i));
         }
         return r;
     }
