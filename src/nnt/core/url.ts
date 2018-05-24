@@ -60,6 +60,8 @@ export function pathd(): (target: Object, key: string) => void {
 
 // 自动解码SID，简化工作量
 export function SmartDecodeSessionID(sid: string): string {
+    if (!sid)
+        return sid;
     if (sid.indexOf('%') == -1)
         return sid;
     return decodeURIComponent(sid);
