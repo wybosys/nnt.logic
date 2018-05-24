@@ -45,13 +45,6 @@ export class Routers {
     async process(trans: Transaction) {
         let ac = trans.ace;
 
-        // 检查devops
-        if (!await this.devopscheck(trans)) {
-            trans.status = STATUS.PERMISSIO_FAILED;
-            trans.submit();
-            return;
-        }
-
         // 查找router
         let r = this._routers.get(trans.router);
         if (r == null) {
@@ -83,10 +76,20 @@ export class Routers {
             // 不做权限判断
         }
         else {
-            if (trans.needAuth() && !trans.auth()) {
-                trans.status = STATUS.NEED_AUTH;
-                trans.submit();
-                return;
+            if (trans.needAuth()) {
+                if (!trans.auth()) {
+                    trans.status = STATUS.NEED_AUTH;
+                    trans.submit();
+                    return;
+                }
+            }
+            else {
+                // 检查devops
+                if (!await this.devopscheck(trans)) {
+                    trans.status = STATUS.PERMISSIO_FAILED;
+                    trans.submit();
+                    return;
+                }
             }
         }
 
@@ -103,12 +106,6 @@ export class Routers {
     }
 
     async listen(trans: Transaction) {
-        if (!await this.devopscheck(trans)) {
-            trans.status = STATUS.PERMISSIO_FAILED;
-            trans.submit();
-            return;
-        }
-
         trans.timeout(-1);
 
         // 查找router
@@ -131,12 +128,6 @@ export class Routers {
     }
 
     async unlisten(trans: Transaction) {
-        if (!await this.devopscheck(trans)) {
-            trans.status = STATUS.PERMISSIO_FAILED;
-            trans.submit();
-            return;
-        }
-
         trans.timeout(-1);
 
         // 查找router
