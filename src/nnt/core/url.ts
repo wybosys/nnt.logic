@@ -1,6 +1,7 @@
-import process = require("process")
-import {logger} from "./logger";
+import process = require("process");
 import ph = require("path");
+import {logger} from "./logger";
+import {ArrayT} from "./kernel";
 
 // 当前的运行目录
 let ROOT = ph.resolve('/');
@@ -55,6 +56,13 @@ export function pathd(): (target: Object, key: string) => void {
             }
         });
     };
+}
+
+// 自动解码SID，简化工作量
+export function SmartDecodeSessionID(sid: string): string {
+    if (sid.indexOf('%') == -1)
+        return sid;
+    return decodeURIComponent(sid);
 }
 
 // 注册普通的url请求
