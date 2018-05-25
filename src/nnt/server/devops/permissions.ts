@@ -10,14 +10,15 @@ class _Permissions {
 
     constructor() {
         // 连接devops数据库
-        this._db = new KvRedis();
-        this._db.config(<RedisNode>{
+        let db = new KvRedis();
+        db.config(<RedisNode>{
             id: "devops-redis",
             entry: "nnt.store.KvRedis",
             host: 'localhost:26379'
         });
-        this._db.open().then(() => {
-            this._db.select(REDIS_PERMISSIONIDS);
+        db.open().then(() => {
+            db.select(REDIS_PERMISSIONIDS);
+            this._db = db;
         });
 
         // 监听cfg中的id改变
