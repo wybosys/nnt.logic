@@ -394,10 +394,15 @@ export async function UpdateOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t)
     let t = new Transaction<T, T>(clz);
     t.nosqlproc = db => {
         db.updateone(t.table, iid, <NosqlCmdType>cmd, res => {
-            let m = t.produce(res);
-            SetInnerId(m, db.innerId(res));
-            UpdateData(m);
-            t.resolve(m);
+            if (res == null) {
+                t.resolve(null);
+            }
+            else {
+                let m = t.produce(res);
+                SetInnerId(m, db.innerId(res));
+                UpdateData(m);
+                t.resolve(m);
+            }
         });
     };
     return t.run();
