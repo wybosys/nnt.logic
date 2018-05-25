@@ -172,14 +172,23 @@ export class Routers {
         }
 
         let clientip = trans.clientAddress;
-        if (!Permissions.allowClient(clientip))
+        if (!Permissions.allowClient(clientip)) {
+            logger.log("设置为禁止 " + clientip + " 访问服务");
             return false;
+        }
 
         let permid = trans.params[KEY_PERMISSIONID];
-        if (!permid)
+        if (!permid) {
+            logger.log("调用接口没有传递 permissionid");
             return false;
+        }
 
         let cfg = await Permissions.locate(permid);
-        return cfg != null;
+        if (cfg == null) {
+            logger.log("permission验证失败");
+            return false;
+        }
+
+        return true;
     }
 }
