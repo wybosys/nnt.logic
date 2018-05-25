@@ -1,5 +1,5 @@
 import {DOMAIN_GROUPS, DOMAIN_ROOMS, DOMAIN_USERS, DOMAIN_USERS_ONLINE, IImCallback, Im, SUPPORT_DOMAINS} from "../im";
-import {Insert, QueryAll, UpdateAll} from "../../manager/dbmss";
+import {Insert, Modify, Query} from "../../manager/dbmss";
 import {auth, Decode, input, model, string} from "../../core/proto";
 import {colinteger, GetInnerId, Output, table} from "../../store/proto";
 import {logger} from "../../core/logger";
@@ -159,7 +159,7 @@ export class ImService implements IRouter {
             return;
         }
         // 过滤可用的消息
-        let arr = await QueryAll(Message, {
+        let arr = await Query(Message, {
             "toi.user": m.toi.user, "status": ImMessageStatus.UNREADED
         });
         // 设置成已读
@@ -167,7 +167,7 @@ export class ImService implements IRouter {
             let ids = ArrayT.Convert(arr, e => {
                 return GetInnerId(e);
             });
-            UpdateAll(Message, null, [
+            Modify(Message, [
                 {_id: {$in: ids}},
                 {$set: {"status": ImMessageStatus.READED}}
             ]);

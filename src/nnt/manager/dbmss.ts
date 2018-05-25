@@ -228,48 +228,8 @@ export async function Count<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<numb
     return t.run();
 }
 
-// id 的定义格式为 <dbid> . <其他，nosql的时候为collection的名称, kv的时候为key>
-// 获得一个
-export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T> {
-    let t = new Transaction<T, T>(clz);
-    t.rdbproc = db => {
-        let q: RdbCmdType;
-        if (cmd instanceof Array)
-            q = [<string>cmd[0], cmd[1]];
-        else
-            q = [<string>cmd, null];
-        db.query(q, res => {
-            if (res == null || !res.length)
-                t.resolve(null);
-            else if (res.length > 1)
-                t.resolve(null); //获取一个，不能有多个返回的情况
-            else {
-                let m = t.produce(res[0]);
-                UpdateData(m);
-                t.resolve(m);
-            }
-        });
-    };
-    t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, 1, res => {
-            if (res == null || !res.length)
-                t.resolve(null);
-            else if (res.length > 1)
-                t.resolve(null);
-            else {
-                // 使用db的decode函数重建模型, core和db中的Decode遵循的规则是完全不一样的
-                let m = t.produce(res[0]);
-                SetInnerId(m, db.innerId(res[0]));
-                UpdateData(m);
-                t.resolve(m);
-            }
-        });
-    };
-    return t.run();
-}
-
 // 获得一组数据
-export async function QueryAll<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: number): Promise<T[]> {
+export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: number): Promise<T[]> {
     let t = new Transaction<T, T[]>(clz);
     t.rdbproc = db => {
         let q: RdbCmdType;
@@ -305,6 +265,46 @@ export async function QueryAll<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: nu
                     rcds.push(m);
                 });
                 t.resolve(rcds);
+            }
+        });
+    };
+    return t.run();
+}
+
+// id 的定义格式为 <dbid> . <其他，nosql的时候为collection的名称, kv的时候为key>
+// 获得一个
+export async function QueryOne<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T> {
+    let t = new Transaction<T, T>(clz);
+    t.rdbproc = db => {
+        let q: RdbCmdType;
+        if (cmd instanceof Array)
+            q = [<string>cmd[0], cmd[1]];
+        else
+            q = [<string>cmd, null];
+        db.query(q, res => {
+            if (res == null || !res.length)
+                t.resolve(null);
+            else if (res.length > 1)
+                t.resolve(null); //获取一个，不能有多个返回的情况
+            else {
+                let m = t.produce(res[0]);
+                UpdateData(m);
+                t.resolve(m);
+            }
+        });
+    };
+    t.nosqlproc = db => {
+        db.query(t.table, <Object>cmd, 1, res => {
+            if (res == null || !res.length)
+                t.resolve(null);
+            else if (res.length > 1)
+                t.resolve(null);
+            else {
+                // 使用db的decode函数重建模型, core和db中的Decode遵循的规则是完全不一样的
+                let m = t.produce(res[0]);
+                SetInnerId(m, db.innerId(res[0]));
+                UpdateData(m);
+                t.resolve(m);
             }
         });
     };
@@ -347,52 +347,64 @@ export async function Insert<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T> 
     return t.run();
 }
 
-// 更新
-export async function Update<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<T> {
-    let t = new Transaction<T, T>(clz);
-    t.rdbproc = db => {
-        let q: RdbCmdType;
-        if (cmd instanceof Array)
-            q = [<string>cmd[0], cmd[1]];
-        else
-            q = [<string>cmd, null];
-        db.query(q, res => {
-            if (res == null)
-                t.resolve(null);
-            else {
-                let m = t.produce(res);
-                UpdateData(m);
-                t.resolve(m);
-            }
-        });
-    };
-    t.nosqlproc = db => {
-        db.qupdate(t.table, iid, <NosqlCmdType>cmd, res => {
-            if (res == null)
-                t.resolve(null);
-            else {
-                let m = t.produce(res);
-                SetInnerId(m, db.innerId(res));
-                UpdateData(m);
-                t.resolve(m);
-            }
-        });
-    };
-    return t.run();
-}
-
-export async function UpdateAll<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<DbExecuteStat> {
+// 修改
+export async function Modify<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<DbExecuteStat> {
     let t = new Transaction<T, DbExecuteStat>(clz);
     t.nosqlproc = db => {
-        db.update(t.table, iid, <NosqlCmdType>cmd, res => {
+        db.modify(t.table, <NosqlCmdType>cmd, res => {
             t.resolve(res);
         });
     };
     return t.run();
 }
 
+export async function ModifyOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<boolean> {
+    let t = new Transaction<T, boolean>(clz);
+    t.nosqlproc = db => {
+        db.modifyone(t.table, iid, <NosqlCmdType>cmd, res => {
+            t.resolve(res);
+        });
+    };
+    return t.run();
+}
+
+// 更新
+export async function Update<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T[]> {
+    let t = new Transaction<T, T[]>(clz);
+    t.nosqlproc = db => {
+        db.update(t.table, <NosqlCmdType>cmd, res => {
+            if (res == null) {
+                t.resolve([]);
+            }
+            else {
+                let arr = ArrayT.Convert(res, e => {
+                    let m = t.produce(e);
+                    SetInnerId(m, db.innerId(e));
+                    UpdateData(m);
+                    return m;
+                });
+                t.resolve(arr);
+            }
+        });
+    };
+    return t.run();
+}
+
+export async function UpdateOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<T> {
+    let t = new Transaction<T, T>(clz);
+    t.nosqlproc = db => {
+        db.updateone(t.table, iid, <NosqlCmdType>cmd, res => {
+            let m = t.produce(res);
+            SetInnerId(m, db.innerId(res));
+            UpdateData(m);
+            t.resolve(m);
+        });
+    };
+    return t.run();
+}
+
 // 删除
-export async function Delete<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<DbExecuteStat> {
+export async function Delete<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<DbExecuteStat> {
     let t = new Transaction<T, DbExecuteStat>(clz);
     t.rdbproc = db => {
         let q: RdbCmdType;
@@ -405,7 +417,7 @@ export async function Delete<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): P
         });
     };
     t.nosqlproc = db => {
-        db.remove(t.table, iid, <NosqlCmdType>cmd, res => {
+        db.remove(t.table, <NosqlCmdType>cmd, res => {
             t.resolve(res);
         });
     };
@@ -417,6 +429,36 @@ export async function Delete<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): P
             key += "." + cmd;
         db.del(key, res => {
             t.resolve(res);
+        });
+    };
+    return t.run();
+}
+
+export async function DeleteOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<boolean> {
+    let t = new Transaction<T, boolean>(clz);
+    t.rdbproc = db => {
+        let q: RdbCmdType;
+        if (cmd instanceof Array)
+            q = [<string>cmd[0], cmd[1]];
+        else
+            q = [<string>cmd, null];
+        db.query(q, res => {
+            t.resolve();
+        });
+    };
+    t.nosqlproc = db => {
+        db.removeone(t.table, iid, <NosqlCmdType>cmd, res => {
+            t.resolve(res);
+        });
+    };
+    t.kvproc = db => {
+        let key = t.table;
+        if (typeof cmd == "object")
+            key += "." + JSON.stringify(cmd);
+        else
+            key += "." + cmd;
+        db.del(key, res => {
+            t.resolve(res ? true : false);
         });
     };
     return t.run();

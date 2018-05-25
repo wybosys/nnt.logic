@@ -2,18 +2,34 @@ import url = require("url");
 import {Channel} from "../../channel";
 import {RegisterChannel, Sdk} from "../../sdk";
 import {
-    AsyncArray, IndexedObject, make_tuple, ObjectT, Random, StringT, toJson,
+    AsyncArray,
+    IndexedObject,
+    make_tuple,
+    ObjectT,
+    Random,
+    StringT,
+    toJson,
     toJsonObject
 } from "../../../core/kernel";
 import {
-    Auth, CompletePay, Environment, GetRemoteMedia, Info, Login, LoginMethod, Pay, PayMethod, SdkUserInfo, Share,
+    Auth,
+    CompletePay,
+    Environment,
+    GetRemoteMedia,
+    Info,
+    Login,
+    LoginMethod,
+    Pay,
+    PayMethod,
+    SdkUserInfo,
+    Share,
     Support
 } from "../../msdk";
 import {Fast} from "../../../component/encode";
 import {AuthType, WechatRefreshToken, WechatToken, WechatUserProfile} from "./model";
 import {RestSession} from "../../../session/rest";
 import {DateTime} from "../../../core/time";
-import {Insert, Query, Update} from "../../../manager/dbmss";
+import {Insert, Query, QueryOne, UpdateOne} from "../../../manager/dbmss";
 import {GetInnerId, Output} from "../../../store/proto";
 import {Call} from "../../../manager/servers";
 import {NonceAlDig} from "../../../component/nonce";
@@ -102,7 +118,7 @@ export class Wechat extends Channel {
         m.authtype = authtype;
 
         // 保存token
-        await Update(make_tuple(this._sdk.dbsrv, WechatToken),
+        await UpdateOne(make_tuple(this._sdk.dbsrv, WechatToken),
             null,
             [{unionid: m.unionid},
                 {$set: Output(m)},
@@ -123,7 +139,7 @@ export class Wechat extends Channel {
         }
 
         // 添加到微信用户数据表
-        Update(make_tuple(this._sdk.dbsrv, WechatUserProfile),
+        UpdateOne(make_tuple(this._sdk.dbsrv, WechatUserProfile),
             null,
             [{unionid: m.unionid},
                 {$set: Output(m)},
@@ -225,7 +241,7 @@ export class Wechat extends Channel {
                 let pf = await this.doReqProfile(lg.access_token, lg.openid);
                 if (pf) {
                     // 插入到数据库中
-                    let r = await Update(make_tuple(this._sdk.dbsrv, SdkUserInfo), null, [
+                    let r = await UpdateOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), null, [
                         // 从openid修改成unionid
                         {oid: lg.unionid},
                         {$set: pf.info},
@@ -263,7 +279,7 @@ export class Wechat extends Channel {
     }
 
     async doRenewal(ui: SdkUserInfo): Promise<boolean> {
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, WechatToken), {
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, WechatToken), {
             unionid: ui.userid,
             openid: ui.deviceid
         });
@@ -290,7 +306,9 @@ export class Wechat extends Channel {
         rcd.scope = m.scope;
         rcd.scopes = m.scope.split(",");
         rcd.accesstime = DateTime.Current() + m.expires_in;
-        return Update(make_tuple(this._sdk.dbsrv, WechatToken), GetInnerId(rcd), {$set: Output(rcd)});
+        return UpdateOne(make_tuple(this._sdk.dbsrv, WechatToken),
+            GetInnerId(rcd),
+            {$set: Output(rcd)});
     }
 
     protected async renewalS2SToken(appid: string, appsecret: string): Promise<S2SWechatToken> {
@@ -303,7 +321,7 @@ export class Wechat extends Channel {
             logger.log("微信：" + appid + " 刷新服务端 accesstoken 失败");
             return null;
         }
-        return Update(make_tuple(this._sdk.dbsrv, S2SWechatToken), null, [{
+        return UpdateOne(make_tuple(this._sdk.dbsrv, S2SWechatToken), null, [{
             appid: appid
         }, {
             $set: {
@@ -316,7 +334,7 @@ export class Wechat extends Channel {
     // 获得可用的accesstoken
     async doGetAccessToken(userid: string, deviceid: string): Promise<string> {
         logger.log("微信：" + userid + " 查找 accesstoken");
-        let tk = await Query(make_tuple(this._sdk.dbsrv, WechatToken), {
+        let tk = await QueryOne(make_tuple(this._sdk.dbsrv, WechatToken), {
             unionid: userid,
             openid: deviceid
         });
@@ -333,7 +351,7 @@ export class Wechat extends Channel {
     // 获取服务端的accesstoken
     async doGetS2SAccessToken(appid: string, appsecret: string): Promise<string> {
         logger.log("微信：" + appid + " 查找服务端 accesstoken");
-        let tk = await Query(make_tuple(this._sdk.dbsrv, S2SWechatToken), {
+        let tk = await QueryOne(make_tuple(this._sdk.dbsrv, S2SWechatToken), {
             appid: appid
         });
         if (!tk) {
@@ -355,7 +373,7 @@ export class Wechat extends Channel {
     async doGetTicket(appid: string, appsecret: string): Promise<S2SWechatTicket> {
         logger.log("微信：" + appid + " 请求 ticket");
         let type = "jsapi";
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, S2SWechatTicket), {
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, S2SWechatTicket), {
             appid: appid,
             type: type,
             expiretime: {$gt: DateTime.Now()}
@@ -379,7 +397,7 @@ export class Wechat extends Channel {
         }
         m.expiretime = DateTime.Current() + m.expires_in;
         m.appid = appid;
-        await Update(make_tuple(this._sdk.dbsrv, S2SWechatTicket), null, [{
+        await UpdateOne(make_tuple(this._sdk.dbsrv, S2SWechatTicket), null, [{
             appid: appid,
             type: type
         }, {$set: Output(m)},
@@ -580,7 +598,7 @@ export class Wechat extends Channel {
         Insert(make_tuple(this._sdk.dbsrv, WechatPayResult), wpr);
 
         // 查询该订单的价格是否一致
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, Pay), {
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, Pay), {
             orderid: wpr.out_trade_no
         });
         if (!rcd) {

@@ -2,7 +2,7 @@ import {AbstractNosql, InnerIdType, NosqlCmdType, RecordObject} from "./kv";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {DbExecuteStat, IterateCursorProcess} from "./store";
-import {IndexedObject, ObjectT, toJson} from "../core/kernel";
+import {ArrayT, IndexedObject, ObjectT, toJson} from "../core/kernel";
 import {Variant} from "../core/object";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
@@ -292,7 +292,58 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    update(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
+    modify(page: string, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
+        let match: any, modify: any, opt: any;
+        if (cmd instanceof Array) {
+            match = cmd[0];
+            modify = cmd[1];
+            opt = cmd[2];
+        }
+        else {
+            let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
+            logerr(err, ["modify", cmd]);
+            cb(null);
+            return;
+        }
+
+        // 如果match中包含$id，则认为是目标查询ObjectId
+        if (ObjectT.HasKey(match, "$id")) {
+            match["_id"] = StrToObjectId(match["$id"]);
+            delete match["$id"];
+        }
+
+        let col = this._db.collection(page);
+        if (opt) {
+            col.updateMany(match, modify, opt, (err, res) => {
+                if (err) {
+                    logerr(err, ["modify", cmd]);
+                    cb(null);
+                }
+                else {
+                    cb({
+                        insert: res.upsertedCount,
+                        update: res.modifiedCount
+                    });
+                }
+            });
+        }
+        else {
+            col.updateMany(match, modify, opt, (err, res) => {
+                if (err) {
+                    logerr(err, ["modify", cmd]);
+                    cb(null);
+                }
+                else {
+                    cb({
+                        insert: res.upsertedCount,
+                        update: res.modifiedCount
+                    });
+                }
+            });
+        }
+    }
+
+    modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: boolean) => void) {
         let match: any, modify: any, opt: any;
         if (iid) {
             if (typeof(iid) == "string")
@@ -317,7 +368,7 @@ export class KvMongo extends AbstractNosql {
             }
             else {
                 let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
-                logerr(err, ["update", iid, cmd]);
+                logerr(err, ["modifyone", iid, cmd]);
                 cb(null);
                 return;
             }
@@ -331,36 +382,134 @@ export class KvMongo extends AbstractNosql {
 
         let col = this._db.collection(page);
         if (opt) {
-            col.updateMany(match, modify, opt, (err, res) => {
+            col.updateOne(match, modify, opt, (err, res) => {
                 if (err) {
-                    logerr(err, ["update", iid, cmd]);
-                    cb(null);
+                    logerr(err, ["modifyone", iid, cmd]);
+                    cb(false);
                 }
                 else {
-                    cb({
-                        insert: res.upsertedCount,
-                        update: res.modifiedCount
-                    });
+                    cb(true);
                 }
             });
         }
         else {
-            col.updateMany(match, modify, opt, (err, res) => {
+            col.updateOne(match, modify, opt, (err, res) => {
                 if (err) {
-                    logerr(err, ["update", iid, cmd]);
-                    cb(null);
+                    logerr(err, ["modifyone", iid, cmd]);
+                    cb(false);
                 }
                 else {
-                    cb({
-                        insert: res.upsertedCount,
-                        update: res.modifiedCount
-                    });
+                    cb(true);
                 }
             });
         }
     }
 
-    qupdate(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: RecordObject) => void) {
+    // mongodb官方没有提供大批量findupdate的方法（毕竟可能更新大量数据，所以用此类方法时需要谨慎操作，而且需要重启服务后，维护用来保护的字段），采用保护字段，如果超过10s，则认为是之前的没有清，可以认为没有被锁
+    update(page: string, cmd: NosqlCmdType, cb: (res: RecordObject[]) => void) {
+        let match: any, modify: any, opt: any;
+        if (cmd instanceof Array) {
+            match = cmd[0];
+            modify = cmd[1];
+            opt = cmd[2];
+        }
+        else {
+            let err = new Error("cmd的查询必须为一个数组");
+            logerr(err, ["update", page, cmd]);
+            cb(null);
+            return;
+        }
+
+        // 如果match中包含$id，则认为是目标查询ObjectId
+        if (ObjectT.HasKey(match, "$id")) {
+            match["_id"] = StrToObjectId(match["$id"]);
+            delete match["$id"];
+        }
+
+        let col = this._db.collection(page);
+        let origin = false;
+        if (opt && "returnOriginal" in opt)
+            origin = !!opt["returnOriginal"];
+
+        // 获取所有符合要求的id
+        const rand = Math.random();
+
+        // 锁掉符合要求的数据
+        let locker_match = ObjectT.LightClone(match);
+        locker_match["__ttl_findandupdatemany"] = {$ne: rand};
+        col.updateMany(locker_match, {$set: {__ttl_findandupdatemany: rand}}, (err, stat) => {
+            if (err) {
+                logerr(err, ["update", page, cmd]);
+                cb(null);
+                return;
+            }
+
+            if (stat.matchedCount == 0) {
+                cb(null);
+                return;
+            }
+
+            // 获取到刚刚锁定的记录
+            col.find({__ttl_findandupdatemany: rand},
+                origin ? null : {projection: {_id: 1}}
+            ).toArray((err, fnds) => {
+                if (err) {
+                    logerr(err, ["update", page, cmd]);
+                    cb(null);
+                    return;
+                }
+
+                if (!fnds || fnds.length == 0) {
+                    // 高并发时可能会被其他改掉，所以会返回空
+                    cb(null);
+                    return;
+                }
+
+                // 使用bulk批量处理跟新
+                let bulk = col.initializeUnorderedBulkOp();
+
+                let upsert = false;
+                if (opt && "upsert" in opt)
+                    upsert = !!opt["upsert"];
+
+                // 更新顺道解锁
+                let locker_modify = ObjectT.LightClone(modify);
+                locker_modify["$unset"] = {__ttl_findandupdatemany: ""};
+
+                fnds.forEach(e => {
+                    let oper = bulk.find({_id: e["_id"]});
+                    if (upsert)
+                        oper.upsert();
+                    oper.updateOne(locker_modify);
+                });
+
+                bulk.execute((err, stat) => {
+                    if (err) {
+                        logerr(err, ["update", page, cmd]);
+                        cb(null);
+                    }
+                    else {
+                        // 提取数据
+                        if (origin) {
+                            cb(fnds);
+                        }
+                        else {
+                            let ids = ArrayT.Convert(fnds, e => {
+                                return e["_id"];
+                            });
+                            // 重新查询
+                            col.find({_id: {$in: ids}}).toArray((err, res) => {
+                                // 前后瞬间的事情，所以认为此处必定能成功
+                                cb(res);
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    updateone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: RecordObject) => void) {
         let match: any, modify: any, opt: any;
         if (iid) {
             if (typeof(iid) == "string")
@@ -385,7 +534,7 @@ export class KvMongo extends AbstractNosql {
             }
             else {
                 let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
-                logerr(err, ["qupdate", page, iid, cmd]);
+                logerr(err, ["updateone", page, iid, cmd]);
                 cb(err);
                 return;
             }
@@ -403,13 +552,13 @@ export class KvMongo extends AbstractNosql {
                 opt["returnOriginal"] = false;
             col.findOneAndUpdate(match, modify, opt, (err, res) => {
                 if (err) {
-                    logerr(err, ["qupdate", page, iid, cmd]);
+                    logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
                 }
                 else {
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
-                            name: "qupdate",
+                            name: "updateone",
                             page: page,
                             iid: iid,
                             cmd: toJson(cmd)
@@ -421,13 +570,13 @@ export class KvMongo extends AbstractNosql {
         else {
             col.findOneAndUpdate(match, modify, {returnOriginal: false}, (err, res) => {
                 if (err) {
-                    logerr(err, ["qupdate", page, iid, cmd]);
+                    logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
                 }
                 else {
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
-                            name: "qupdate",
+                            name: "updateone",
                             page: page,
                             iid: iid,
                             cmd: toJson(cmd)
@@ -438,7 +587,36 @@ export class KvMongo extends AbstractNosql {
         }
     }
 
-    remove(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
+    remove(page: string, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
+        let match: any;
+        if (cmd instanceof Array) {
+            match = cmd[0];
+        }
+        else {
+            match = cmd;
+        }
+
+        // 如果match中包含$id，则认为是目标查询ObjectId
+        if (ObjectT.HasKey(match, "$id")) {
+            match["_id"] = StrToObjectId(match["$id"]);
+            delete match["$id"];
+        }
+
+        let col = this._db.collection(page);
+        col.deleteMany(match, (err, res) => {
+            if (err) {
+                logerr(err, ["remove", page, cmd]);
+                cb(null);
+            }
+            else {
+                cb({
+                    remove: res.deletedCount
+                });
+            }
+        });
+    }
+
+    removeone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: boolean) => void) {
         let match: any;
         if (iid) {
             if (typeof(iid) == "string")
@@ -463,13 +641,11 @@ export class KvMongo extends AbstractNosql {
         let col = this._db.collection(page);
         col.deleteMany(match, (err, res) => {
             if (err) {
-                logerr(err, ["remove", page, iid, cmd]);
-                cb(null);
+                logerr(err, ["removeone", page, iid, cmd]);
+                cb(false);
             }
             else {
-                cb({
-                    remove: res.deletedCount
-                });
+                cb(true);
             }
         });
     }

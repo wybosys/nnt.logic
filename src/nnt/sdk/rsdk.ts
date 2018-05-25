@@ -1,11 +1,24 @@
 import {action, IRouter} from "../core/router";
 import {
-    Auth, CheckExpire, CompletePay, Environment, GetRemoteMedia, Info, Login, LoginMethod, Pay, PayMethod,
-    SdkPayOrderId, SdkUserInfo, Share, ShareMethod, Support
+    Auth,
+    CheckExpire,
+    CompletePay,
+    Environment,
+    GetRemoteMedia,
+    Info,
+    Login,
+    LoginMethod,
+    Pay,
+    PayMethod,
+    SdkPayOrderId,
+    SdkUserInfo,
+    Share,
+    ShareMethod,
+    Support
 } from "./msdk";
 import {Sdk} from "./sdk";
 import {Transaction} from "../server/transaction";
-import {AutoInc, Insert, Query} from "../manager/dbmss";
+import {AutoInc, Insert, QueryOne} from "../manager/dbmss";
 import {format, make_tuple, ObjectT} from "../core/kernel";
 import {STATUS} from "../core/models";
 import {TODAY_DAY, TODAY_MONTH, TODAY_YEAR} from "../component/today";
@@ -93,7 +106,7 @@ export class RSdk implements IRouter {
         let m: Login = trans.model;
         trans.timeout(20);
 
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
         if (!rcd) {
             trans.status = STATUS.TARGET_NOT_FOUND;
             trans.submit();
@@ -115,7 +128,7 @@ export class RSdk implements IRouter {
         let m: CheckExpire = trans.model;
         trans.timeout(20);
 
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
         if (!rcd) {
             trans.status = STATUS.TARGET_NOT_FOUND;
             trans.submit();
@@ -136,7 +149,7 @@ export class RSdk implements IRouter {
 
         let rcd: SdkUserInfo;
         if (m.uid) {
-            rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+            rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
             if (!rcd) {
                 trans.status = STATUS.TARGET_NOT_FOUND;
                 trans.submit();
@@ -165,7 +178,7 @@ export class RSdk implements IRouter {
     async share(trans: Transaction) {
         let m: Share = trans.model;
 
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
         if (!rcd) {
             trans.status = STATUS.TARGET_NOT_FOUND;
             trans.submit();
@@ -197,7 +210,7 @@ export class RSdk implements IRouter {
 
         let rcd: SdkUserInfo;
         if (m.uid) {
-            rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+            rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
             if (!rcd) {
                 trans.status = STATUS.TARGET_NOT_FOUND;
                 trans.submit();
@@ -257,7 +270,7 @@ export class RSdk implements IRouter {
 
         let rcd: SdkUserInfo;
         if (m.uid) {
-            rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+            rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
             if (!rcd) {
                 trans.status = STATUS.TARGET_NOT_FOUND;
                 trans.submit();
@@ -286,7 +299,7 @@ export class RSdk implements IRouter {
 
         let rcd: SdkUserInfo;
         if (m.uid) {
-            rcd = await Query(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
+            rcd = await QueryOne(make_tuple(this._sdk.dbsrv, SdkUserInfo), m.uid);
             if (!rcd) {
                 trans.status = STATUS.TARGET_NOT_FOUND;
                 trans.submit();

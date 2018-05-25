@@ -17,7 +17,7 @@ export enum HttpContentType {
 export class RequestParams {
 
     // 参数列表
-    fields:IndexedObject = {};
+    fields: IndexedObject = {};
 
     // 如果是xml这种树形参数，根节点名称
     root = "root";
@@ -97,7 +97,9 @@ export abstract class Base {
             if (this.error)
                 msg += this.error + " ";
             msg += "错误码:" + this.code;
-            error(new Error(msg));
+            let err = new Error(msg);
+            error(err);
+            logger.error(err);
         }
         else {
             try {

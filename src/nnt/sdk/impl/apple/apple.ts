@@ -1,15 +1,23 @@
 import {Channel} from "../../channel";
 import {IndexedObject, make_tuple} from "../../../core/kernel";
 import {
-    Auth, CompletePay, Environment, GetRemoteMedia, Info, Login, Pay, SdkUserInfo, Share,
+    Auth,
+    CompletePay,
+    Environment,
+    GetRemoteMedia,
+    Info,
+    Login,
+    Pay,
+    SdkUserInfo,
+    Share,
     Support
 } from "../../msdk";
 import {RegisterChannel, Sdk} from "../../sdk";
 import {Transaction} from "../../../server/transaction";
 import {IapReceiptValidate} from "./model";
 import {Decode} from "../../../core/proto";
-import {Insert, Query} from "../../../manager/dbmss";
-import {colboolean, Output} from "../../../store/proto";
+import {Insert, QueryOne} from "../../../manager/dbmss";
+import {Output} from "../../../store/proto";
 import {logger} from "../../../core/logger";
 import {RestSession} from "../../../session/rest";
 import {static_cast} from "../../../core/core";
@@ -76,7 +84,7 @@ export class Apple extends Channel {
         }
 
         // 查询订单是否一致
-        let rcd = await Query(make_tuple(this._sdk.dbsrv, Pay), {
+        let rcd = await QueryOne(make_tuple(this._sdk.dbsrv, Pay), {
             orderid: oid
         });
         if (!rcd) {
