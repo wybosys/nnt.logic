@@ -1,6 +1,5 @@
 import {IndexedObject} from "../core/kernel";
 import {DecodeValue, Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
-import {logger} from "../core/logger";
 
 export enum HttpMethod {
     GET,
@@ -82,6 +81,10 @@ export abstract class Base {
 
     // 处理响应的结果
     parseData(data: IResponseData, suc: () => void, error: (err: Error) => void) {
+        this.code = data.code == null ? -1 : data.code;
+        this.error = data.message;
+
+        // 读取数据到对象，需要吧code、error放到前面处理，避免如果错误、或者返回的data中本来就包含code时，导致消息的code被通信的code覆盖
         if (data.data) {
             this.data = data.data;
             // 把data的数据写入model中
@@ -90,8 +93,6 @@ export abstract class Base {
             UpdateData(this);
         }
 
-        this.code = data.code == null ? -1 : data.code;
-        this.error = data.message;
         if (this.code < 0) {
             let msg = "";
             if (this.error)
@@ -99,7 +100,6 @@ export abstract class Base {
             msg += "错误码:" + this.code;
             let err = new Error(msg);
             error(err);
-            logger.error(err);
         }
         else {
             try {
@@ -107,7 +107,6 @@ export abstract class Base {
             }
             catch (err) {
                 error(err);
-                logger.error(err);
             }
         }
     }

@@ -6,6 +6,7 @@ import {Find} from "../manager/servers";
 import {Base} from "../session/model";
 import {RestSession} from "../session/rest";
 import {KEY_PERMISSIONID, Permissions} from "./devops/permissions";
+import {integer, json, output} from "../core/proto";
 
 interface RemoteConfig extends Node {
     // 远端服务器地址
@@ -35,7 +36,14 @@ export class Remote extends AbstractServer {
 
 class RpcModel extends Base {
 
+    // 访问的url
     url: string;
+
+    @integer(1, [output])
+    code: number;
+
+    @json(2, [output])
+    data: IndexedObject;
 
     requestUrl(): string {
         return this.url;
