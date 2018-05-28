@@ -1420,7 +1420,7 @@ export class Random {
 
     private _seed: string;
     private _hdl: any;
-    private _entropy: boolean;
+    private _entropy: boolean = true;
 
     static Rangef(from: number, to: number): number {
         return Math.random() * (to - from) + from;
