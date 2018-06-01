@@ -1,12 +1,12 @@
 import {ArrayT, asString} from "../core/kernel";
 import {UpcaseFirst} from "../core/string";
 import {logger} from "../core/logger";
-import fs = require("fs");
 import {expand} from "../core/url";
-import tpl = require("dustjs-linkedin");
 import {AsyncQueue} from "../core/operation";
-import xlsx = require("xlsx");
 import {static_cast} from "../core/core";
+import fs = require("fs");
+import tpl = require("dustjs-linkedin");
+import xlsx = require("xlsx");
 
 export let TPL_CONFIGS = "export module configs {~lb}\n" +
     "\n" +

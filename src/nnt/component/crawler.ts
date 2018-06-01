@@ -1,4 +1,4 @@
-import {ArrayT, asString, SafeEval} from "../core/kernel";
+import {ArrayT, asString, SafeEval, toJson} from "../core/kernel";
 import {logger} from "../core/logger";
 import tmp = require('tmp');
 import fs = require('fs');
@@ -23,7 +23,7 @@ function pack_function(fun: Function): string {
     // let需要换成var
     str = str.replace(/let /g, 'var ');
     // ()=> 换成 function ()
-    str = str.replace(/\(([a-zA-Z0-9_, ]+)\) =>/g, "function ($1)")
+    str = str.replace(/\(([a-zA-Z0-9_, ]*)\) =>/g, "function ($1)")
     // 替换console为alert，否则无法从evaluate中传出
     str = str.replace(/console\.(log|warn)\(/g, 'alert(');
     return str;
@@ -37,6 +37,10 @@ function pack_arguments(args: any[]): string {
 
 // 每一步生成对应的代码，然后最终生成临时的casperjs文件
 export class Crawler {
+
+    constructor() {
+        this.userAgent('Mozilla/5.0 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)');
+    }
 
     private _buffer: string[] = [];
 
@@ -52,6 +56,14 @@ export class Crawler {
 
     start(url: string, then?: () => void): this {
         return this.cmd('start', '"' + url + '"', pack_function(then));
+    }
+
+    userAgent(ua: string) {
+        return this.cmd('userAgent', '"' + ua + '"');
+    }
+
+    capture(file: string, options?: { left: number, top: number, width: number, height: number }) {
+        return this.cmd('capture', options ? toJson(options) : null);
     }
 
     run(): Promise<any> {
@@ -74,7 +86,7 @@ export class Crawler {
 
             // 命令保存到文件
             let text = cmds.join('\n');
-            //logger.log(text);
+            // logger.log(text);
             let tf = tmp.fileSync();
             fs.writeSync(tf.fd, text);
 
