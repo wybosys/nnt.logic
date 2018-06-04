@@ -4,7 +4,7 @@ import dbmss = require("./dbmss");
 import servers = require("./servers");
 import containers = require("./containers");
 import events = require("events");
-import {AppNodes, DevopsNodes} from "../config/app";
+import {AppNodes, DevopsNode} from "../config/app";
 import {sep} from "path";
 import {assets} from "./assets";
 import {expand, home, pathd, RegisterScheme} from "../core/url";
@@ -119,7 +119,7 @@ export class App {
 
         // 读取devops的配置
         if (devcfg) {
-            let cfg: DevopsNodes = toJsonObject(fs.readFileSync(devcfg, "utf8"));
+            let cfg: DevopsNode = toJsonObject(fs.readFileSync(devcfg, "utf8"));
             if (cfg.client != null)
                 Config.CLIENT_ALLOW = cfg.client;
             if (cfg.server != null)

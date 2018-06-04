@@ -19,7 +19,7 @@ export interface AppNodes {
     container?: Node[];
 }
 
-export interface DevopsNodes {
+export interface DevopsNode {
 
     client?: boolean; // 是否允许客户端访问本服务
     server?: boolean; // 是否允许服务端访问本服务
