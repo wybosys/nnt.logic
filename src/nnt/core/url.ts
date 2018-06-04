@@ -1,7 +1,6 @@
 import process = require("process");
 import ph = require("path");
 import {logger} from "./logger";
-import {ArrayT} from "./kernel";
 
 // 当前的运行目录
 let ROOT = ph.resolve('/');
