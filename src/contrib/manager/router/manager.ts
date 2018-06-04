@@ -4,10 +4,16 @@ import {Null, STATUS} from "../../../nnt/core/models";
 import {GenApi} from "./genapi";
 import {GenConfig} from "./genconfig";
 import {
-    ADMIN_GID, MgrActionRecord, MgrActionRecordType, MgrAddUser, MgrInit, MgrLogin, MgrSid,
+    ADMIN_GID,
+    MgrActionRecord,
+    MgrActionRecordType,
+    MgrAddUser,
+    MgrInit,
+    MgrLogin,
+    MgrSid,
     MgrUser
 } from "../model/manager";
-import {AutoInc, Count, Insert, Query, Set} from "../../../nnt/manager/dbmss";
+import {AutoInc, Count, Insert, QueryOne, Set} from "../../../nnt/manager/dbmss";
 import {AcUser} from "../../../nnt/acl/user";
 import {make_tuple, Self} from "../../../nnt/core/kernel";
 import {admin, Trans} from "../trans";
@@ -32,7 +38,7 @@ export class RManager implements IRouter {
 
         let m: MgrInit = trans.model;
         m.gid = [ADMIN_GID];
-        m.id = await AutoInc(make_tuple(this._mgr.dbsrv, AcUser), "uid");
+        m.uid = await AutoInc(make_tuple(this._mgr.dbsrv, AcUser), "uid");
         await Insert(make_tuple(this._mgr.dbsrv, AcUser), m);
 
         trans.submit();
@@ -51,7 +57,7 @@ export class RManager implements IRouter {
                 // 纪录
                 Insert(make_tuple(this._mgr.dbsrv, MgrActionRecord), Self(new MgrActionRecord(), t => {
                     t.type = MgrActionRecordType.LOGIN;
-                    t.uid = trans.current.id;
+                    t.uid = trans.current.uid;
                 }));
                 return;
             }
@@ -69,7 +75,7 @@ export class RManager implements IRouter {
         }
 
         // 使用用户密码登陆
-        let fnd = await Query(make_tuple(this._mgr.dbsrv, AcUser), {
+        let fnd = await QueryOne(make_tuple(this._mgr.dbsrv, AcUser), {
             account: m.account,
             password: m.password
         });
@@ -88,14 +94,14 @@ export class RManager implements IRouter {
         // 生成新得SID
         m.sid = GEN_SID();
         await Set(make_tuple(this._mgr.mcsrv, MgrSid), m.sid, Self(new MgrSid(), t => {
-            t.uid = fnd.id;
+            t.uid = fnd.uid;
             t.sid = m.sid;
         }));
 
         // 纪录
         Insert(make_tuple(this._mgr.dbsrv, MgrActionRecord), Self(new MgrActionRecord(), t => {
             t.type = MgrActionRecordType.LOGIN;
-            t.uid = fnd.id;
+            t.uid = fnd.uid;
         }));
 
         trans.submit();
@@ -111,7 +117,7 @@ export class RManager implements IRouter {
             return;
         }
 
-        let fnd = await Query(make_tuple(this._mgr.dbsrv, AcUser), {account: m.account});
+        let fnd = await QueryOne(make_tuple(this._mgr.dbsrv, AcUser), {account: m.account});
         if (fnd) {
             trans.status = STATUS.TARGET_EXISTS;
             trans.submit();
@@ -120,7 +126,7 @@ export class RManager implements IRouter {
 
         let ui = new MgrUser();
         ui.gid = [m.gid];
-        ui.id = await AutoInc(make_tuple(this._mgr.dbsrv, AcUser), "uid");
+        ui.uid = await AutoInc(make_tuple(this._mgr.dbsrv, AcUser), "uid");
         ui.account = m.account;
         ui.password = m.password;
         await Insert(make_tuple(this._mgr.dbsrv, AcUser), ui);
@@ -128,9 +134,9 @@ export class RManager implements IRouter {
         // 纪录
         Insert(make_tuple(this._mgr.dbsrv, MgrActionRecord), Self(new MgrActionRecord(), t => {
             t.type = MgrActionRecordType.ADD_USER;
-            t.uid = trans.current.id;
+            t.uid = trans.current.uid;
             t.payload = {
-                who: cur.id,
+                who: cur.uid,
                 target: t.uid
             }
         }));

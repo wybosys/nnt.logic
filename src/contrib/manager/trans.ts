@@ -1,6 +1,6 @@
 import {Transaction} from "../../nnt/server/transaction";
 import {AcUser} from "../../nnt/acl/user";
-import {Get, Query, Set} from "../../nnt/manager/dbmss";
+import {Get, QueryOne, Set} from "../../nnt/manager/dbmss";
 import {make_tuple} from "../../nnt/core/kernel";
 import {Manager} from "./manager";
 import {ADMIN_GID, MgrSid} from "./model/manager";
@@ -26,7 +26,7 @@ export class Trans extends Transaction {
             let srv = <Manager>this.server;
             let rcd = await Get(make_tuple(srv.mcsrv, MgrSid), this.sid);
             if (rcd) {
-                this.current = await Query(make_tuple(srv.dbsrv, AcUser), {id: rcd.uid});
+                this.current = await QueryOne(make_tuple(srv.dbsrv, AcUser), {id: rcd.uid});
                 if (this.current) {
                     // 续约
                     await Set(make_tuple(srv.mcsrv, MgrSid), this.sid, rcd);

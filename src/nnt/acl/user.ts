@@ -6,7 +6,7 @@ export class AcUser {
 
     // 管理系统中的用户id
     @colinteger()
-    id: number;
+    uid: number;
 
     // 组id
     @colarray(integer_t)
