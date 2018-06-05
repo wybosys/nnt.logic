@@ -44,7 +44,7 @@ export function NodeIsEnable(node: Node): boolean {
             return Config.PUBLISH;
         if (e == "distribution")
             return Config.DISTRIBUTION;
-        if (e == "local")
+        if (e == "debug")
             return Config.DEBUG;
         if (e == "release")
             return Config.PUBLISH;
