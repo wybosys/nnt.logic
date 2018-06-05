@@ -36,24 +36,31 @@ export function NodeIsEnable(node: Node): boolean {
         if (e === null)
             return false;
 
+        // 仅--debug打开
         if (e == "debug")
             return Config.DEBUG;
+        // 仅--develop打开
         if (e == "develop")
             return Config.DEVELOP;
+        // 仅--publish打开
         if (e == "publish")
             return Config.PUBLISH;
+        // 仅--distribution打开
         if (e == "distribution")
             return Config.DISTRIBUTION;
-        if (e == "debug")
-            return Config.DEBUG;
+        // 处于publish或distribution打开
         if (e == "release")
-            return Config.PUBLISH;
+            return Config.PUBLISH || Config.DISTRIBUTION;
+        // 运行在devops容器中
         if (e == "devops")
             return Config.DEVOPS;
+        // 容器内网测试版
         if (e == "devops-develop")
             return Config.DEVOPS_DEVELOP;
+        // 容器发布版本
         if (e == "devops-release")
             return Config.DEVOPS_RELEASE;
+        // 本地运行
         if (e == "local")
             return Config.LOCAL;
 
