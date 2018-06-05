@@ -244,11 +244,13 @@ export abstract class Multiplayers extends Socket {
     protected onConnectorAvaliable(connector: Connector) {
         super.onConnectorAvaliable(connector);
         connector.avaliable();
+        logger.log("{{=it.userIdentifier}} 连接服务器", connector);
     }
 
     protected onConnectorUnavaliable(connector: Connector) {
         super.onConnectorUnavaliable(connector);
         connector.unavaliable();
+        logger.log("{{=it.userIdentifier}} 断开连接", connector);
     }
 
     protected onListen(connector: Connector, trans: Transaction, listen: boolean) {
