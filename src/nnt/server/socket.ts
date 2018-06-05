@@ -333,6 +333,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     // 新连接执行成功后，作为用户上线的标记
                     this._routers.process(t).then(() => {
                         if (!connector.authed && connector.init(t)) {
+                            connector.authed = true;
                             // 登陆清除timeout
                             let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
                             CancelDelay(tmr);
@@ -362,6 +363,8 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 else {
                     this._routers.process(t).then(() => {
                         if (t.status == STATUS.OK && !connector.authed && connector.init(t)) {
+                            connector.authed = true;
+
                             // 登陆清除timeout
                             let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
                             CancelDelay(tmr);
