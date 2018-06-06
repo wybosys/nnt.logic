@@ -38,7 +38,7 @@ export interface TransactionSubmitOption {
 
     // 输出的类型
     type?: string;
-};
+}
 
 export abstract class Transaction {
 
