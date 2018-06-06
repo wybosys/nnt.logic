@@ -232,8 +232,10 @@ export abstract class Transaction {
 
     // 部分api本来时间就很长，所以存在自定义timeout的需求
     timeout(seconds: number) {
-        if (this._timeout)
+        if (this._timeout) {
             CancelDelay(this._timeout);
+            this._timeout = null;
+        }
         if (seconds == -1)
             return;
         this._timeout = Delay(seconds, () => {
