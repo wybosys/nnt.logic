@@ -3,7 +3,7 @@ import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
 import {IsClass, Require, static_cast} from "../../core/core";
-import {AnyClass, ArrayT, IndexedObject, JsonObject, length, ObjectT, toJson} from "../../core/kernel";
+import {AnyClass, ArrayT, IndexedObject, JsonObject, ObjectT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
 import {
@@ -84,7 +84,7 @@ export class Router implements IRouter {
     @action(Null, [], "文档")
     doc(trans: Transaction) {
         let srv = static_cast<IRouterable>(trans.server);
-        if (length(srv.routers)) {
+        if (srv.routers.length) {
             // 收集routers的信息
             let infos = Router.ActionsInfo(srv.routers);
             // 渲染页面
