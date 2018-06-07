@@ -247,11 +247,12 @@ export class Router implements IRouter {
     protected static _ActionInfos = new Map<string, ActionInfo[]>();
 
     static RouterActions(router: IRouter): ActionInfo[] {
-        if (this._ActionInfos.has(router.action))
-            return this._ActionInfos.get(router.action);
+        let name = router.action;
+
+        if (this._ActionInfos.has(name))
+            return this._ActionInfos.get(name);
 
         // 获得router身上的action信息以及属性列表
-        let name = router.action;
         let as = GetAllActionNames(router);
         let r = ArrayT.Convert(as, a => {
             let ap = FindAction(router, a);
@@ -261,7 +262,7 @@ export class Router implements IRouter {
             t.params = this.ParametersInfo(ap.clazz);
             return t;
         });
-        this._ActionInfos.set(router.action, r);
+        this._ActionInfos.set(name, r);
         return r;
     }
 
