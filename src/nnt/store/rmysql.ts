@@ -76,12 +76,10 @@ export class RMySql extends AbstractRdb {
         cnf["multipleStatements"] = true;
         try {
             this._hdl = mysql.createPool(cnf);
+            logger.info("启动 mysql@{{=it.id}}", {id: this.id});
         }
         catch (err) {
             logger.fatal("启动失败 mysql@{{=it.id}}", {id: this.id});
-        }
-        finally {
-            logger.info("启动 mysql@{{=it.id}}", {id: this.id});
         }
     }
 
