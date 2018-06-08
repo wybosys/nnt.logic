@@ -36,7 +36,7 @@ export interface TableInfo {
 
     // 设置
     setting?: TableSetting;
-};
+}
 
 type clazz_type = AnyClass | string;
 
