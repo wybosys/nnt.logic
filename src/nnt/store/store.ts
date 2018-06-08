@@ -1,13 +1,12 @@
 import {Node} from "../config/config"
 import {ObjectExt} from "../core/object";
-import {AppNodes} from "../config/app";
 
 export abstract class AbstractDbms extends ObjectExt {
     // 唯一标记
     id: string;
 
     // 配置
-    config(cfg: Node, root?: AppNodes): boolean {
+    config(cfg: Node): boolean {
         this.id = cfg.id;
         return true;
     }
