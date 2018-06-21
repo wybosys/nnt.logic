@@ -1,8 +1,10 @@
 import {Rest} from "../nnt/server/rest";
 import {action, IRouter} from "../nnt/core/router";
-import {input, integer, model, output, string} from "../nnt/core/proto";
+import {input, integer, json, model, output, string} from "../nnt/core/proto";
 import {Transaction} from "../nnt/server/transaction";
 import {DateTime} from "../nnt/core/time";
+import {IndexedObject} from "../nnt/core/kernel";
+import {TODAY_RANGE} from "../nnt/component/today";
 
 @model()
 export class Echoo {
@@ -15,6 +17,9 @@ export class Echoo {
 
     @integer(3, [output], "服务器时间")
     time: number;
+
+    @json(4, [output], "当天的时间段")
+    today: IndexedObject;
 }
 
 export class RSample implements IRouter {
@@ -25,6 +30,7 @@ export class RSample implements IRouter {
         let m: Echoo = trans.model;
         m.output = m.input;
         m.time = DateTime.Now();
+        m.today = TODAY_RANGE;
         trans.submit();
     }
 }
