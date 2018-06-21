@@ -18,12 +18,12 @@ import {IApiServer, IHttpServer} from "./apiserver";
 import {ParseContentToParams} from "./rest/params";
 import {DateTime} from "../core/time";
 import {Stream} from "../core/object";
+import {DevopsService} from "./devops/service";
 import http = require("http");
 import https = require("https");
 import spdy = require("spdy");
 import fs = require("fs");
 import formidable = require("formidable");
-import {DevopsService} from "./devops/service";
 
 export interface RestResponseData {
     contentType: string;
@@ -360,7 +360,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                     t.info.agent = req.headers['user-agent'] as string;
                 t.info.host = req.headers['host'];
                 t.info.origin = req.headers['origin'] as string;
-                t.info.addr = req.connection.remoteAddress;
+                t.info.addr = req.connection.remoteAddress || req.headers['x-forwarded-for'] as string;
                 t.info.referer = req.headers['referer'] as string;
                 t.info.path = url.pathname;
             }
