@@ -171,7 +171,7 @@ export class Routers {
                 return true;
         }
 
-        let clientip = trans.clientAddress;
+        let clientip = trans.info.addr;
         if (!Permissions.allowClient(clientip)) {
             logger.log("设置为禁止 " + clientip + " 访问服务");
             return false;

@@ -54,10 +54,6 @@ export abstract class Transaction {
         return this.params["_cid"];
     }
 
-    // client的访问地址
-    clientAddress: string;
-    clientPort: number;
-
     // 是否是新连接上的客户端(包括客户端重启)
     newOneClient(): boolean {
         return this.params["_noc"] == "1";
