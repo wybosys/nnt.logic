@@ -161,9 +161,6 @@ export class Connector extends BaseConnector {
                 });
             }
         }
-        else {
-            logger.warn("客户端没有对model的监听");
-        }
     }
 
     unavaliable() {
