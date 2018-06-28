@@ -1,5 +1,6 @@
 <html>
 <head>
+    <!-- @formatter:off -->
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/zepto.min.js"></script>
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/vue.min.js"></script>
     <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
