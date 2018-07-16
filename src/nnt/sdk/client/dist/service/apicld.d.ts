@@ -6,8 +6,8 @@ export declare class ApiCldService extends NntService {
     auth(cnt: AuthContent): void;
     share(cnt: ShareContent): void;
     protected doPay(cnt: PayContent): void;
-    private payByWeixin(pay, cnt);
-    private payByApple(pay, cnt);
+    private payByWeixin;
+    private payByApple;
     audio(cnt: AudioContent): void;
 }
 export declare class ApicldAudioRecorder extends AudioRecorder {

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { IndexedObject, jsonobj } from "./model";
 export declare type PodType = number | string | boolean;
 export interface INumber {
@@ -50,3 +51,12 @@ export declare class Mask {
     static Unset(value: number, mask: number): number;
     static Has(value: number, mask: number): boolean;
 }
+declare type QueueCallback = (next: () => void) => void;
+export declare class Queue {
+    add(func: QueueCallback): Queue;
+    run(): void;
+    protected doIter(iter: IterableIterator<[number, QueueCallback]>): void;
+    private _store;
+}
+export declare function Retry(cond: () => boolean, proc: () => void, interval?: number, delta?: number): void;
+export {};

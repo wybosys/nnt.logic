@@ -22,11 +22,11 @@ export declare class CMap<K, V> {
 }
 export declare enum HttpMethod {
     GET = 0,
-    POST = 1,
+    POST = 1
 }
 export declare enum SocketMethod {
     JSON = 0,
-    PROTOBUF = 1,
+    PROTOBUF = 1
 }
 export interface IResponseData {
     code: number;

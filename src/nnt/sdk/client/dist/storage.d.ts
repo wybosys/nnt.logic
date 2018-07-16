@@ -2,7 +2,7 @@ import { Base } from "./model";
 export declare enum CacheTime {
     MINUTE = 60,
     HOUR = 3600,
-    DAY = 86400,
+    DAY = 86400
 }
 export declare class CacheStorage {
     static IsValid: boolean;

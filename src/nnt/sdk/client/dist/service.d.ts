@@ -5,18 +5,18 @@ export declare enum LoginMethod {
     PHONE = 1,
     WECHAT_QRCODE = 33,
     WECHAT_PUB = 34,
-    WECHAT_APP = 35,
+    WECHAT_APP = 35
 }
 export declare enum ShareMethod {
     PASSIVE = 1,
-    WECHAT = 2,
+    WECHAT = 2
 }
 export declare enum PayMethod {
     INAPP_APPLE = 17,
     WECHAT_QRCODE = 33,
     WECHAT_PUB = 34,
     WECHAT_APP = 35,
-    WECHAT_H5 = 36,
+    WECHAT_H5 = 36
 }
 export declare abstract class Service {
     abstract prepare(cnt: InfoContent, cb: () => void): void;
@@ -55,7 +55,7 @@ export declare class LoginContent extends Content {
 }
 export declare enum ShareType {
     IMAGE = 1,
-    WEBSITE = 2,
+    WEBSITE = 2
 }
 export declare class ShareContent extends Content {
     proc: string;

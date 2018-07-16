@@ -612,7 +612,10 @@ export function Output(mdl: any): IndexedObject {
                 // 通用类型，则直接可以输出
                 if (typeof(fp.valtype) == "string") {
                     let arr = new Array();
-                    if (fp.valtype == string_t) {
+                    if (!val) {
+                        // 处理val==null的情况
+                    }
+                    else if (fp.valtype == string_t) {
                         val.forEach((e: any) => {
                             arr.push(e ? e.toString() : null);
                         });
@@ -645,33 +648,35 @@ export function Output(mdl: any): IndexedObject {
             }
             else if (fp.map) {
                 let m: IndexedObject = {};
-                if (val) {
-                    if (typeof(fp.valtype) == "string") {
-                        val.forEach((v: any, k: string) => {
-                            m[k] = v;
-                        });
-                    }
-                    else {
-                        val.forEach((v: any, k: string) => {
-                            m[k] = Output(v);
-                        });
-                    }
+                if (!val) {
+                    // pass
+                }
+                else if (typeof(fp.valtype) == "string") {
+                    val.forEach((v: any, k: string) => {
+                        m[k] = v;
+                    });
+                }
+                else {
+                    val.forEach((v: any, k: string) => {
+                        m[k] = Output(v);
+                    });
                 }
                 r[fk] = m;
             }
             else if (fp.multimap) {
                 let m: IndexedObject = {};
-                if (val) {
-                    if (typeof(fp.valtype) == "string") {
-                        val.forEach((v: any[], k: string) => {
-                            m[k] = v;
-                        });
-                    }
-                    else {
-                        val.forEach((v: any[], k: string) => {
-                            m[k] = ArrayT.Convert(v, e => Output(e));
-                        });
-                    }
+                if (!val) {
+                    // pass
+                }
+                else if (typeof(fp.valtype) == "string") {
+                    val.forEach((v: any[], k: string) => {
+                        m[k] = v;
+                    });
+                }
+                else {
+                    val.forEach((v: any[], k: string) => {
+                        m[k] = ArrayT.Convert(v, e => Output(e));
+                    });
                 }
                 r[fk] = m;
             }
