@@ -5,8 +5,9 @@ import {IndexedObject} from "../core/kernel";
 import {Find} from "../manager/servers";
 import {Base} from "../session/model";
 import {RestSession} from "../session/rest";
-import {KEY_PERMISSIONID, Permissions} from "./devops/permissions";
+import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 import {integer, json, output} from "../core/proto";
+import {Config} from "../manager/config";
 
 interface RemoteConfig extends Node {
     // 远端服务器地址
@@ -68,6 +69,9 @@ export function Call(): Promise<IndexedObject> {
                 if (Permissions) {
                     args[KEY_PERMISSIONID] = Permissions.id;
                 }
+                else if (Config.LOCAL) {
+                    args[KEY_SKIPPERMISSION] = 1;
+                }
 
                 let m = new RpcModel();
                 m.url = arguments[0];
@@ -108,6 +112,9 @@ export function Call(): Promise<IndexedObject> {
         // 如果是devops，则需要增加服务端授权id
         if (Permissions) {
             args[KEY_PERMISSIONID] = Permissions.id;
+        }
+        else if (Config.LOCAL) {
+            args[KEY_SKIPPERMISSION] = 1;
         }
 
         let m = new RpcModel();
