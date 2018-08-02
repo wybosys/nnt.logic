@@ -543,13 +543,13 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
     }
     else {
         if (fp.string)
-            return val ? val.toString() : null;
+            return asString(val);
         else if (fp.integer)
             return toInt(val);
         else if (fp.double)
             return toFloat(val);
         else if (fp.boolean)
-            return val == "true";
+            return toBoolean(val);
         else if (fp.enum)
             return toInt(val);
         else if (fp.json)
