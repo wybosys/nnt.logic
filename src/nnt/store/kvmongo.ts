@@ -84,7 +84,9 @@ export class KvMongo extends AbstractNosql {
             url += encodeURIComponent(this.user) + ":" + encodeURIComponent(this.password) + "@";
         url += this.repl.server.join(",") + "?replicaSet=" + this.repl.name;
         try {
-            let opts: IndexedObject = {};
+            let opts: mongo.MongoClientOptions = {
+                useNewUrlParser: true
+            };
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
@@ -97,7 +99,9 @@ export class KvMongo extends AbstractNosql {
     protected async doOpenAlone() {
         let url = "mongodb://" + this.host;
         try {
-            let opts: IndexedObject = {};
+            let opts: mongo.MongoClientOptions = {
+                useNewUrlParser: true
+            };
             if (this.user) {
                 opts.auth = {
                     user: this.user,
