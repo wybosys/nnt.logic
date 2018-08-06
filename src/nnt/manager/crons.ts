@@ -97,7 +97,7 @@ let mastertasks = new Set<CronTask>();
 
 Clusters.OnBecomeMaster(() => {
     mastertasks.forEach(e => {
-        e.start();
+        e.start(true);
     });
 });
 
