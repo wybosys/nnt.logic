@@ -76,8 +76,6 @@ export abstract class CronTask {
         }, () => {
 
             // 保护运行状态
-            this._job.stop();
-
             if (this._keeprunning) {
                 // 重新启动
                 logger.log("自动重新启动计划任务 {{=it.name}}", {name: GetObjectClassName(this)});
