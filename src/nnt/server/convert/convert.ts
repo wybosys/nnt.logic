@@ -23,7 +23,7 @@ function ConvertSupportExt(v: number): string {
         case ConvertSupport.PNG:
             return "png";
     }
-    return "unknown";
+    return "undecl";
 }
 
 @model()

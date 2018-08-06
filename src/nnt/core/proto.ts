@@ -814,7 +814,7 @@ function ValtypeDefToDef(def: clazz_type): string {
         case boolean_t:
             return "boolean";
     }
-    return (<any>def).name ? (<any>def).name : "unknown";
+    return (<any>def).name ? (<any>def).name : "undecl";
 }
 
 function FpToCommentDef(fp: FieldOption): string {

@@ -191,7 +191,7 @@ export function coldef(fp: FieldOption): string {
     if (fp.valtype) {
         return valtypedef(fp.valtype);
     }
-    return "unknown";
+    return "undecl";
 }
 
 // 返回基础的定义结构，之后的都直接使用固定的类型函数来声明

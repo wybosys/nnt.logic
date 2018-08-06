@@ -98,7 +98,7 @@ class Field {
             return "string";
         if (this.number)
             return "number";
-        return "unknown";
+        return "undecl";
     }
 
     type: Type; // field可以明确设置类型，也用来留给业务层自定义配置字段来使用

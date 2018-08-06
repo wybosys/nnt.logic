@@ -1,6 +1,6 @@
 export module configs {
 
-type unknown = string;
+type undecl = string;
 type rowindex = number;
 let t:any;
 
