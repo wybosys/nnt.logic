@@ -3,8 +3,8 @@ import {Node} from "../config/config";
 import {static_cast} from "../core/core";
 import {App} from "../manager/app";
 import {logger} from "../core/logger";
-import {AbstractCronTask, CronAdd} from "../manager/crons";
 import {Call} from "./remote";
+import {CronTask} from "../manager/crons";
 
 interface TaskConfig {
 
@@ -21,7 +21,8 @@ interface TaskConfig {
     cluster: boolean;
 }
 
-class TaskInvoke extends AbstractCronTask {
+class TaskInvoke extends CronTask {
+
     constructor(url: string) {
         super();
         this.url = url;
@@ -55,16 +56,19 @@ export class Cron extends AbstractServer {
     async start(): Promise<void> {
         this.task.forEach(e => {
             if (e.task) {
-                let ent = App.shared().instanceEntry(e.task);
+                let ent: CronTask = App.shared().instanceEntry(e.task);
                 if (!ent) {
                     logger.fatal("没有找到对象 " + e.task);
                     return;
                 }
-                CronAdd(e.time, ent, e.cluster);
+
+                ent.time = e.time;
+                ent.start(e.cluster);
             }
             else if (e.url) {
                 let ent = new TaskInvoke(e.url);
-                CronAdd(e.time, ent, e.cluster);
+                ent.time = e.time;
+                ent.start(e.cluster);
             }
         });
         logger.info("启动 {{=it.id}}@cron", {id: this.id});

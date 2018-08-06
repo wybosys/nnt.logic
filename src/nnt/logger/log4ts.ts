@@ -1,7 +1,7 @@
 import log4js = require("log4js");
 import {AbstractLogger} from "./logger";
 import {Node} from "../config/config";
-import {AbstractCronTask, CronAdd, PerDay} from "../manager/crons";
+import {CronTask, PerDay} from "../manager/crons";
 import {DateTime} from "../core/time";
 import {Config} from "../manager/config";
 
@@ -20,8 +20,7 @@ export class Log4Ts extends AbstractLogger {
 
     constructor() {
         super();
-        // 每天需要更新一次appender需要的相关参数
-        CronAdd(PerDay(1), new TaskLog4ts(this), false);
+        new TaskLog4ts(this).start();
     }
 
     config(cfg: Node) {
@@ -71,11 +70,14 @@ export class Log4Ts extends AbstractLogger {
     }
 }
 
-class TaskLog4ts extends AbstractCronTask {
+class TaskLog4ts extends CronTask {
 
     constructor(hdl: Log4Ts) {
         super();
         this._hdl = hdl;
+
+        // 每天需要更新一次appender需要的相关参数
+        this.time = PerDay(1);
     }
 
     private _hdl: Log4Ts;

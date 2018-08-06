@@ -1,26 +1,56 @@
 import cron = require("cron");
 import {logger} from "../core/logger";
-import {GetObjectClassName, static_cast} from "../core/core";
+import {GetObjectClassName} from "../core/core";
 import {Clusters} from "./clusters";
-import {ArrayT} from "../core/kernel";
 
-export abstract class AbstractCronTask {
+export abstract class CronTask {
 
-    // 绑定的任务id
-    get id(): string {
-        return this._id;
-    }
+    // 任务id
+    id: string;
 
     // 执行依赖的时间
-    get time(): string {
-        return this._time;
-    }
+    time: string;
 
     // 主执行函数
     abstract main(): void;
 
+    // 启动
+    start(cluster: boolean = false): boolean {
+        this._keeprunning = true;
+
+        if (!cluster) {
+            if (this._doStart()) {
+                tasks.add(this);
+                return true;
+            }
+            return false;
+        }
+
+        // 只有集群中的主服务可以添加任务
+        if (Clusters.IsMaster) {
+            if (this._doStart()) {
+                mastertasks.add(this);
+                return true;
+            }
+            return false;
+        }
+
+        // 不是集群，所以不能运行（等待自己被推举成master时再启动)
+        mastertasks.add(this);
+        return true;
+    }
+
     // 停止
-    stopped() {
+    stop() {
+        if (!this._job)
+            return;
+
+        this._keeprunning = false;
+        this._job.stop();
+        this._job = null;
+
+        tasks.delete(this);
+        mastertasks.delete(this);
     }
 
     // 是否位于计划任务中
@@ -28,101 +58,55 @@ export abstract class AbstractCronTask {
         return this._job && this._job.running;
     }
 
-    protected _id: string;
-    private _time: string;
     private _job: cron.CronJob;
-}
+    private _keeprunning: boolean; // 保持运行状态，避免自动结束
 
-interface IAbstractCronTask {
-    _id: string;
-    _time: string;
-    _job: cron.CronJob;
+    private _doStart(): boolean {
+        let tm = cron.time(this.time);
+        if (!tm) {
+            logger.warn("设置了错误的cron时间 {{=it.time}}", this);
+            return false;
+        }
+
+        this._job = new cron.CronJob(this.time, () => {
+            logger.log("执行一次计划任务 {{=it.name}}", {name: GetObjectClassName(this)});
+
+            // 执行一次
+            this.main();
+        }, () => {
+
+            // 保护运行状态
+            this._job.stop();
+
+            if (this._keeprunning) {
+                // 重新启动
+                logger.log("自动重新启动计划任务 {{=it.name}}", {name: GetObjectClassName(this)});
+                this._doStart();
+            }
+        }, true, 'Asia/Shanghai');
+
+        return true;
+    }
 }
 
 // 普通任务
-let tasks = new Array<AbstractCronTask>();
+let tasks = new Set<CronTask>();
 
 // 集群任务
-let mastertasks = new Array<AbstractCronTask>();
-
-// 没有跑起来的集群任务
-let masteralltasks = new Array<AbstractCronTask>();
-
-// 添加任务
-// clusters 在集群中添加任务，会保证集群中只有一个运行
-export function CronAdd(time: string, task: AbstractCronTask, clusters: boolean, id?: string): boolean {
-    if (!clusters) {
-        if (doCronAdd(time, task, id)) {
-            tasks.push(task);
-            return true;
-        }
-        return false;
-    }
-
-    // 只有集群中的主服务可以添加任务
-    if (Clusters.IsMaster) {
-        if (doCronAdd(time, task)) {
-            mastertasks.push(task);
-            masteralltasks.push(task);
-            return true;
-        }
-        return false;
-    }
-
-    let itask = static_cast<IAbstractCronTask>(task);
-    itask._id = id;
-    itask._time = time;
-    masteralltasks.push(task);
-    return true;
-}
-
-// 删除任务
-export function CronRemove(task: AbstractCronTask) {
-    let itask = static_cast<IAbstractCronTask>(task);
-    // 停止任务
-    if (itask._job)
-        itask._job.stop();
-    // 从集合中移除
-    ArrayT.RemoveObject(tasks, task);
-    ArrayT.RemoveObject(mastertasks, task);
-    ArrayT.RemoveObject(masteralltasks, task);
-}
+let mastertasks = new Set<CronTask>();
 
 Clusters.OnBecomeMaster(() => {
-    masteralltasks.forEach(e => {
-        if (doCronAdd(e.time, e, e.id)) {
-            mastertasks.push(e);
-        }
+    mastertasks.forEach(e => {
+        e.start();
     });
 });
 
 Clusters.OnBecomeSlaver(() => {
     // 停掉所有的集群任务
     mastertasks.forEach(e => {
-        let itask = static_cast<IAbstractCronTask>(e);
-        itask._job.stop();
+        e.stop();
     });
-    mastertasks.length = 0;
 });
-
-function doCronAdd(time: string, task: AbstractCronTask, id?: string): boolean {
-    let itask = static_cast<IAbstractCronTask>(task);
-    try {
-        itask._id = id;
-        itask._time = time;
-        itask._job = new cron.CronJob(time, () => {
-            logger.log("执行一次计划任务 {{=it.name}}", {name: GetObjectClassName(task)});
-            task.main();
-        }, () => {
-            task.stopped();
-        }, true, 'Asia/Shanghai');
-    }
-    catch (err) {
-        logger.error(err);
-        return false;
-    }
-    return true;
-}
 
 // 生成配置
 export function PerSecond(v: number = 1): string {
