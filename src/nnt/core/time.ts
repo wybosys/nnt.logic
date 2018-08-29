@@ -347,6 +347,7 @@ export class DateTime {
     }
 
     static MINUTE = 60;
+    static MINUTE_3 = 180;
     static MINUTE_5 = 300;
     static MINUTE_15 = 900;
     static MINUTE_30 = 1800;
