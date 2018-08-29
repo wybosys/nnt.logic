@@ -227,6 +227,7 @@ export abstract class Multiplayers extends Socket {
         return true;
     }
 
+    // 用来建立消息队列的服务器名称，配置在app.json中
     mqsrv: string;
 
     // 必须提供事务对象
