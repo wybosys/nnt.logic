@@ -62,9 +62,7 @@ export class Routers {
         }
 
         // 恢复数据上下文
-        if (!trans.isCollected()) {
-            await trans.collect();
-        }
+        await trans.collect();
 
         // 请求锁，实现流控的目的
         if (trans.frqctl && !await trans.lock()) {
