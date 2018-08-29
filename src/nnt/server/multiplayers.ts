@@ -232,14 +232,17 @@ export abstract class Multiplayers extends Socket {
     // 必须提供事务对象
     protected abstract instanceTransaction(): Transaction;
 
+    // 实例化连接对象
     protected instanceConnector(): Connector {
-        let cnt = new Connector();
-        cnt.mqsrv = this.mqsrv;
-        return cnt;
+        return new Connector();
     }
 
     protected onConnectorAvaliable(connector: Connector) {
+        // 绑定mq服务，后面会自动打开消息通道
+        connector.mqsrv = this.mqsrv;
         super.onConnectorAvaliable(connector);
+
+        // 准备消息通道等
         connector.avaliable();
         logger.log("{{=it.userIdentifier}} 连接服务器", connector);
     }
