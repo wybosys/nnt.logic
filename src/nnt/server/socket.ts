@@ -361,17 +361,23 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     });
                 }
                 else {
+                    // 已经登录，则直接先初始化事务
+                    if (connector.authed)
+                        connector.init(t);
                     this._routers.process(t).then(() => {
-                        if (t.status == STATUS.OK && !connector.authed && connector.init(t)) {
-                            connector.authed = true;
+                        if (t.status == STATUS.OK) {
+                            // 如果没有登录，需要初始化登录数据
+                            if (!connector.authed && connector.init(t)) {
+                                connector.authed = true;
 
-                            // 登陆清除timeout
-                            let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
-                            CancelDelay(tmr);
-                            ObjectT.Set(rsp, IO_TIMEOUT, null);
+                                // 登陆清除timeout
+                                let tmr = ObjectT.Get(rsp, IO_TIMEOUT);
+                                CancelDelay(tmr);
+                                ObjectT.Set(rsp, IO_TIMEOUT, null);
 
-                            // 登陆成功
-                            this.onConnectorAvaliable(connector);
+                                // 登陆成功
+                                this.onConnectorAvaliable(connector);
+                            }
                         }
                     });
                 }
