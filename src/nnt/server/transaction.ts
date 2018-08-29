@@ -144,6 +144,11 @@ export abstract class Transaction {
         return new Promise<void>(resolve => (resolve()));
     }
 
+    // 如果数据已经收集（类似于长联），则可以通过返回true来使得跳过collect的过程
+    isCollected(): boolean {
+        return false;
+    }
+
     // 同步模式还是异步模式
     async(): boolean {
         return IsAsyncModel(this.model);
