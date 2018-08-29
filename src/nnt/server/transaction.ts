@@ -141,7 +141,7 @@ export abstract class Transaction {
 
     // 恢复上下文，涉及到数据的恢复，所以是异步模式
     collect(): Promise<void> {
-        return;
+        return new Promise<void>(resolve => (resolve()));
     }
 
     // 同步模式还是异步模式

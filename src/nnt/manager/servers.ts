@@ -64,12 +64,12 @@ export function FindRouter(srvid: string, action: string): IRouter {
     let srv = servers.get(srvid);
     if (!srv) {
         logger.fatal("没有找到注册Router时使用的服务器 {{=it.id}}", {id: srvid});
-        return;
+        return null;
     }
     let srvR = static_cast<IRouterable>(srv);
     if (!srvR.routers) {
         logger.fatal("该服务器 {{=it.id}} 不支持注册Router", {id: srvid});
-        return;
+        return null;
     }
     let ap = action.split(".");
     return srvR.routers.find(ap[0]);

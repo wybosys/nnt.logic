@@ -110,7 +110,7 @@ export function Acquire(srvid: string): IMQClient {
     let srv = static_cast<IMQServer>(Find(srvid));
     if (srv == null) {
         logger.warn("没有找到mq服务器 {{=it.id}}", {id: srvid});
-        return;
+        return null;
     }
     return srv.instanceClient();
 }

@@ -428,7 +428,7 @@ export class CoTimer
     stop(): CoTimer {
         if (!this.isRunning) {
             logger.warn("CoTimer 定时器已经停止");
-            return;
+            return this;
         }
 
         this._tmr.stop();

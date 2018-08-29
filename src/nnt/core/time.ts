@@ -42,13 +42,15 @@ export class Timeout {
     start(): boolean {
         if (this._hdl) {
             logger.fatal("定时器已经开始执行");
-            return;
+            return false;
         }
 
         this._hdl = Delay(this._time, () => {
             this._proc();
             this._hdl = null;
         });
+
+        return true;
     }
 
     stop() {
@@ -76,11 +78,12 @@ export class TimeoutManual {
     start(): boolean {
         if (this._hdl) {
             logger.fatal("定时器已经开始执行");
-            return;
+            return false;
         }
 
         this._hdl = {};
         this.now = 0;
+        return true;
     }
 
     stop() {
@@ -121,12 +124,14 @@ export class Interval {
     start(): boolean {
         if (this._hdl) {
             logger.fatal("定时器已经开始执行");
-            return;
+            return false;
         }
 
         this._hdl = Repeat(this._time, () => {
             this._proc();
         });
+
+        return true;
     }
 
     stop() {

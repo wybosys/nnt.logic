@@ -171,9 +171,9 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                         logger.warn("没有找到该实例类型 {{=it.clz}}", {clz: ent});
                         return false;
                     }
-                    else {
-                        this._routers.register(router);
-                    }
+
+                    this._routers.register(router);
+                    return true;
                 });
             }
         }

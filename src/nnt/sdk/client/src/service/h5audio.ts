@@ -12,7 +12,8 @@ export class H5AudioRecorder extends AudioRecorder {
 
     static IsValid(cb: (support: boolean) => void) {
         if (H5AudioRecorder._VALID != null) {
-            return H5AudioRecorder._VALID;
+            cb(H5AudioRecorder._VALID);
+            return;
         }
 
         if (typeof AudioContext != "undefined") {

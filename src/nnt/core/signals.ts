@@ -395,7 +395,7 @@ export class Signals {
         }
         else {
             logger.warn("SignalRedirect 传入了错误的参数");
-            return;
+            return null;
         }
 
         let ss = this.avaslots(sig);

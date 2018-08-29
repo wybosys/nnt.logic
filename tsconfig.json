@@ -1,27 +1,17 @@
 {
-    "compilerOptions":{
-        "module":"commonjs",
-        "target":"es6",
-        "outDir":"bin",
-        "sourceMap":true,
-        "allowSyntheticDefaultImports":true,
-        "allowUnreachableCode": true,
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "esnext",
+        "outDir": "bin",
+        "sourceMap": true,
         "removeComments": true,
         "experimentalDecorators": true,
         "noImplicitAny": true,
         "noImplicitUseStrict": true,
-        "newLine": "LF",
-        "moduleResolution": "node",
-        "types":[
-            "node"
-        ]
+        "noImplicitReturns": true,
+        "moduleResolution": "node"
     },
-    "include":[
+    "include": [
         "src/**/*.ts"
-    ],
-    "exclude": [
-        "src/nnt/client",
-        "cache",
-        "assets"
     ]
 }
