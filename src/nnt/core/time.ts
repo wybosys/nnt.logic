@@ -159,10 +159,10 @@ export function SkipFrame(n: number, proc: Function) {
 
 // 从cygwin里面运行时tz会导致拿出的hours错误
 let TIMEZONE = "Asia/Shanghai";
-if (process.env.TZ != null) {
-    console.error("必须要保证process.env.TZ为空，否则时区会有问题");
-    process.exit(-1);
-}
+//if (process.env.TZ != null) {
+//    console.error("必须要保证process.env.TZ为空，否则时区会有问题");
+//    process.exit(-1);
+//}
 
 export function InstanceDate(): Date {
     let dt = new Date();
