@@ -14,10 +14,13 @@ interface pair <K, V> {k:K;v:V;}
         get low_gold():number { return this.cfg[1]; } 
         //金币量上限
         get high_gold():number { return this.cfg[2]; } 
+        //JSON数据
+        get json():any { return this.cfg[3]; } 
         
         static INDEX_ID = 0;
         static INDEX_LOW_GOLD = 1;
         static INDEX_HIGH_GOLD = 2;
+        static INDEX_JSON = 3;
         
         static ONE = 0;
         static TWO = 1;
@@ -31,13 +34,13 @@ interface pair <K, V> {k:K;v:V;}
 
 
     export const bet_button_roles:Array<any> = [
-        [0,0,100000],[1,100000,2000000],[2,2000000,20000000],[3,20000000,-1],[0,0,0]
+        [0,0,100000,{"test":"abc"}],[1,100000,2000000,null],[2,2000000,20000000,null],[3,20000000,-1,null]
         ];
 
 
         t = bet_button_roles;
         let _bet_button_roleMap:any = {
-        0:t[0],1:t[1],2:t[2],3:t[3],4:t[4]
+        0:t[0],1:t[1],2:t[2],3:t[3]
         };
 
 

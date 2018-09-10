@@ -1,4 +1,4 @@
-import {ArrayT, asString} from "../core/kernel";
+import {ArrayT, asString, toJson, toJsonObject} from "../core/kernel";
 import {UpcaseFirst} from "../core/string";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
@@ -608,3 +608,15 @@ class FormulaProcessor implements Processor {
 }
 
 RegisterConfigProcessor("Formula", new FormulaProcessor());
+
+class JsonProcessor implements Processor {
+    type = "any";
+
+    convert(val: string): string {
+        if (val.trim().length == 0)
+            return "null";
+        return toJson(toJsonObject(val));
+    }
+}
+
+RegisterConfigProcessor("Json", new JsonProcessor());
