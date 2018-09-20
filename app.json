@@ -49,8 +49,8 @@
         {
             "id": "gendata",
             "entry": "nnt.server.XlsxConfig",
-            "dir": "~/src/app",
-            "output": "~/src/app/data.ts",
+            "dir": "~/src/app/data",
+            "output": "~/src/app/data/data.ts",
             "enable": null
         }
     ],
