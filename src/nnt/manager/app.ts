@@ -11,6 +11,7 @@ import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
 import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
 import {ArrayT, toJsonObject} from "../core/kernel";
+import tmp = require("tmp");
 
 export class App {
 
@@ -253,6 +254,10 @@ RegisterScheme("entry", body => {
 // 处理clientSDK的url转换
 RegisterScheme("sdk", body => {
     return home() + "/src/" + body;
+});
+
+RegisterScheme("cache", body => {
+    return Config.CACHE + "/" + body;
 });
 
 process.on('uncaughtException', err => {

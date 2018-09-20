@@ -5,6 +5,7 @@ import {Variant} from "../core/object";
 import {DbExecuteStat} from "./store";
 import {Node} from "../config/config";
 import tmp = require("tmp");
+import {expand} from "../core/url";
 
 interface KvLevelNode {
 
@@ -18,7 +19,7 @@ export class KvLevel extends AbstractKv {
         super.config(cfg);
         let c: KvLevelNode = <any>cfg;
         if (c.file)
-            this._file = c.file;
+            this._file = expand(c.file);
         return true;
     }
 
