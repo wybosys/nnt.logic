@@ -15,18 +15,18 @@ export class KvMemory extends AbstractKv {
     }
 
     get(key: string, cb: (res: Variant) => void) {
-        cb(new Variant(this._obj[key]));
+        cb(Variant.Unserialize(this._obj[key]));
     }
 
     set(key: string, val: Variant, cb: (res: boolean) => void) {
-        this._obj[key] = val.raw;
+        this._obj[key] = val.serialize();
         cb(true);
     }
 
     getset(key: string, val: Variant, cb: (res: Variant) => void) {
         let prev = this._obj[key];
-        this._obj[key] = val.raw;
-        cb(new Variant(prev));
+        this._obj[key] = val.serialize();
+        cb(Variant.Unserialize(prev));
     }
 
     autoinc(key: string, delta: number, cb: (cb: number) => void) {

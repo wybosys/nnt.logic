@@ -1,5 +1,6 @@
-import {input, integer, json, model, output, string} from "../../nnt/core/proto";
+import {auth, input, integer, json, model, output, string} from "../../nnt/core/proto";
 import {IndexedObject} from "../../nnt/core/kernel";
+import {colstring, table} from "../../nnt/store/proto";
 
 @model()
 export class Echoo {
@@ -15,4 +16,23 @@ export class Echoo {
 
     @json(4, [output], "当天的时间段")
     today: IndexedObject;
+}
+
+@model()
+@table("memdb", "user")
+export class Login {
+
+    @string(1, [input], "随便输入一个用户id")
+    @colstring()
+    uid: string;
+
+    @colstring()
+    sid: string;
+}
+
+@model([auth])
+export class User {
+
+    @string(1, [output], "当前用户id")
+    uid: string;
 }
