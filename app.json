@@ -61,7 +61,7 @@
         },
         {
             "id": "amqp",
-            "host": "localhost",
+            "host": "develop.91egame.com",
             "vhost": "sample",
             "user": "sample",
             "password": "sample",
