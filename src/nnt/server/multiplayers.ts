@@ -7,11 +7,12 @@ import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
 import {DateTime} from "../core/time";
+import {STATUS} from "../core/models";
 
 export interface IMPMessage {
 
     // 用户的标识
-    u: string;
+    u?: string;
 
     // 条件，对于model，就是所有input的集合，服务端发消息时会严格比对，一样后才发送
     f?: IndexedObject;
@@ -26,7 +27,7 @@ export interface IMPMessage {
     p: IndexedObject;
 
     // 内部消息
-    i: boolean;
+    i?: boolean;
 
     // 状态码
     s?: number;
@@ -62,6 +63,15 @@ export class Connector extends BaseConnector {
 
     // 使用的mq服务
     mqsrv: string;
+
+    // 是否允许多端登陆 Single User Multi Devices
+    sumd: boolean = false;
+
+    // 客户端的连接的唯一id
+    device = UUID();
+
+    // 是否是多端登陆正在退出
+    isSumdClosing: boolean;
 
     init(trans: Transaction): boolean {
         if (!trans.auth())
@@ -110,9 +120,9 @@ export class Connector extends BaseConnector {
         Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
             transmitter: true,
             longliving: false
-        }).then(() => {
+        }).then(mqsumd => {
             // 多机通道下的单机独立队列
-            Acquire(this.mqsrv).open("user.online." + this.userIdentifier + "." + DateTime.Current(), {
+            Acquire(this.mqsrv).open("user.online." + this.userIdentifier + "." + this.device, {
                 durable: false,
                 longliving: false
             }).then(mq => {
@@ -121,6 +131,15 @@ export class Connector extends BaseConnector {
                     this.processData(data);
                 });
                 mq.receiver("user.online." + this.userIdentifier, true);
+
+                // 禁止多端需要发送登陆消息用来在其他已经连接的客户端处理下线操作
+                if (!this.sumd) {
+                    mqsumd.broadcast(new Variant({
+                        i: true,
+                        p: {d: this.device, u: this.userIdentifier},
+                        c: "user.online"
+                    }));
+                }
             });
         });
     }
@@ -145,6 +164,17 @@ export class Connector extends BaseConnector {
         if (!jsobj)
             return;
         if (jsobj.i) {
+            if (!this.sumd) {
+                if (jsobj.c == "user.online") {
+                    if (jsobj.p && jsobj.p.u == this.userIdentifier) {
+                        if (jsobj.p.d != this.device) {
+                            // 需要下线当前客户端
+                            this.isSumdClosing = true;
+                            this.close(STATUS.MULTIDEVICE);
+                        }
+                    }
+                }
+            }
             return;
         }
         // 指定了modelid，如果查找到，则直接发送

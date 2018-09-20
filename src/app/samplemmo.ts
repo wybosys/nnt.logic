@@ -36,6 +36,8 @@ export class SampleMmo extends Multiplayers {
 
     protected onConnectorUnavaliable(connector: MmoConnector) {
         super.onConnectorUnavaliable(connector);
+        if (connector.isSumdClosing)
+            return;
         Manager.shared().user.stopMessageBomb(connector.userIdentifier);
     }
 }

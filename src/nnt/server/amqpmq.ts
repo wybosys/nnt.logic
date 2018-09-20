@@ -36,7 +36,7 @@ class AmqpmqClient extends AbstractMQClient {
                         durable: this.durable,
                         autoDelete: !this.longliving
                     }).then(() => {
-                        resolve(null);
+                        resolve(this);
                     }).catch(logger.warn);
                 }
                 else {
