@@ -92,8 +92,8 @@
     ],
     "dbms": [
         {
-            "id": "memdb",
-            "entry": "nnt.store.KvMemory"
+            "id": "localdb",
+            "entry": "nnt.store.KvLevel"
         }
     ],
     "logger": [

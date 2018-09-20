@@ -19,7 +19,7 @@ export class Echoo {
 }
 
 @model()
-@table("memdb", "user")
+@table("localdb", "user")
 export class Login {
 
     @string(1, [input], "随便输入一个用户id")
