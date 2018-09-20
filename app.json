@@ -47,11 +47,59 @@
             }
         },
         {
+            "id": "mmo",
+            "attach": "sample",
+            "entry": "app.SampleMmo",
+            "mqsrv": "amqp"
+        },
+        {
             "id": "gendata",
             "entry": "nnt.server.XlsxConfig",
             "dir": "~/src/app/data",
             "output": "~/src/app/data/data.ts",
             "enable": null
+        },
+        {
+            "id": "amqp",
+            "host": "localhost",
+            "vhost": "sample",
+            "user": "sample",
+            "password": "sample",
+            "entry": "nnt.server.Amqpmq",
+            "channel": {
+                "users.online": {
+                    "type": "fanout",
+                    "durable": false,
+                    "longliving": true
+                },
+                "users": {
+                    "type": "fanout",
+                    "durable": true,
+                    "longliving": true
+                }
+            },
+            "enable": "debug"
+        },
+        {
+            "id": "amqp",
+            "host": "rabbitmq",
+            "vhost": "sample",
+            "user": "sample",
+            "password": "sample",
+            "entry": "nnt.server.Amqpmq",
+            "channel": {
+                "users.online": {
+                    "type": "fanout",
+                    "durable": false,
+                    "longliving": true
+                },
+                "users": {
+                    "type": "fanout",
+                    "durable": true,
+                    "longliving": true
+                }
+            },
+            "enable": "distribution"
         }
     ],
     "dbms": [
