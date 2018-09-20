@@ -235,8 +235,8 @@ export class Variant implements ISerializableObject {
         }
     }
 
-    get object(): any {
-        return this._jsobj;
+    get raw(): any {
+        return this._raw;
     }
 
     static Unserialize(str: string): Variant {
@@ -256,6 +256,10 @@ export class Variant implements ISerializableObject {
     private _bol: boolean;
     private _num: number;
     private _jsobj: IndexedObject;
+
+    get object(): any {
+        return this._jsobj;
+    }
 
     get value(): any {
         if (this._type == VariantType.STRING)
@@ -351,7 +355,7 @@ export class Variant implements ISerializableObject {
 export class Stream {
 
     bindRead(stm: NodeJS.ReadableStream): this {
-        stm.on("ready", ()=>{
+        stm.on("ready", () => {
 
         });
         this._from = stm;

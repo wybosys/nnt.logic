@@ -12,16 +12,16 @@
             "id": "sample",
             "listen": "*",
             "port": 8090,
-            "entry": "app.Sample",
+            "entry": "app.SampleRest",
             "enable": "local",
             "router": {
                 "nnt.server.apidoc.Router": {
                     "export": {
                         "router": [
-                            "entry://app/sample"
+                            "entry://app/samplerest"
                         ],
                         "model": [
-                            "entry://app/sample"
+                            "entry://app/samplerest"
                         ]
                     }
                 }
@@ -31,16 +31,16 @@
             "id": "sample",
             "listen": "*",
             "port": 80,
-            "entry": "app.Sample",
+            "entry": "app.SampleRest",
             "enable": "devops-develop,devops-release",
             "router": {
                 "nnt.server.apidoc.Router": {
                     "export": {
                         "router": [
-                            "entry://app/sample"
+                            "entry://app/samplerest"
                         ],
                         "model": [
-                            "entry://app/sample"
+                            "entry://app/samplerest"
                         ]
                     }
                 }
@@ -54,9 +54,11 @@
             "enable": null
         }
     ],
-    "container": [
-    ],
     "dbms": [
+        {
+            "id": "memdb",
+            "entry": "nnt.store.KvMemory"
+        }
     ],
     "logger": [
         {
