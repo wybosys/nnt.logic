@@ -30,6 +30,9 @@ export interface IMPMessage {
 
     // 状态码
     s?: number;
+
+    // 静默
+    q?: boolean;
 }
 
 // 多玩家服务需要提供带user区分的事务

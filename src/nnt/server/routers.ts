@@ -125,6 +125,7 @@ export class Routers {
             return;
         }
 
+        trans.quiet = true;
         trans.status = STATUS.OK;
     }
 
@@ -147,6 +148,7 @@ export class Routers {
             return;
         }
 
+        trans.quiet = true;
         trans.status = STATUS.OK;
     }
 

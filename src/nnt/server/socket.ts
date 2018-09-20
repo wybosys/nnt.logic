@@ -416,19 +416,25 @@ interface TransactionPayload {
 function TransactionSubmit() {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
-    pl.rsp.send(new Variant({
+    let data: IndexedObject = {
         s: self.status,
         d: self.modelId(),
-        p: Output(self.model)
-    }).toBuffer());
+        p: Output(self.model),
+    };
+    if (self.quiet)
+        data.q = 1;
+    pl.rsp.send(new Variant(data).toBuffer());
 }
 
 function TransactionOutput(type: string, obj: any) {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
-    pl.rsp.send(new Variant({
+    let data: IndexedObject = {
         s: self.status,
         d: self.modelId(),
-        p: Output(self.model)
-    }).toBuffer());
+        p: Output(self.model),
+    };
+    if (self.quiet)
+        data.q = 1;
+    pl.rsp.send(new Variant(data).toBuffer());
 }

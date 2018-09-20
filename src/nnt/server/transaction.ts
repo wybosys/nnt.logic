@@ -262,6 +262,9 @@ export abstract class Transaction {
 
     // 是否把sid返回客户端
     responseSessionId: boolean;
+
+    // 静默模式，不输出回调
+    quiet: boolean;
 }
 
 export class EmptyTransaction extends Transaction {
