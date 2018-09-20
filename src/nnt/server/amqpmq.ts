@@ -88,6 +88,7 @@ class AmqpmqClient extends AbstractMQClient {
         return this;
     }
 
+    // 直接给队列发消息
     async produce(msg: Variant): Promise<this> {
         if (!this._hdl.sendToQueue(this._chann, msg.toBuffer())) {
             logger.warn("amqp: 发送消息失败");
@@ -95,6 +96,7 @@ class AmqpmqClient extends AbstractMQClient {
         return this;
     }
 
+    // 给通道发消息
     async broadcast(msg: Variant): Promise<this> {
         if (!this._hdl.publish(this._chann, "", msg.toBuffer())) {
             logger.warn("amqp: 广播消息失败");
@@ -102,6 +104,7 @@ class AmqpmqClient extends AbstractMQClient {
         return this;
     }
 
+    // 建立群监听
     async receiver(transmitter: string, connect: boolean): Promise<this> {
         try {
             if (connect) {

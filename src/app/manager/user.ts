@@ -9,8 +9,10 @@ export class User {
     // 测试时当用户长联后，开始消息轰炸
     startMessageBomb(uid: string) {
         let fnd = this._msgbombs.get(uid);
-        if (fnd != null)
+        if (fnd != null) {
             logger.fatal("已经开始轰炸");
+            return;
+        }
         let mb = new MessageBomb(uid);
         this._msgbombs.set(uid, mb);
     }

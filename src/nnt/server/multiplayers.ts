@@ -1,11 +1,12 @@
 import {Connector as BaseConnector, Socket, Transaction as BaseTransaction} from "./socket";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
-import {GetObjectClassName} from "../core/core";
+import {GetObjectClassName, UUID} from "../core/core";
 import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
+import {DateTime} from "../core/time";
 
 export interface IMPMessage {
 
@@ -72,6 +73,7 @@ export class Connector extends BaseConnector {
 
     protected _mqA: IMQClient;
     protected _mqB: IMQClient;
+    protected _mqC: IMQClient;
 
     avaliable() {
         // 建立mq服务器
@@ -80,6 +82,7 @@ export class Connector extends BaseConnector {
         // B user.online.<uid> <AD|topic>
         // A user.<uid> <D|topic>
 
+        // 持久化通道
         Acquire(this.mqsrv).open("user." + this.userIdentifier, {
             durable: true,
             longliving: true
@@ -91,6 +94,7 @@ export class Connector extends BaseConnector {
             mq.receiver("users", true);
         });
 
+        // 单用户独立在线通道
         Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
             durable: false,
             longliving: false
@@ -100,6 +104,24 @@ export class Connector extends BaseConnector {
                 this.processData(data);
             });
             mq.receiver("users.online", true);
+        });
+
+        // 多机通道
+        Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
+            transmitter: true,
+            longliving: false
+        }).then(() => {
+            // 多机通道下的单机独立队列
+            Acquire(this.mqsrv).open("user.online." + this.userIdentifier + "." + DateTime.Current(), {
+                durable: false,
+                longliving: false
+            }).then(mq => {
+                this._mqC = mq;
+                mq.subscribe(data => {
+                    this.processData(data);
+                });
+                mq.receiver("user.online." + this.userIdentifier, true);
+            });
         });
     }
 
@@ -180,6 +202,12 @@ export class Connector extends BaseConnector {
             this._mqB.unsubscribe();
             this._mqB.close();
             this._mqB = null;
+        }
+
+        if (this._mqC) {
+            this._mqC.unsubscribe();
+            this._mqC.close();
+            this._mqC = null;
         }
 
         this._listenings.clear();
