@@ -26,6 +26,7 @@ export class Login {
     @colstring()
     uid: string;
 
+    @string(2, [output])
     @colstring()
     sid: string;
 }

@@ -2,7 +2,7 @@ import {action, IRouter} from "../../nnt/core/router";
 import {Transaction} from "../../nnt/server/transaction";
 import {DateTime} from "../../nnt/core/time";
 import {TODAY_RANGE} from "../../nnt/component/today";
-import {Echoo, Login, User} from "../model/sample";
+import {Echoo, Login, Message, User} from "../model/sample";
 import {UUID} from "../../nnt/core/core";
 import {Trans} from "../model/trans";
 import {Get, Set} from "../../nnt/manager/dbmss";
@@ -31,6 +31,7 @@ export class RSample implements IRouter {
             Set(Login, {uid: m.uid}, {sid: trans.sid});
             Set(Login, {sid: trans.sid}, {uid: m.uid});
         }
+        m.sid = trans.sid;
         trans.responseSessionId = true;
         trans.submit();
     }
@@ -39,6 +40,11 @@ export class RSample implements IRouter {
     async user(trans: Trans) {
         let m: User = trans.model;
         m.uid = trans.uid;
+        trans.submit();
+    }
+
+    @action(Message, [], "监听消息炸弹")
+    message(trans: Trans) {
         trans.submit();
     }
 }

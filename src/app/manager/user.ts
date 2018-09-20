@@ -17,10 +17,10 @@ export class User {
 
     stopMessageBomb(uid: string) {
         let fnd = this._msgbombs.get(uid);
-        if (fnd == null)
-            logger.fatal("没有找到轰炸");
-        fnd.stop();
-        this._msgbombs.delete(uid);
+        if (fnd) {
+            fnd.stop();
+            this._msgbombs.delete(uid);
+        }
     }
 
     private _msgbombs = new Map<string, MessageBomb>();

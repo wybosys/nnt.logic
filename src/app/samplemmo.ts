@@ -1,6 +1,7 @@
 import {Connector, Multiplayers} from "../nnt/server/multiplayers";
 import {Trans} from "./model/trans";
 import {Manager} from "./manager/manager";
+import {RSample} from "./router/sample";
 
 export class MmoConnector extends Connector {
 
@@ -17,6 +18,7 @@ export class SampleMmo extends Multiplayers {
 
     constructor() {
         super();
+        this.routers.register(new RSample());
     }
 
     instanceTransaction(): Trans {
