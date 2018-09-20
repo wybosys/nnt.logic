@@ -119,7 +119,8 @@ export class Connector extends BaseConnector {
         // 多机通道
         Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
             transmitter: true,
-            longliving: false
+            longliving: false,
+            durable: false
         }).then(mqsumd => {
             // 多机通道下的单机独立队列
             Acquire(this.mqsrv).open("user.online." + this.userIdentifier + "." + this.device, {
