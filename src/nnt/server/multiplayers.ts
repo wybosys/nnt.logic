@@ -6,7 +6,6 @@ import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
-import {STATUS} from "../core/models";
 
 export interface IMPMessage {
 
@@ -27,6 +26,9 @@ export interface IMPMessage {
 
     // 内部消息
     i: boolean;
+
+    // 状态码
+    s?: number;
 }
 
 // 多玩家服务需要提供带user区分的事务
@@ -118,8 +120,11 @@ export class Connector extends BaseConnector {
 
     protected processData(data: Variant) {
         let jsobj: IMPMessage = <any>data.toJsObj();
-        if (!jsobj || jsobj.i)
+        if (!jsobj)
             return;
+        if (jsobj.i) {
+            return;
+        }
         // 指定了modelid，如果查找到，则直接发送
         if (jsobj.d) {
             if (this._listenings.contains(jsobj.c, jsobj.d)) {
