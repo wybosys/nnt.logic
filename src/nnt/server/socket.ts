@@ -417,6 +417,7 @@ function TransactionSubmit() {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
     pl.rsp.send(new Variant({
+        c: self.status,
         d: self.modelId(),
         p: Output(self.model)
     }).toBuffer());
