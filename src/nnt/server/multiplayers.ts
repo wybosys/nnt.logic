@@ -6,6 +6,7 @@ import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
+import {STATUS} from "../core/models";
 
 export interface IMPMessage {
 
