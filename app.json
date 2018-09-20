@@ -21,7 +21,7 @@
                             "entry://app/samplerest"
                         ],
                         "model": [
-                            "entry://app/samplerest"
+                            "entry://app/model/sample"
                         ]
                     }
                 }
@@ -32,19 +32,7 @@
             "listen": "*",
             "port": 80,
             "entry": "app.SampleRest",
-            "enable": "devops-develop,devops-release",
-            "router": {
-                "nnt.server.apidoc.Router": {
-                    "export": {
-                        "router": [
-                            "entry://app/samplerest"
-                        ],
-                        "model": [
-                            "entry://app/samplerest"
-                        ]
-                    }
-                }
-            }
+            "enable": "devops-develop,devops-release"
         },
         {
             "id": "mmo",

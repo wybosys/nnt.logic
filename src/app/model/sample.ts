@@ -36,3 +36,10 @@ export class User {
     @string(1, [output], "当前用户id")
     uid: string;
 }
+
+@model([auth])
+export class Message {
+
+    @string(1, [output], "消息体")
+    content: string;
+}

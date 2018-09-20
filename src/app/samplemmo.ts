@@ -1,5 +1,6 @@
 import {Connector, Multiplayers} from "../nnt/server/multiplayers";
 import {Trans} from "./model/trans";
+import {Manager} from "./manager/manager";
 
 export class MmoConnector extends Connector {
 
@@ -28,9 +29,11 @@ export class SampleMmo extends Multiplayers {
 
     protected onConnectorAvaliable(connector: MmoConnector) {
         super.onConnectorAvaliable(connector);
+        Manager.shared().user.startMessageBomb(connector.userIdentifier);
     }
 
     protected onConnectorUnavaliable(connector: MmoConnector) {
         super.onConnectorUnavaliable(connector);
+        Manager.shared().user.stopMessageBomb(connector.userIdentifier);
     }
 }

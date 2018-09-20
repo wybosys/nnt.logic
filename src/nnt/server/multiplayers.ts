@@ -3,7 +3,7 @@ import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {GetObjectClassName} from "../core/core";
 import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
-import {Acquire, IMQClient} from "./mq";
+import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
 
@@ -265,5 +265,17 @@ export abstract class Multiplayers extends Socket {
             connector.listen(model, trans.modelId());
         else
             connector.unlisten(model, trans.modelId());
+    }
+
+    static AcquireUser(mqsrv: string, uid: string): Promise<IMQClient> {
+        return Acquire(mqsrv).open(PREFIX_USER + uid, {
+            passive: true
+        });
+    }
+
+    static AcquireOnlineUser(mqsrv: string, uid: string, opt?: MQClientOption): Promise<IMQClient> {
+        return Acquire(mqsrv).open(PREFIX_USER_ONLINE + uid, {
+            passive: true
+        });
     }
 }
