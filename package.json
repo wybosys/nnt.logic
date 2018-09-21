@@ -79,7 +79,7 @@
     "redis": "^2.8.0",
     "request": "^2.85.0",
     "seed-random": "^2.2.0",
-    "sharpkit": "^10.20.2",
+    "sharpkit": "^10.30.4",
     "soap": "^0.23.0",
     "spdy": "^3.4.7",
     "sprintf-js": "^1.1.1",
