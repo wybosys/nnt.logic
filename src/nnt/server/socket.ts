@@ -349,6 +349,8 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 if (params["_listen"] === ListenMode.LISTEN) {
                     this._routers.listen(t).then(() => {
                         if (t.status == STATUS.OK) {
+                            if (connector.authed)
+                                connector.init(t);
                             this.onListen(connector, t, true);
                             this._routers.process(t);
                         }
@@ -356,8 +358,11 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 }
                 else if (params["_listen"] === ListenMode.UNLISTEN) {
                     this._routers.listen(t).then(() => {
-                        if (t.status == STATUS.OK)
+                        if (t.status == STATUS.OK) {
+                            if (connector.authed)
+                                connector.init(t);
                             this.onListen(connector, t, false);
+                        }
                     });
                 }
                 else {
