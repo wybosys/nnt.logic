@@ -3,7 +3,7 @@ import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
 import {IsClass, Require, static_cast} from "../../core/core";
-import {AnyClass, ArrayT, IndexedObject, JsonObject, ObjectT, toJson} from "../../core/kernel";
+import {AnyClass, ArrayT, clazz_type, IndexedObject, JsonObject, ObjectT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
 import {
@@ -21,7 +21,6 @@ import {
 import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
-import {clazz_type} from "../../sdk/client/src/model";
 import {VueExport} from "./vue-export";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");

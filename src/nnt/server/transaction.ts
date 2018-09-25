@@ -9,6 +9,7 @@ import {CancelDelay, DateTime, Delay, DelayHandler} from "../core/time";
 import {Config} from "../manager/config";
 import {promise} from "../core/core";
 import {AbstractParser} from "./parser/parser";
+import {AbstractRender} from "./render/render";
 
 export const RESPONSE_SID = "X-NntLogic-SessionId";
 
@@ -266,6 +267,7 @@ export abstract class Transaction {
     parser: AbstractParser;
 
     // 用来构建输出
+    render: AbstractRender;
 }
 
 export class EmptyTransaction extends Transaction {

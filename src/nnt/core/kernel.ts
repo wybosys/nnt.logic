@@ -11,6 +11,7 @@ export type AnyClass = Class<any>;
 export type IndexedObject = { [key: string]: any };
 export type KvObject<V> = { [key: string]: V };
 export type PodType = number | string | boolean;
+export type clazz_type = AnyClass | string;
 
 export function ispod(v: any): boolean {
     let typ = typeof v;
