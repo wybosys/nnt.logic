@@ -1,5 +1,5 @@
 import {FindAction, IRouter} from "../core/router";
-import {CheckInputStatus, Decode, IsAsyncModel, IsNeedAuth} from "../core/proto";
+import {CheckInputStatus, Decode, IsNeedAuth} from "../core/proto";
 import {logger} from "../core/logger";
 import {AbstractServer} from "./server";
 import {STATUS} from "../core/models";
@@ -142,11 +142,6 @@ export abstract class Transaction {
     // 恢复上下文，涉及到数据的恢复，所以是异步模式
     collect(): Promise<void> {
         return new Promise<void>(resolve => (resolve()));
-    }
-
-    // 同步模式还是异步模式
-    async(): boolean {
-        return IsAsyncModel(this.model);
     }
 
     // 验证

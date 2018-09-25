@@ -26,9 +26,8 @@ export function UpdateData(obj: any) {
 }
 
 // model的参数
-// 异步请求
-export const async = "async";
-export const sync = "sync";
+
+// 隐藏该model
 export const hidden = "hidden";
 
 // 需要登录
@@ -61,8 +60,6 @@ export const boolean_t = "boolean";
 export type FileType = File | string;
 
 export interface ModelOption {
-    // 异步模式
-    async: boolean;
 
     // 需要登陆验证
     auth: boolean;
@@ -144,13 +141,6 @@ export function IsModel(clz: any): boolean {
     return clz[MP_KEY] != null;
 }
 
-// 是否是异步model
-export function IsAsyncModel(mdl: any): boolean {
-    let clz = mdl.constructor;
-    let mp: ModelOption = clz[MP_KEY];
-    return mp ? mp.async : false;
-}
-
 // 是否需要登陆验证
 export function IsNeedAuth(mdl: any): boolean {
     let clz = mdl.constructor;
@@ -164,7 +154,6 @@ let models = new Map<string, any>();
 // 描述model;''
 export function model(opts?: string[], parent?: AnyClass): (target: any) => void {
     let mp: ModelOption = {
-        async: opts ? opts.indexOf(async) != -1 : false,
         auth: opts ? opts.indexOf(auth) != -1 : false,
         enum: opts ? opts.indexOf(enumm) != -1 : false,
         constant: opts ? opts.indexOf(constant) != -1 : false,
