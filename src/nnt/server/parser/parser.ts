@@ -1,7 +1,5 @@
 import {FieldOption} from "../../core/proto";
 import {logger} from "../../core/logger";
-import {Json} from "./json";
-import {Bin} from "./bin";
 
 /**
  * Paser负责将不同协议传输的数据回写刀模型中，根据不同的协议，params有时为json，有时是字节流
@@ -32,6 +30,3 @@ export function FindParser(name: string): AbstractParser {
     let r = parsers.get(name);
     return r ? r : parsers.get("json");
 }
-
-RegisterParser("json", new Json());
-RegisterParser("bin", new Bin());

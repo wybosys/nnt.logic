@@ -1,7 +1,5 @@
 import {logger} from "../../core/logger";
-import {Json} from "./json";
 import {Transaction, TransactionSubmitOption} from "../transaction";
-import {Raw} from "./raw";
 
 export abstract class AbstractRender {
 
@@ -27,6 +25,3 @@ export function FindRender(name: string): AbstractRender {
     let r = renders.get(name);
     return r ? r : renders.get("json");
 }
-
-RegisterRender("json", new Json());
-RegisterRender("raw", new Raw());

@@ -1,7 +1,7 @@
 import {Node} from "../config/config"
 import {parse as urlparse} from "url"
 import {EmptyTransaction, RESPONSE_SID, Transaction, TransactionSubmitOption} from "./transaction";
-import {FindRender} from "./render/render";
+import {FindRender, RegisterRender} from "./render/render";
 import {AbstractServer, IConsoleServer} from "./server";
 import {RestService} from "./rest/service";
 import {IRouterable, Routers} from "./routers";
@@ -24,6 +24,11 @@ import https = require("https");
 import spdy = require("spdy");
 import fs = require("fs");
 import formidable = require("formidable");
+import {Json as JsonRender} from "./render/json";
+import {Raw as RawRender} from "./render/raw";
+import {RegisterParser} from "./parser/parser";
+import {Json as JsonParser} from "./parser/json";
+import {Bin as BinParser} from "./parser/bin";
 
 export interface RestResponseData {
     contentType: string;
@@ -405,3 +410,9 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         }
     }
 }
+
+RegisterRender("json", new JsonRender());
+RegisterRender("raw", new RawRender());
+
+RegisterParser("json", new JsonParser());
+RegisterParser("bin", new BinParser());
