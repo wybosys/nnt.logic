@@ -11,7 +11,7 @@ import {JsonDecoder} from "./socket/jsondecoder";
 import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {ConsoleOutput, ConsoleSubmit, Find} from "../manager/servers";
-import {IRender} from "../render/render";
+import {IRender} from "./render/render";
 import {RSocket} from "./socket/router";
 import {CancelDelay, Delay} from "../core/time";
 import {ListenMode} from "./rest/listener";

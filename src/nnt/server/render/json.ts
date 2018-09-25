@@ -1,8 +1,8 @@
 import {IRender} from "./render";
-import {Transaction, TransactionSubmitOption} from "../server/transaction";
-import {Output} from "../core/proto";
-import {asString, IndexedObject} from "../core/kernel";
-import {Mime} from "../core/file";
+import {Transaction, TransactionSubmitOption} from "../transaction";
+import {Output} from "../../core/proto";
+import {asString, IndexedObject} from "../../core/kernel";
+import {Mime} from "../../core/file";
 
 export class Json implements IRender {
 

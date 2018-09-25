@@ -1,7 +1,7 @@
 import {Node} from "../config/config"
 import {parse as urlparse} from "url"
 import {EmptyTransaction, RESPONSE_SID, Transaction, TransactionSubmitOption} from "./transaction";
-import {FindRender} from "../render/render";
+import {FindRender} from "./render/render";
 import {AbstractServer, IConsoleServer} from "./server";
 import {RestService} from "./rest/service";
 import {IRouterable, Routers} from "./routers";

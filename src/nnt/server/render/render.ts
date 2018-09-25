@@ -1,8 +1,7 @@
-import {logger} from "../core/logger";
+import {logger} from "../../core/logger";
 import {Json} from "./json";
 import {Protobuf} from "./protobuf";
-import {Vue} from "./vue";
-import {Transaction, TransactionSubmitOption} from "../server/transaction";
+import {Transaction, TransactionSubmitOption} from "../transaction";
 import {Raw} from "./raw";
 
 export interface IRender {
@@ -32,5 +31,4 @@ export function FindRender(name: string): IRender {
 
 RegisterRender("json", new Json());
 RegisterRender("pb", new Protobuf());
-RegisterRender("vue", new Vue());
 RegisterRender("raw", new Raw());

@@ -1,5 +1,5 @@
 import {IRender} from "./render";
-import {Transaction, TransactionSubmitOption} from "../server/transaction";
+import {Transaction, TransactionSubmitOption} from "../transaction";
 
 export class Raw implements IRender {
 
