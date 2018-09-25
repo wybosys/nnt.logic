@@ -1,6 +1,6 @@
 import {IndexedObject} from "../../core/kernel";
 import ws = require("ws");
-import {IRender} from "../render/render";
+import {AbstractRender} from "../render/render";
 
 export type DecoderMsgType = ws.Data;
 
@@ -10,5 +10,5 @@ export interface IDecoder {
     decode(msg: DecoderMsgType): IndexedObject;
 
     // 用来返回输出的数据
-    render: IRender;
+    render: AbstractRender;
 }

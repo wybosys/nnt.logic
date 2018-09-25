@@ -1,10 +1,10 @@
-import {IRender} from "./render";
 import {Transaction, TransactionSubmitOption} from "../transaction";
 import {Output} from "../../core/proto";
 import {asString, IndexedObject} from "../../core/kernel";
 import {Mime} from "../../core/file";
+import {AbstractRender} from "./render";
 
-export class Json implements IRender {
+export class Json extends AbstractRender {
 
     type = Mime.Type("json");
 

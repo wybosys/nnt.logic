@@ -1,7 +1,7 @@
-import {IRender} from "./render";
 import {Transaction, TransactionSubmitOption} from "../transaction";
+import {AbstractRender} from "./render";
 
-export class Raw implements IRender {
+export class Raw implements AbstractRender {
 
     type = "text/plain";
 

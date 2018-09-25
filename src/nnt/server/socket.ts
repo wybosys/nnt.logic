@@ -11,7 +11,6 @@ import {JsonDecoder} from "./socket/jsondecoder";
 import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {ConsoleOutput, ConsoleSubmit, Find} from "../manager/servers";
-import {IRender} from "./render/render";
 import {RSocket} from "./socket/router";
 import {CancelDelay, Delay} from "../core/time";
 import {ListenMode} from "./rest/listener";
@@ -23,6 +22,7 @@ import ws = require("ws");
 import http = require("http");
 import https = require("https");
 import fs = require("fs");
+import {AbstractRender} from "./render/render";
 
 export type SocketOutputType = string | Buffer | ArrayBuffer;
 
@@ -70,7 +70,7 @@ export class Connector {
     clientId: string;
 
     // 输出的渲染器
-    render: IRender;
+    render: AbstractRender;
 
     // 初始化
     init(trans: Transaction): boolean {

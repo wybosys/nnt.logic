@@ -8,6 +8,7 @@ import {AcEntity} from "../acl/acl";
 import {CancelDelay, DateTime, Delay, DelayHandler} from "../core/time";
 import {Config} from "../manager/config";
 import {promise} from "../core/core";
+import {AbstractParser} from "./parser/parser";
 
 export const RESPONSE_SID = "X-NntLogic-SessionId";
 
@@ -260,6 +261,11 @@ export abstract class Transaction {
 
     // 静默模式，不输出回调
     quiet: boolean;
+
+    // 用来解析传入数据
+    parser: AbstractParser;
+
+    // 用来构建输出
 }
 
 export class EmptyTransaction extends Transaction {
