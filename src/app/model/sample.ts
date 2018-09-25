@@ -1,4 +1,17 @@
-import {auth, input, integer, json, model, output, string} from "../../nnt/core/proto";
+import {
+    array,
+    auth,
+    double_t,
+    input,
+    integer,
+    integer_t,
+    json,
+    map,
+    model,
+    output,
+    string,
+    string_t
+} from "../../nnt/core/proto";
 import {IndexedObject} from "../../nnt/core/kernel";
 import {colstring, table} from "../../nnt/store/proto";
 
@@ -14,8 +27,14 @@ export class Echoo {
     @integer(3, [output], "服务器时间")
     time: number;
 
-    @json(4, [output], "当天的时间段")
-    today: IndexedObject;
+    @json(4, [output])
+    json: IndexedObject;
+
+    @map(5, string_t, integer_t, [output])
+    map = new Map<string, number>();
+
+    @array(6, double_t, [output])
+    array = new Array<number>();
 }
 
 @model()

@@ -15,7 +15,11 @@ export class RSample implements IRouter {
         let m: Echoo = trans.model;
         m.output = m.input;
         m.time = DateTime.Now();
-        m.today = TODAY_RANGE;
+        m.json = {
+            today: TODAY_RANGE
+        };
+        m.map.set('a0', 0).set('b1', 1);
+        m.array.push(0, 1, 2, 3);
         trans.submit();
     }
 
