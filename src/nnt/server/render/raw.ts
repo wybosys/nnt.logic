@@ -1,7 +1,7 @@
 import {Transaction, TransactionSubmitOption} from "../transaction";
 import {AbstractRender} from "./render";
 
-export class Raw implements AbstractRender {
+export class Raw extends AbstractRender {
 
     type = "text/plain";
 
