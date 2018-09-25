@@ -1,4 +1,4 @@
-import {ArrayT, asString, SafeEval, toJson} from "../core/kernel";
+import {ArrayT, asString, SafeEval, toJson, toJsonObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import tmp = require('tmp');
 import fs = require('fs');
@@ -66,18 +66,19 @@ export class Crawler {
         return this.cmd('capture', options ? toJson(options) : null);
     }
 
-    run(): Promise<any> {
+    run(cbmit?: (obj: any) => void): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             // 生成最终执行的脚本
             let cmds: string[] = [];
             ArrayT.PushObjects(cmds, [
-                'function Output(hdl, typ, obj) { hdl.echo(JSON.stringify({type:typ, payload:obj}) + ","); }',
+                'function Output(hdl, typ, obj) { hdl.echo(JSON.stringify({type:typ, payload:obj}) + "#@@#"); }',
                 'function hookError(hdl, msg, btrace) { Output(hdl, "error", msg); };',
                 'function hookAlert(hdl, msg) { Output(hdl, "log", msg); };',
                 'var hdl = require("casper").create({onError:hookError, onAlert:hookAlert});',
                 // 抛出返回值
                 'hdl.result = function(obj) { Output(this, "result", obj); }',
-                'hdl.log = function (obj) { Output(this, "info", obj); };'
+                'hdl.log = function (obj) { Output(this, "info", obj); };',
+                'hdl.yhy = function (obj) { Output(this, "emit", obj); };'
             ]);
             ArrayT.PushObjects(cmds, this._buffer);
             ArrayT.PushObjects(cmds, [
@@ -88,26 +89,31 @@ export class Crawler {
             let text = cmds.join('\n');
             // logger.log(text);
             let tf = tmp.fileSync();
+            // 生成phantomjs使用的爬虫文件
             fs.writeSync(tf.fd, text);
 
-            let output: any;
+            let resultdata: any;
             let err: string;
+            let buf = "";
 
             // 执行
             let proc = spawn('casperjs', [tf.name]);
             proc.stdout.on('data', (data: Uint8Array) => {
-                let msg = data.toString();
-                msg = '[' + msg + ']';
-                // 分解结果
-                let msgs = SafeEval(msg);
-                if (!msgs) {
-                    logger.warn("无法处理数据 " + msg);
-                    return;
+                buf += data.toString();
+                let msgs = [];
+                //  根据||||来读取被阶段的数据
+                while (1) {
+                    let pos = buf.search('#@@#');
+                    if (pos == -1)
+                        break;
+                    let msg = buf.substring(0, pos);
+                    buf = buf.substring(pos + 4, buf.length);
+                    msgs.push(toJsonObject(msg));
                 }
                 msgs.forEach((msg: any) => {
                     switch (msg.type) {
                         case 'result': {
-                            output = msg.payload;
+                            resultdata = msg.payload;
                         }
                             break;
                         case 'log': {
@@ -116,6 +122,10 @@ export class Crawler {
                             break;
                         case 'warn': {
                             logger.warn(msg.payload);
+                        }
+                            break;
+                        case 'emit': {
+                            cbmit && cbmit(msg.payload);
                         }
                             break;
                         case 'info': {
@@ -130,7 +140,7 @@ export class Crawler {
                     return e.type == 'result';
                 });
                 if (result) {
-                    output = result.payload;
+                    resultdata = result.payload;
                 }
             });
             proc.stderr.on('data', (data: Uint8Array) => {
@@ -141,7 +151,7 @@ export class Crawler {
                 if (err)
                     reject(new Error(err));
                 else
-                    resolve(output);
+                    resolve(resultdata);
             });
         });
     }
