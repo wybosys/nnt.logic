@@ -26,7 +26,7 @@ import fs = require("fs");
 import formidable = require("formidable");
 import {Json as JsonRender} from "./render/json";
 import {Raw as RawRender} from "./render/raw";
-import {RegisterParser} from "./parser/parser";
+import {FindParser, RegisterParser} from "./parser/parser";
 import {Jsobj as JsobjParser} from "./parser/jsobj";
 import {Bin as BinParser} from "./parser/bin";
 
@@ -356,7 +356,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             t.action = action;
             t.params = params;
 
-            // 从请求中保存下信息
+            // 整理数据
             if (req) {
                 let url = urlparse(req.url, true);
                 if ("_agent" in params)
@@ -370,6 +370,11 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 t.info.path = url.pathname;
             }
 
+            // 绑定解析器
+            t.parser = FindParser(params['_pfmt']); // _pfmt parser format 预留关键字
+            t.render = FindRender(params['_rfmt']); // _ofmt render format 预留关键字
+
+            // 处理调用
             this.onBeforeInvoke(t);
             this.doInvoke(t, params, req, rsp, ac);
             this.onAfterInvoke(t);
