@@ -5,7 +5,8 @@ export class Raw extends AbstractRender {
 
     type = "text/plain";
 
-    render(trans: Transaction, opt?: TransactionSubmitOption): string {
-        return trans.model.toString();
+    render(trans: Transaction, opt?: TransactionSubmitOption): Buffer {
+        let str = trans.model.toString();
+        return new Buffer(str, 'utf8');
     }
 }

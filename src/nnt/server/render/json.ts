@@ -8,11 +8,13 @@ export class Json extends AbstractRender {
 
     type = Mime.Type("json");
 
-    render(trans: Transaction, opt?: TransactionSubmitOption): string {
+    render(trans: Transaction, opt?: TransactionSubmitOption): Buffer {
         let r: IndexedObject;
         if (opt && opt.model) {
-            if (opt.raw)
-                return asString(trans.model);
+            if (opt.raw) {
+                let str = asString(trans.model);
+                return new Buffer(str, 'utf8');
+            }
             r = Output(trans.model);
             if (trans.model && r === null)
                 r = {};
@@ -31,6 +33,7 @@ export class Json extends AbstractRender {
         let listen = trans.params["_listening"];
         if (listen != null)
             r["_listening"] = listen;
-        return JSON.stringify(r);
+        let str = JSON.stringify(r);
+        return new Buffer(str, 'utf8');
     }
 }

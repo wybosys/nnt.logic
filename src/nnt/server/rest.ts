@@ -30,6 +30,7 @@ import {FindParser, RegisterParser} from "./parser/parser";
 import {Jsobj as JsobjParser} from "./parser/jsobj";
 import {Bin as BinParser} from "./parser/bin";
 import {Bin as BinRender} from "./render/bin";
+import zlib = require("zlib");
 
 export interface RestResponseData {
     contentType: string;
@@ -68,10 +69,29 @@ function TransactionSubmit(opt?: TransactionSubmitOption) {
     let ct: IndexedObject = {
         "Content-Type": (opt && opt.type) ? opt.type : self.render.type
     };
+    if (self.gzip)
+        ct["Content-Encoding"] = "gzip";
     if (self.responseSessionId)
-        pl.rsp.setHeader(RESPONSE_SID, self.sessionId());
-    pl.rsp.writeHead(200, ct);
-    pl.rsp.end(self.render.render(self, opt));
+        ct[RESPONSE_SID] = self.sessionId();
+    //pl.rsp.setHeader(RESPONSE_SID, self.sessionId());
+    let buf = self.render.render(self, opt);
+    if (self.gzip) {
+        zlib.gzip(buf, (err, zip) => {
+            if (err) {
+                pl.rsp.writeHead(500, ct);
+                pl.rsp.end();
+                logger.error(err);
+            }
+            else {
+                pl.rsp.writeHead(200, ct);
+                pl.rsp.end(zip);
+            }
+        });
+    }
+    else {
+        pl.rsp.writeHead(200, ct);
+        pl.rsp.end(buf);
+    }
 }
 
 function TransactionOutput(type: string, obj: any) {
@@ -370,6 +390,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 t.info.addr = req.connection.remoteAddress || req.headers['x-forwarded-for'] as string;
                 t.info.referer = req.headers['referer'] as string;
                 t.info.path = url.pathname;
+                t.gzip = req.headers['accept-encoding'].indexOf('gzip') != -1;
             }
 
             // 绑定解析器

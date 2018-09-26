@@ -7,7 +7,7 @@ export abstract class AbstractRender {
     type: string;
 
     // 渲染数据
-    abstract render(trans: Transaction, opt?: TransactionSubmitOption): any;
+    abstract render(trans: Transaction, opt?: TransactionSubmitOption): Buffer;
 }
 
 let renders = new Map<string, AbstractRender>();
