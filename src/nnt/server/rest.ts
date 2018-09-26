@@ -64,12 +64,13 @@ interface TransactionPayload {
 function TransactionSubmit(opt?: TransactionSubmitOption) {
     let self = <Transaction>this;
     let pl: TransactionPayload = self.payload;
-    let r = FindRender(self.params["render"]);
-    let ct: IndexedObject = {"Content-Type": (opt && opt.type) ? opt.type : r.type};
+    let ct: IndexedObject = {
+        "Content-Type": (opt && opt.type) ? opt.type : self.render.type
+    };
     if (self.responseSessionId)
         pl.rsp.setHeader(RESPONSE_SID, self.sessionId());
     pl.rsp.writeHead(200, ct);
-    pl.rsp.end(r.render(self, opt));
+    pl.rsp.end(self.render.render(self, opt));
 }
 
 function TransactionOutput(type: string, obj: any) {
