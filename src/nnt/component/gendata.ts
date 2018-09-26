@@ -260,12 +260,12 @@ class File {
     sheets = new Array<Sheet>();
 }
 
-interface ParseOption {
+export interface ParseOption {
     server?: boolean;
     client?: boolean;
 }
 
-function ReadFiles(cfgdir: string, opt: ParseOption): File[] {
+export function ReadFiles(cfgdir: string, opt: ParseOption): File[] {
     let pat = /^[a-zA-Z0-9_]+\.xls[x]?$/;
     let files = new Array<File>();
     fs.readdirSync(cfgdir).forEach(entry => {
@@ -343,7 +343,7 @@ export function GenConfig(cfg: ConfigCfg) {
         .run();
 }
 
-function ParseFile(path: string, opt: ParseOption): File {
+export function ParseFile(path: string, opt: ParseOption): File {
     let r = new File();
     let file = xlsx.readFile(path, {
         type: 'file',
@@ -362,7 +362,7 @@ function ParseFile(path: string, opt: ParseOption): File {
     return r;
 }
 
-function ParseSheet(nm: string, s: xlsx.WorkSheet, opt: ParseOption): Sheet {
+export function ParseSheet(nm: string, s: xlsx.WorkSheet, opt: ParseOption): Sheet {
     let pat = /Sheet\d+/;
     if (nm.match(pat))
         return null; //
