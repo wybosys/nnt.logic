@@ -14,7 +14,7 @@ import {
 } from "../../core/kernel";
 import {logger} from "../../core/logger";
 
-export class Json extends AbstractParser {
+export class Jsobj extends AbstractParser {
 
     // 检查模型和输入数据的匹配情况，返回status的错误码
     checkInput(proto: any, params: IndexedObject): number {

@@ -28,5 +28,5 @@ export function RegisterParser(name: string, parser: AbstractParser) {
 
 export function FindParser(name: string): AbstractParser {
     let r = parsers.get(name);
-    return r ? r : parsers.get("json");
+    return r ? r : parsers.get("jsobj");
 }

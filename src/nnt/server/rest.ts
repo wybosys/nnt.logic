@@ -27,7 +27,7 @@ import formidable = require("formidable");
 import {Json as JsonRender} from "./render/json";
 import {Raw as RawRender} from "./render/raw";
 import {RegisterParser} from "./parser/parser";
-import {Json as JsonParser} from "./parser/json";
+import {Jsobj as JsobjParser} from "./parser/jsobj";
 import {Bin as BinParser} from "./parser/bin";
 
 export interface RestResponseData {
@@ -411,8 +411,10 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     }
 }
 
+// 注册支持的输出格式
 RegisterRender("json", new JsonRender());
 RegisterRender("raw", new RawRender());
 
-RegisterParser("json", new JsonParser());
+// 注册支持的输入格式
+RegisterParser("jsobj", new JsobjParser());
 RegisterParser("bin", new BinParser());
