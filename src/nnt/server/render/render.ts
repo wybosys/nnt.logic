@@ -6,8 +6,8 @@ export abstract class AbstractRender {
     // 输出的类型
     type: string;
 
-    // 渲染
-    abstract render(trans: Transaction, opt?: TransactionSubmitOption): string;
+    // 渲染数据
+    abstract render(trans: Transaction, opt?: TransactionSubmitOption): any;
 }
 
 let renders = new Map<string, AbstractRender>();
