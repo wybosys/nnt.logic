@@ -1,5 +1,5 @@
 import {IndexedObject} from "../core/kernel";
-import {DecodeValue, Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
+import {Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
 
 export enum HttpMethod {
     GET,
@@ -29,6 +29,7 @@ export interface IResponseData {
     data: any
 }
 
+// 服务端基础模型
 export abstract class Base {
 
     // 请求的服务器地址
@@ -124,6 +125,7 @@ export function Decode(mdl: any, params: any) {
         let fp: FieldOption = fps[key];
         if (fp == null || !fp.output)
             continue;
-        mdl[key] = DecodeValue(fp, params[key]);
+        // todo 服务端模型的序列化封装
+        //mdl[key] = DecodeValue(fp, params[key]);
     }
 }

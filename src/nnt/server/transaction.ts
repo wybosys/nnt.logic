@@ -1,5 +1,5 @@
 import {FindAction, IRouter} from "../core/router";
-import {CheckInputStatus, Decode, IsNeedAuth} from "../core/proto";
+import {IsNeedAuth} from "../core/proto";
 import {logger} from "../core/logger";
 import {AbstractServer} from "./server";
 import {STATUS} from "../core/models";
@@ -123,14 +123,14 @@ export abstract class Transaction {
         let clz = ap.clazz;
 
         // 检查输入参数
-        let sta = CheckInputStatus(clz.prototype, this.params);
+        let sta = this.parser.checkInput(clz.prototype, this.params);
         if (sta != STATUS.OK)
             return sta;
 
         // 填入数据到模型
         this.model = new clz();
         try {
-            Decode(this.model, this.params);
+            this.parser.fill(this.model, this.params, true, false);
         }
         catch (err) {
             this.model = null;

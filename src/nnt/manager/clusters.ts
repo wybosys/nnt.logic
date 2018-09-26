@@ -1,16 +1,13 @@
 import cluster = require("cluster");
 import os = require("os");
-import {SObject, Variant} from "../core/object";
+import {SObject} from "../core/object";
 import {logger} from "../core/logger";
 import {Find, Get, Set} from "./dbmss";
 import {KvRedis} from "../store/kvredis";
-import {static_cast, UUID} from "../core/core";
+import {static_cast} from "../core/core";
 import {DateTime, Repeat} from "../core/time";
-import {colinteger, colstring, Decode, Output} from "../store/proto";
-import {IndexedObject, make_tuple} from "../core/kernel";
-import {Message, mid_make} from "../core/models";
-import {Acquire, IMQClient} from "../server/mq";
-import {DOMAIN_CLUSTERS} from "../server/im";
+import {colinteger, colstring} from "../store/proto";
+import {make_tuple} from "../core/kernel";
 import {Config} from "./config";
 
 export class ClusterRecord {
@@ -201,85 +198,3 @@ class _ClusterVotes extends SObject {
 }
 
 let _votes = new _ClusterVotes();
-
-// 集群之间内部消息的处理
-
-export class Server {
-
-    constructor(mqsrv: string) {
-        this._mqsrv = mqsrv;
-    }
-
-    private _mqsrv: string;
-    private _idr = UUID();
-    private _mq: IMQClient;
-    private _process = new Map<number, (msg: Message) => void>();
-
-    async subscribe(type: number, proc: (msg: Message) => void) {
-        if (!this._mq) {
-            this._mq = await Acquire(this._mqsrv).open("server." + this._idr, {
-                durable: false,
-                longliving: false
-            });
-            this._mq.receiver("nnt.cluster", true);
-            this._mq.subscribe(data => {
-                let msg = new Message();
-                Decode(msg, data.toJsObj());
-                let proc = this._process.get(msg.type);
-                if (proc)
-                    proc(msg);
-            });
-        }
-
-        this._process.set(type, proc);
-    }
-
-    unsubscribe(type?: number) {
-        if (this._mq) {
-            this._mq.unsubscribe();
-            this._mq.close();
-            this._mq = null;
-        }
-        this._process.clear();
-    }
-
-    post(type: number, payload?: IndexedObject) {
-        let msg = new Message();
-        msg.type = type;
-        msg.payload = payload;
-        msg.fromi = mid_make(this._idr, DOMAIN_CLUSTERS);
-        msg.toi = mid_make("", DOMAIN_CLUSTERS);
-        msg.online = true;
-        Acquire(this._mqsrv).open("nnt.cluster", {passive: true}).then(mq => {
-            mq.broadcast(new Variant(Output(msg)));
-        });
-    }
-}
-
-export class Worker {
-
-    constructor(mqsrv: string, chann: string) {
-        this._mqsrv = mqsrv;
-        this._chann = chann;
-    }
-
-    private _mqsrv: string;
-    private _chann: string;
-    private _mq: IMQClient;
-
-    async open() {
-        if (this._mq)
-            return;
-        this._mq = await Acquire(this._mqsrv).open(this._chann, {
-            durable: true,
-            longliving: true
-        });
-    }
-
-    close() {
-        if (this._mq) {
-            this._mq.close();
-            this._mq = null;
-        }
-    }
-}
