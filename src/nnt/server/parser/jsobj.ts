@@ -73,10 +73,11 @@ export class Jsobj extends AbstractParser {
                                 arr.push(toFloat(e));
                             });
                         }
-                        else if (fp.valtype == boolean_t)
+                        else if (fp.valtype == boolean_t) {
                             val.forEach((e: any) => {
                                 arr.push(!!e);
                             });
+                        }
                     }
                     else {
                         if (typeof val == "string")
@@ -183,7 +184,6 @@ export class Jsobj extends AbstractParser {
                                 return t;
                             }));
                         }
-                        ;
                     }
                 }
                 return mmap;

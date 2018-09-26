@@ -29,6 +29,7 @@ import {Raw as RawRender} from "./render/raw";
 import {FindParser, RegisterParser} from "./parser/parser";
 import {Jsobj as JsobjParser} from "./parser/jsobj";
 import {Bin as BinParser} from "./parser/bin";
+import {Bin as BinRender} from "./render/bin";
 
 export interface RestResponseData {
     contentType: string;
@@ -420,6 +421,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
 // 注册支持的输出格式
 RegisterRender("json", new JsonRender());
 RegisterRender("raw", new RawRender());
+RegisterRender("bin", new BinRender());
 
 // 注册支持的输入格式
 RegisterParser("jsobj", new JsobjParser());

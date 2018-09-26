@@ -23,6 +23,13 @@ export class BytesBuilder {
         return this._buf;
     }
 
+    trim(): this {
+        let old = this._buf;
+        this._buf = Buffer.allocUnsafe(this._offset);
+        old.copy(this._buf);
+        return this;
+    }
+
     // 总容量
     get capacity(): number {
         return this._capacity;
@@ -53,11 +60,21 @@ export class BytesBuilder {
         return this;
     }
 
+    setInt8(val: number, offset: number): this {
+        this._buf.writeInt8(val, offset);
+        return this;
+    }
+
     addUInt8(val: number): this {
         this.deltaAlloc(1);
         this._buf.writeUInt8(val, this._offset);
         this._offset += 1;
         this._left -= 1;
+        return this;
+    }
+
+    setUInt8(val: number, offset: number): this {
+        this._buf.writeUInt8(val, offset);
         return this;
     }
 
@@ -69,11 +86,21 @@ export class BytesBuilder {
         return this;
     }
 
+    setInt16(val: number, offset: number): this {
+        this._be ? this._buf.writeInt16BE(val, offset) : this._buf.writeInt16LE(val, offset);
+        return this;
+    }
+
     addUInt16(val: number): this {
         this.deltaAlloc(2);
         this._be ? this._buf.writeUInt16BE(val, this._offset) : this._buf.writeUInt16LE(val, this._offset);
         this._offset += 2;
         this._left -= 2;
+        return this;
+    }
+
+    setUInt16(val: number, offset: number): this {
+        this._be ? this._buf.writeUInt16BE(val, offset) : this._buf.writeUInt16LE(val, offset);
         return this;
     }
 
@@ -85,11 +112,21 @@ export class BytesBuilder {
         return this;
     }
 
+    setInt32(val: number, offset: number): this {
+        this._be ? this._buf.writeInt32BE(val, offset) : this._buf.writeInt32LE(val, offset);
+        return this;
+    }
+
     addUInt32(val: number): this {
         this.deltaAlloc(4);
         this._be ? this._buf.writeUInt32BE(val, this._offset) : this._buf.writeUInt32LE(val, this._offset);
         this._offset += 4;
         this._left -= 4;
+        return this;
+    }
+
+    setUInt32(val: number, offset: number): this {
+        this._be ? this._buf.writeUInt32BE(val, offset) : this._buf.writeUInt32LE(val, offset);
         return this;
     }
 
@@ -101,6 +138,11 @@ export class BytesBuilder {
         return this;
     }
 
+    setFloat(val: number, offset: number): this {
+        this._be ? this._buf.writeFloatBE(val, offset) : this._buf.writeFloatLE(val, offset);
+        return this;
+    }
+
     addDouble(val: number): this {
         this.deltaAlloc(4);
         this._be ? this._buf.writeDoubleBE(val, this._offset) : this._buf.writeDoubleLE(val, this._offset);
@@ -109,11 +151,25 @@ export class BytesBuilder {
         return this;
     }
 
-    addString(val: string): this {
-        const buf = new Buffer(val, "utf8");
+    setDouble(val: number, offset: number): this {
+        this._be ? this._buf.writeDoubleBE(val, offset) : this._buf.writeDoubleLE(val, offset);
+        return this;
+    }
+
+    addString(val: string, encoding = 'utf8'): this {
+        const buf = new Buffer(val, encoding);
         const lbuf = buf.byteLength;
         this.deltaAlloc(lbuf);
         buf.copy(this._buf, this._offset);
+        this._offset += lbuf;
+        this._left -= lbuf;
+        return this;
+    }
+
+    addBuffer(val: Buffer): this {
+        const lbuf = val.byteLength;
+        this.deltaAlloc(lbuf);
+        val.copy(this._buf, this._offset);
         this._offset += lbuf;
         this._left -= lbuf;
         return this;
