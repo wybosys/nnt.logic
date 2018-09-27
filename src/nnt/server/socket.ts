@@ -6,7 +6,7 @@ import {IndexedObject, nonnull1st, ObjectT, toJson} from "../core/kernel";
 import {Config} from "../manager/config";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
-import {IDecoder} from "./socket/decoder";
+import {FindDecoder, IDecoder, RegisterDecoder} from "./socket/decoder";
 import {JsonDecoder} from "./socket/jsondecoder";
 import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
@@ -22,7 +22,8 @@ import ws = require("ws");
 import http = require("http");
 import https = require("https");
 import fs = require("fs");
-import {AbstractRender} from "./render/render";
+import {AbstractRender, FindRender} from "./render/render";
+import {FindParser} from "./parser/parser";
 
 export type SocketOutputType = string | Buffer | ArrayBuffer;
 
@@ -42,17 +43,6 @@ interface WsNode extends Node {
 
     // 是否加密
     wss?: boolean;
-}
-
-// method到transcation的处理器
-let decoders = new Map<string, IDecoder>();
-
-export function RegisterDecoder(url: string, obj: IDecoder) {
-    decoders.set(url, obj);
-}
-
-export function FindDecoder(url: string): IDecoder {
-    return decoders.get(url);
 }
 
 RegisterDecoder("/json", new JsonDecoder());
@@ -218,16 +208,17 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
     protected doWorker() {
         this._hdl.on("connection", (io, req) => {
             let addr = req.connection.remoteAddress;
+
+            // 根据连接的url查询支持的编解码环境
             let dec = FindDecoder(req.url);
             if (!dec) {
                 logger.log("{{=it.addr}} 请求了错误的连接格式 {{=it.url}}", {addr: addr, url: req.url});
                 Connector.CloseHandle(io, STATUS.SOCK_WRONG_PORTOCOL);
                 return;
             }
+            logger.log("{{=it.addr}} 连接服务器", {addr: addr});
 
-            if (req.url)
-                logger.log("{{=it.addr}} 连接服务器", {addr: addr});
-
+            // 监听socket的数据消息
             io.on("close", (code, reason) => {
                 logger.log("{{=it.addr}} 断开连接", {addr: addr});
 
@@ -242,11 +233,13 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             io.on("message", data => {
                 // 解析请求
                 let obj = dec.decode(data);
+
                 // 如果不存在客户端模型id，则代表请求非法
                 if (!obj || !obj["_cmid"]) {
                     logger.log("{{=it.addr}} 提交了非法数据", {addr: addr});
                     return;
                 }
+
                 // 转由invoke处理
                 this.invoke(obj, req, io);
             });
@@ -279,13 +272,27 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             t.action = params.action;
             t.params = params;
 
+            // 绑定解析器
+            t.parser = FindParser(params['_pfmt']);
+            t.render = FindRender(params['_rfmt']);
+
+            this.onBeforeInvoke(t);
             this.doInvoke(t, params, req, rsp, ac);
+            this.onAfterInvoke(t);
         }
         catch (err) {
             logger.exception(err);
             t.status = STATUS.EXCEPTION;
             t.submit();
         }
+    }
+
+    protected onBeforeInvoke(trans: Transaction) {
+        // pass
+    }
+
+    protected onAfterInvoke(trans: Transaction) {
+        // pass
     }
 
     protected doInvoke(t: Transaction, params: any, req: http.IncomingMessage, rsp: ws, ac?: AcEntity) {
@@ -305,9 +312,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             if (!connector) {
                 // 建立全新连接
                 connector = this.instanceConnector();
-
-                let dec = FindDecoder(req.url);
-                connector.render = dec.render;
+                connector.render = t.render;
 
                 BindHdlToConnector(connector, rsp);
                 ObjectT.Set(rsp, IO_CONNECTOR, connector);
