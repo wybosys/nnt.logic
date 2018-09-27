@@ -14,6 +14,7 @@ import soap = require("soap");
 import crypto = require("crypto");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
+import {AbstractParser} from "../../server/parser/parser";
 
 @model()
 export class PlainSms {
@@ -75,7 +76,7 @@ class RestSendMessage extends Base {
     @string(4, [input])
     message: string;
 
-    parseData(resp: IResponseData, suc: () => void, error: (err: Error) => void) {
+    parseData(resp: IResponseData, parser: AbstractParser, suc: () => void, error: (err: Error) => void) {
         if (typeof resp.data == "string") {
             // 解析xml到类型
             xml2js.parseString(resp.data, (err, result) => {
@@ -96,11 +97,11 @@ class RestSendMessage extends Base {
                     resp.data = result;
                 }
 
-                super.parseData(resp, suc, error);
+                super.parseData(resp, parser, suc, error);
             });
         }
         else {
-            super.parseData(resp, suc, error);
+            super.parseData(resp, parser, suc, error);
         }
     }
 
