@@ -3,11 +3,10 @@ import {Base, HttpContentType, HttpMethod, IResponseData} from "./model";
 import {AxiosResponse, default as axios} from "axios";
 import {logger} from "../core/logger";
 import {toJson, toJsonObject} from "../core/kernel";
+import {AbstractParser, FindParser} from "../server/parser/parser";
 import qs = require("qs");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
-import {AbstractParser, FindParser} from "../server/parser/parser";
-import {FindRender} from "../server/render/render";
 
 export class RestSession extends Session {
 
@@ -32,7 +31,6 @@ export class RestSession extends Session {
 
         // 构造参数分析及输出
         let parser = FindParser(params.fields['_pfmt']);
-        //let render = FindRender(params.fields['_ofmt']);
 
         // 根据post和get分别处理
         if (m.method == HttpMethod.GET) {
