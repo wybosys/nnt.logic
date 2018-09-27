@@ -1,5 +1,6 @@
 import {IndexedObject} from "../core/kernel";
 import {Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
+import {AbstractParser} from "../server/parser/parser";
 
 export enum HttpMethod {
     GET,
@@ -23,10 +24,18 @@ export class RequestParams {
 }
 
 export interface IResponseData {
+
+    // 返回的code
     code: number,
+
+    // 返回消息体
     message?: string,
+
+    // 内容类型
     type: string,
-    data: any
+
+    // 数据
+    data: any;
 }
 
 // 服务端基础模型
@@ -81,7 +90,7 @@ export abstract class Base {
     additionParams: IndexedObject = null;
 
     // 处理响应的结果
-    parseData(data: IResponseData, suc: () => void, error: (err: Error) => void) {
+    parseData(data: IResponseData, parser: AbstractParser, suc: () => void, error: (err: Error) => void) {
         this.code = data.code == null ? -1 : data.code;
         this.error = data.message;
 
@@ -89,7 +98,7 @@ export abstract class Base {
         if (data.data) {
             this.data = data.data;
             // 把data的数据写入model中
-            Decode(this, this.data);
+            Decode(parser, this, this.data);
             // 更新
             UpdateData(this);
         }
@@ -117,7 +126,7 @@ export abstract class Base {
 }
 
 // 和proto中的方向正好相反，是把数据填入output的字段
-export function Decode(mdl: any, params: any) {
+export function Decode(parser: AbstractParser, mdl: any, params: any) {
     let fps = mdl[FP_KEY];
     if (fps == null)
         return;
@@ -125,7 +134,6 @@ export function Decode(mdl: any, params: any) {
         let fp: FieldOption = fps[key];
         if (fp == null || !fp.output)
             continue;
-        // todo 服务端模型的序列化封装
-        //mdl[key] = DecodeValue(fp, params[key]);
+        mdl[key] = parser.decodeField(fp, params[key], false, true);
     }
 }

@@ -6,6 +6,8 @@ import {toJson, toJsonObject} from "../core/kernel";
 import qs = require("qs");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
+import {AbstractParser, FindParser} from "../server/parser/parser";
+import {FindRender} from "../server/render/render";
 
 export class RestSession extends Session {
 
@@ -13,8 +15,10 @@ export class RestSession extends Session {
         super();
     }
 
+    // 全局统一调用对象
     static shared = new RestSession();
 
+    // 获取一个模型
     fetch<T extends Base>(m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
         let url = "";
         if (m.host)
@@ -22,7 +26,15 @@ export class RestSession extends Session {
         url += m.requestUrl();
         if (url.indexOf("?") == -1)
             url += "?/";
+
+        // 所有请求参数
         let params = m.requestParams();
+
+        // 构造参数分析及输出
+        let parser = FindParser(params.fields['_pfmt']);
+        //let render = FindRender(params.fields['_ofmt']);
+
+        // 根据post和get分别处理
         if (m.method == HttpMethod.GET) {
             let p = [];
             for (let k in params.fields) {
@@ -35,7 +47,7 @@ export class RestSession extends Session {
                 url += "&" + p.join("&");
             axios.get(url).then(resp => {
                 logger.log("S2S: " + url);
-                ProcessResponse(resp, m, suc, err);
+                ProcessResponse(resp, parser, m, suc, err);
             }).catch(e => {
                 err && err(e);
             });
@@ -65,7 +77,7 @@ export class RestSession extends Session {
                 }
             }).then(resp => {
                 logger.log("S2S: " + url + " " + form);
-                ProcessResponse(resp, m, suc, err);
+                ProcessResponse(resp, parser, m, suc, err);
             }).catch(e => {
                 err && err(e);
             });
@@ -75,7 +87,7 @@ export class RestSession extends Session {
 
 let SUCCESS = [200];
 
-function ProcessResponse<T extends Base>(resp: AxiosResponse, m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
+function ProcessResponse<T extends Base>(resp: AxiosResponse, parser: AbstractParser, m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
     if (SUCCESS.indexOf(resp.status) == -1) {
         err && err(new Error("请求失败 " + resp.status));
         return;
@@ -93,7 +105,7 @@ function ProcessResponse<T extends Base>(resp: AxiosResponse, m: T, suc: Success
             err && err(new Error("收到的数据不符合定义"));
             return;
         }
-        m.parseData(rd, () => {
+        m.parseData(rd, parser, () => {
             suc && suc(m);
         }, e => {
             err && err(e);
@@ -106,7 +118,7 @@ function ProcessResponse<T extends Base>(resp: AxiosResponse, m: T, suc: Success
                 return;
             }
             rd.data = result;
-            m.parseData(rd, () => {
+            m.parseData(rd, parser, () => {
                 suc && suc(m);
             }, e => {
                 err && err(e);
@@ -114,7 +126,7 @@ function ProcessResponse<T extends Base>(resp: AxiosResponse, m: T, suc: Success
         });
     }
     else {
-        m.parseData(rd, () => {
+        m.parseData(rd, parser, () => {
             suc && suc(m);
         }, e => {
             err && err(e);
