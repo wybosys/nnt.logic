@@ -125,15 +125,29 @@ function TransactionOutput(type: string, obj: any) {
             pl.rsp.setHeader('Content-Transfer-Encoding', 'binary');
         }
         pl.rsp.writeHead(200, ct);
-        obj.readStream.pipe(pl.rsp);
+        if (self.gzip && !obj.compressed) {
+            obj.readStream.pipe(zlib.createGunzip()).pipe(pl.rsp);
+        } else {
+            obj.readStream.pipe(pl.rsp);
+        }
     }
     else if (obj instanceof Stream) {
         pl.rsp.writeHead(200, ct);
-        obj.pipe(pl.rsp);
+        if (self.gzip && !obj.compressed) {
+            obj.pipe(zlib.createGunzip()).pipe(pl.rsp);
+        } else {
+            obj.pipe(pl.rsp);
+        }
     }
     else {
         pl.rsp.writeHead(200, ct);
-        pl.rsp.end(obj);
+        if (self.gzip) {
+            zlib.gzip(new Buffer(obj, 'utf8'), (err, zip) => {
+                pl.rsp.end(zip);
+            });
+        } else {
+            pl.rsp.end(obj);
+        }
     }
 }
 

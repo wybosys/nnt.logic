@@ -363,12 +363,12 @@ export class Stream {
         return this;
     }
 
-    pipe(stm: NodeJS.WritableStream): boolean {
+    pipe(stm: NodeJS.WritableStream): this {
         if (this._from) {
             this._from.pipe(stm);
-            return true;
+            return this;
         }
-        return false;
+        return null;
     }
 
     toBuffer(): Promise<Buffer> {
@@ -409,6 +409,8 @@ export class Stream {
             this._from.pipe(stm);
         });
     }
+
+    compressed: boolean;
 
     private _from: NodeJS.ReadableStream;
     private _output: boolean = true;

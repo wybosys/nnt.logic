@@ -48,6 +48,9 @@ export class RespFile {
         return null;
     }
 
+    // 是否已经压缩
+    compressed: boolean;
+
     protected _file: string;
     protected _buf: Buffer;
     type: string;
@@ -71,6 +74,7 @@ export class RespFile {
     }
 
     protected _downloadfile: string;
+
     asDownload(filename: string): this {
         this._downloadfile = filename;
         return this;

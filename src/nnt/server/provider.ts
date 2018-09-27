@@ -69,10 +69,15 @@ export class Provider implements IRouter {
 
                         // 返回请求的文件
                         pf.loaded = true;
-                        if (m.type == ProviderContentType.JAVASCRIPT)
-                            trans.output(Mime.Type(".js"), RespFile.Regular(js));
-                        else
-                            trans.output(Mime.Type(".txt"), RespFile.Regular(txt));
+                        if (m.type == ProviderContentType.JAVASCRIPT) {
+                            let f = RespFile.Regular(js);
+                            f.compressed = true;
+                            trans.output(Mime.Type(".js"), f);
+                        } else {
+                            let f = RespFile.Regular(txt);
+                            f.compressed = true;
+                            trans.output(Mime.Type(".txt"), f);
+                        }
                     });
                 });
             });
