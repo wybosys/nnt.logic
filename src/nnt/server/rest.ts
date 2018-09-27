@@ -404,7 +404,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 t.info.addr = req.connection.remoteAddress || req.headers['x-forwarded-for'] as string;
                 t.info.referer = req.headers['referer'] as string;
                 t.info.path = url.pathname;
-                t.gzip = req.headers['accept-encoding'].indexOf('gzip') != -1;
+                if ('accept-encoding' in req.headers)
+                    t.gzip = req.headers['accept-encoding'].indexOf('gzip') != -1;
             }
 
             // 绑定解析器
