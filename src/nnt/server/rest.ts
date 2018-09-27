@@ -125,7 +125,7 @@ function TransactionOutput(type: string, obj: any) {
             pl.rsp.setHeader('Content-Transfer-Encoding', 'binary');
         }
         pl.rsp.writeHead(200, ct);
-        if (self.gzip && !obj.compressed) {
+        if (self.gzip && !self.compressed) {
             obj.readStream.pipe(zlib.createGunzip()).pipe(pl.rsp);
         } else {
             obj.readStream.pipe(pl.rsp);
@@ -133,7 +133,7 @@ function TransactionOutput(type: string, obj: any) {
     }
     else if (obj instanceof Stream) {
         pl.rsp.writeHead(200, ct);
-        if (self.gzip && !obj.compressed) {
+        if (self.gzip && !self.compressed) {
             obj.pipe(zlib.createGunzip()).pipe(pl.rsp);
         } else {
             obj.pipe(pl.rsp);

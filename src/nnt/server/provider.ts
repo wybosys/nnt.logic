@@ -66,17 +66,14 @@ export class Provider implements IRouter {
                     data = data.replace(/"/g, "\\\"");
                     zlib.gzip(new Buffer(data), (err, zip) => {
                         fs.writeFileSync(txt, zip);
+                        trans.compressed = true;
 
                         // 返回请求的文件
                         pf.loaded = true;
                         if (m.type == ProviderContentType.JAVASCRIPT) {
-                            let f = RespFile.Regular(js);
-                            f.compressed = true;
-                            trans.output(Mime.Type(".js"), f);
+                            trans.output(Mime.Type(".js"), RespFile.Regular(js));
                         } else {
-                            let f = RespFile.Regular(txt);
-                            f.compressed = true;
-                            trans.output(Mime.Type(".txt"), f);
+                            trans.output(Mime.Type(".txt"), RespFile.Regular(txt));
                         }
                     });
                 });

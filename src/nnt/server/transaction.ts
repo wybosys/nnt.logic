@@ -99,8 +99,11 @@ export abstract class Transaction {
     // 基于哪个服务器运行
     server: AbstractServer;
 
-    // 是否是压缩数据
+    // 是否需要压缩
     gzip: boolean;
+
+    // 是否已经压缩
+    compressed: boolean;
 
     // 需要打开频控
     frqctl: boolean;

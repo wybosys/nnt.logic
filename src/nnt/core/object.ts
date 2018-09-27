@@ -410,8 +410,6 @@ export class Stream {
         });
     }
 
-    compressed: boolean;
-
     private _from: NodeJS.ReadableStream;
     private _output: boolean = true;
 }

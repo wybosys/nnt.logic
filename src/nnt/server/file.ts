@@ -48,9 +48,6 @@ export class RespFile {
         return null;
     }
 
-    // 是否已经压缩
-    compressed: boolean;
-
     protected _file: string;
     protected _buf: Buffer;
     type: string;
