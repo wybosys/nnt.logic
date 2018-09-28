@@ -59,7 +59,11 @@ interface RestNode extends Node {
 }
 
 interface TransactionPayload {
-    req: http.ServerRequest;
+
+    // rest服务收到的请求
+    req: http.IncomingMessage;
+
+    // 用来发送响应的数据
     rsp: http.ServerResponse;
 }
 
@@ -281,7 +285,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         this.onStart();
     }
 
-    protected doWorker(req: http.ServerRequest, rsp: http.ServerResponse) {
+    protected doWorker(req: http.IncomingMessage, rsp: http.ServerResponse) {
         // 打开跨域支持
         rsp.setHeader("Access-Control-Allow-Origin", "*");
         rsp.setHeader("Access-Control-Allow-Credentials", "true");
@@ -377,7 +381,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     }
 
     // 处理请求
-    invoke(params: any, req: http.ServerRequest, rsp: http.ServerResponse, ac?: AcEntity) {
+    invoke(params: any, req: http.IncomingMessage, rsp: http.ServerResponse, ac?: AcEntity) {
         let action = params["$$"] || params["action"];
         if (typeof action != "string") {
             rsp.writeHead(400);
@@ -431,7 +435,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     protected onAfterInvoke(trans: Transaction) {
     }
 
-    protected doInvoke(t: Transaction, params: any, req: http.ServerRequest, rsp: http.ServerResponse, ac?: AcEntity) {
+    protected doInvoke(t: Transaction, params: any, req: http.IncomingMessage, rsp: http.ServerResponse, ac?: AcEntity) {
         if (req && rsp) {
             t.payload = {req: req, rsp: rsp};
             t.implSubmit = TransactionSubmit;
