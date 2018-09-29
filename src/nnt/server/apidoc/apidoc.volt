@@ -206,6 +206,7 @@
         }
         if (localStorage.getItem('::nnt::logic::sid'))
             params['_sid'] = localStorage.getItem('::nnt::logic::sid');
+        params['_skippermission'] = 1;
         // 请求数据
         let url = location.href.replace('action=api.doc', 'action=' + this.action.action);
         if (Object.keys(params).length)
