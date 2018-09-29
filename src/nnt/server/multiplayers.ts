@@ -238,7 +238,13 @@ export class Connector extends BaseConnector {
         }
 
         if (this._mqC) {
+            // 取消普通得监听
             this._mqC.unsubscribe();
+
+            // 取消对sumd得监听
+            this._mqC.receiver("user.online." + this.userIdentifier, false);
+
+            // 关闭连接
             this._mqC.close();
             this._mqC = null;
         }
