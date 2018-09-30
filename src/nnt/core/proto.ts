@@ -1,7 +1,6 @@
 // 协议数据定义
 import {AnyClass, ArrayT, asString, IndexedObject, ObjectT, toFloat, toInt, ToObject} from "./kernel";
 import {Config} from "../manager/config";
-import MODEL_FIELDS_MAX = Config.MODEL_FIELDS_MAX;
 
 export interface IUpdatable {
     updateData(): void;
@@ -186,7 +185,7 @@ function DefineFp(target: any, key: string, fp: FieldOption) {
             // 继承过来的id需要放大指定倍数，避免重复
             for (let k in fps) {
                 let fp: FieldOption = fps[k];
-                fp.id *= MODEL_FIELDS_MAX;
+                fp.id *= Config.MODEL_FIELDS_MAX;
             }
         }
         else {
@@ -219,6 +218,13 @@ function field(id: number, opts: string[], comment: string, valid: FieldValidPro
         comment: comment,
         valid: valid
     };
+}
+
+function ensureClazz(clz: any): any {
+    if (clz)
+        return clz;
+    console.error("proto设置的类型定义为null，请检查模型文件的引用关系");
+    return Object;
 }
 
 // 定义数据类型, id 从 1 开始
@@ -258,7 +264,7 @@ export function double(id: number, opts: string[], comment?: string, valid?: Fie
 export function array(id: number, clz: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
     fp.array = true;
-    fp.valtype = clz;
+    fp.valtype = ensureClazz(clz);
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
     };
@@ -269,7 +275,7 @@ export function map(id: number, keytyp: clazz_type, valtyp: clazz_type, opts: st
     let fp = field(id, opts, comment, valid);
     fp.map = true;
     fp.keytype = keytyp;
-    fp.valtype = valtyp;
+    fp.valtype = ensureClazz(valtyp);
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
     };
@@ -279,7 +285,7 @@ export function multimap(id: number, keytyp: clazz_type, valtyp: clazz_type, opt
     let fp = field(id, opts, comment, valid);
     fp.multimap = true;
     fp.keytype = keytyp;
-    fp.valtype = valtyp;
+    fp.valtype = ensureClazz(valtyp);
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
     };
@@ -297,7 +303,7 @@ export function json(id: number, opts: string[], comment?: string, valid?: Field
 // 使用其他类型
 export function type(id: number, clz: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
-    fp.valtype = clz;
+    fp.valtype = ensureClazz(clz);
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
     };
@@ -306,7 +312,7 @@ export function type(id: number, clz: clazz_type, opts: string[], comment?: stri
 // 枚举
 export function enumerate(id: number, clz: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
-    fp.valtype = clz;
+    fp.valtype = ensureClazz(clz);
     fp.enum = true;
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
@@ -357,7 +363,7 @@ export function Output(mdl: any): IndexedObject {
             if (fp.array) {
                 // 通用类型，则直接可以输出
                 if (typeof(fp.valtype) == "string") {
-                    let arr = new Array();
+                    let arr: any[] = [];
                     if (!val) {
                         // 处理val==null的情况
                     }
@@ -385,7 +391,7 @@ export function Output(mdl: any): IndexedObject {
                 }
                 else {
                     // 特殊类型，需要迭代进去
-                    let arr = new Array();
+                    let arr: any[] = [];
                     val && val.forEach((e: any) => {
                         arr.push(Output(e));
                     });
