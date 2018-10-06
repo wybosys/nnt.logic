@@ -18,8 +18,10 @@ export async function Start(cfg: Node[]): Promise<void> {
             if (!NodeIsEnable(e))
                 return;
             let t: AbstractServer = App.shared().instanceEntry(e.entry);
-            if (!t)
+            if (!t) {
+                console.log(e.entry + " 实例化失败");
                 return;
+            }
 
             if (t.config(e)) {
                 servers.set(t.id, t);
