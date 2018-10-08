@@ -5,6 +5,10 @@ import {toInt} from "../../core/kernel";
 // mode:
 // default or 0: max
 // 1: min
+
+const MAX_WIDTH = 10240;
+const MAX_HEIGHT = 10240;
+
 export class Resize extends ImageFilter {
     action = "resize";
 
@@ -14,7 +18,7 @@ export class Resize extends ImageFilter {
             h: parseInt(params[1]),
             m: toInt(params[2])
         };
-        if (isNaN(p.w) || isNaN(p.h) || p.w <= 0 || p.h <= 0)
+        if (isNaN(p.w) || isNaN(p.h) || p.w <= 0 || p.h <= 0 || p.w >= MAX_WIDTH || p.h >= MAX_HEIGHT)
             return false;
         f.params.push(p);
         let h = ["resize", p.w, p.h];
