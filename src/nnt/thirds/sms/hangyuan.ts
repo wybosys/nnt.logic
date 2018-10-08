@@ -6,7 +6,7 @@ import {Rest} from "../../server/rest";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {STATUS} from "../../core/models";
-import {Base, HttpContentType, HttpMethod, IResponseData} from "../../session/model";
+import {Base, HttpContentType, HttpMethod, IResponseData, ModelError} from "../../session/model";
 import {RestSession} from "../../session/rest";
 import {REGEX_PHONE} from "../../component/pattern";
 import {ArrayT} from "../../core/kernel";
@@ -76,7 +76,7 @@ class RestSendMessage extends Base {
     @string(4, [input])
     message: string;
 
-    parseData(resp: IResponseData, parser: AbstractParser, suc: () => void, error: (err: Error) => void) {
+    parseData(resp: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
         if (typeof resp.data == "string") {
             // 解析xml到类型
             xml2js.parseString(resp.data, (err, result) => {
@@ -89,7 +89,7 @@ class RestSendMessage extends Base {
 
                 if (result.subStat[0] != "r:000") {
                     let msg = result.subStatDes[0];
-                    error(new Error(msg));
+                    error(new ModelError(STATUS.FAILED, msg));
                     return;
                 }
                 else {

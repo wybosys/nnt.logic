@@ -52,7 +52,6 @@
     "@types/xmlbuilder": "^0.0.34",
     "amqplib": "^0.5.2",
     "async": "^2.6.0",
-    "axios": "^0.18.0",
     "compression": "^1.7.2",
     "cron": "^1.4.1",
     "d3": "^5.7.0",

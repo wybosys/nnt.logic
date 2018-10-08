@@ -1,11 +1,12 @@
 import {action, IRouter} from "../../nnt/core/router";
-import {Transaction} from "../../nnt/server/transaction";
 import {DateTime} from "../../nnt/core/time";
 import {TODAY_RANGE} from "../../nnt/component/today";
-import {Echoo, Login, Message, User} from "../model/sample";
+import {Echoo, Login, Message, Upload, User} from "../model/sample";
 import {UUID} from "../../nnt/core/core";
 import {Trans} from "../model/trans";
 import {Get, Set} from "../../nnt/manager/dbmss";
+import {Fetch} from "../../nnt/server/remote";
+import {logger} from "../../nnt/core/logger";
 
 export class RSample implements IRouter {
     action = "sample";
@@ -49,6 +50,22 @@ export class RSample implements IRouter {
 
     @action(Message, [], "监听消息炸弹")
     message(trans: Trans) {
+        trans.submit();
+    }
+
+    @action(Upload, [], "上传图片")
+    async upload(trans: Trans) {
+        let m: Upload = trans.model;
+        try {
+            let res = await Fetch('media', {
+                action: 'imagestore.upload',
+                file: m.file
+            });
+            m.file = res.path;
+        }
+        catch (err) {
+            logger.warn(err.message);
+        }
         trans.submit();
     }
 }

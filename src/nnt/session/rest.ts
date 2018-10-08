@@ -1,12 +1,14 @@
 import {ErrorCallBack, Session, SuccessCallback} from "./session";
-import {Base, HttpContentType, HttpMethod, IResponseData} from "./model";
-import {AxiosResponse, default as axios} from "axios";
+import {Base, HttpContentType, HttpMethod, IResponseData, ModelError} from "./model";
 import {logger} from "../core/logger";
-import {toJson, toJsonObject} from "../core/kernel";
+import {ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
 import {AbstractParser, FindParser} from "../server/parser/parser";
 import qs = require("qs");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
+import fs = require("fs");
+import request = require("request");
+import {STATUS} from "../core/models";
 
 export class RestSession extends Session {
 
@@ -18,7 +20,7 @@ export class RestSession extends Session {
     static shared = new RestSession();
 
     // 获取一个模型
-    fetch<T extends Base>(m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
+    fetch<T extends Base>(m: T, cbsuc: SuccessCallback<T>, cberr: ErrorCallBack) {
         let url = "";
         if (m.host)
             url += m.host;
@@ -32,6 +34,13 @@ export class RestSession extends Session {
         // 构造参数分析及输出
         let parser = FindParser(params.fields['_pfmt']);
 
+        // 从params里提取出文件
+        let files = ObjectT.PopTuplesByFilter(params.fields, v => {
+            return v instanceof UploadedFileHandle;
+        });
+        if (files.length)
+            m.method = HttpMethod.POST; // 含有文件的必须走post
+
         // 根据post和get分别处理
         if (m.method == HttpMethod.GET) {
             let p = [];
@@ -43,16 +52,18 @@ export class RestSession extends Session {
             }
             if (p.length)
                 url += "&" + p.join("&");
-            axios.get(url).then(resp => {
-                logger.log("S2S: " + url);
-                ProcessResponse(resp, parser, m, suc, err);
-            }).catch(e => {
-                err && err(e);
+            request.get(url, (err, resp, body) => {
+                if (err) {
+                    cberr && cberr(err);
+                } else {
+                    logger.log("S2S: " + url);
+                    ProcessResponse(resp, parser, m, cbsuc, cberr);
+                }
             });
         }
         else {
             let contentType: string;
-            let form: string;
+            let form: any;
             if (m.requestType == HttpContentType.XML) {
                 contentType = "application/xml";
                 let f = xml.create(params.root);
@@ -60,24 +71,65 @@ export class RestSession extends Session {
                     f.ele(k, null, params.fields[k]);
                 }
                 form = f.end();
+                if (files.length)
+                    logger.warn("暂时不支持xml的请求附带文件");
             }
             else if (m.requestType == HttpContentType.JSON) {
                 contentType = "application/json";
-                form = toJson(params.fields);
+                if (files.length) {
+                    form = {};
+                    ObjectT.Foreach(params.fields, (v, k) => {
+                        form[k] = v;
+                    });
+                    files.forEach(e => {
+                        let ufh: UploadedFileHandle = e[1];
+                        form[e[0]] = {
+                            value: fs.createReadStream(ufh.path),
+                            options: {
+                                filename: ufh.name,
+                                contentType: ufh.type
+                            }
+                        }
+                    });
+                } else {
+                    form = toJson(params.fields);
+                }
             }
             else {
-                contentType = "application/x-www-form-urlencoded";
-                form = qs.stringify(params.fields);
-            }
-            axios.post(url, form, {
-                headers: {
-                    "Content-Type": contentType
+                if (files.length) {
+                    contentType = "multipart/form-data";
+                    form = {};
+                    ObjectT.Foreach(params.fields, (v, k) => {
+                        form[k] = v;
+                    });
+                    files.forEach(e => {
+                        let ufh: UploadedFileHandle = e[1];
+                        form[e[0]] = {
+                            value: fs.createReadStream(ufh.path),
+                            options: {
+                                filename: ufh.name,
+                                contentType: ufh.type
+                            }
+                        }
+                    });
+                } else {
+                    contentType = "application/x-www-form-urlencoded";
+                    form = qs.stringify(params.fields);
                 }
-            }).then(resp => {
-                logger.log("S2S: " + url + " " + form);
-                ProcessResponse(resp, parser, m, suc, err);
-            }).catch(e => {
-                err && err(e);
+            }
+            request.post({
+                url: url,
+                headers: {
+                    'Content-Type': contentType
+                },
+                formData: form
+            }, (err, resp, body) => {
+                if (err) {
+                    cberr && cberr(err);
+                } else {
+                    logger.log("S2S: " + url);
+                    ProcessResponse(resp, parser, m, cbsuc, cberr);
+                }
             });
         }
     }
@@ -85,22 +137,22 @@ export class RestSession extends Session {
 
 let SUCCESS = [200];
 
-function ProcessResponse<T extends Base>(resp: AxiosResponse, parser: AbstractParser, m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
-    if (SUCCESS.indexOf(resp.status) == -1) {
-        err && err(new Error("请求失败 " + resp.status));
+function ProcessResponse<T extends Base>(resp: request.Response, parser: AbstractParser, m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
+    if (SUCCESS.indexOf(resp.statusCode) == -1) {
+        err && err(new ModelError(STATUS.FAILED, "请求失败 " + resp.statusCode));
         return;
     }
 
     let rd: IResponseData = {
-        code: resp.status,
+        code: resp.statusCode,
         type: resp.headers["content-type"],
-        data: resp.data
+        data: null
     };
 
     if (m.responseType == HttpContentType.JSON) {
-        rd.data = toJsonObject(rd.data);
-        if (!resp.data) {
-            err && err(new Error("收到的数据不符合定义"));
+        rd.data = toJsonObject(resp.body);
+        if (!rd.data) {
+            err && err(new ModelError(STATUS.FAILED, "收到的数据不符合定义"));
             return;
         }
         m.parseData(rd, parser, () => {
@@ -110,7 +162,7 @@ function ProcessResponse<T extends Base>(resp: AxiosResponse, parser: AbstractPa
         });
     }
     else if (m.responseType == HttpContentType.XML) {
-        xml2js.parseString(resp.data, (e, result) => {
+        xml2js.parseString(resp.body, (e, result) => {
             if (e) {
                 err && err(e);
                 return;

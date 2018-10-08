@@ -1,7 +1,7 @@
 import {
     array,
     auth,
-    double_t,
+    double_t, file, FileType,
     input,
     integer,
     integer_t,
@@ -62,4 +62,11 @@ export class Message {
 
     @string(1, [output], "消息体")
     content: string;
+}
+
+@model([])
+export class Upload {
+
+    @file(1, [input, output], "选择一个图片")
+    file: FileType;
 }

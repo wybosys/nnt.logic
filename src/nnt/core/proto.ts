@@ -1,5 +1,15 @@
 // 协议数据定义
-import {AnyClass, ArrayT, asString, IndexedObject, ObjectT, toFloat, toInt, ToObject} from "./kernel";
+import {
+    AnyClass,
+    ArrayT,
+    asString,
+    IndexedObject,
+    ObjectT,
+    toFloat,
+    toInt,
+    ToObject,
+    UploadedFileHandle
+} from "./kernel";
 import {Config} from "../manager/config";
 
 export interface IUpdatable {
@@ -42,7 +52,7 @@ export const double_t = "double";
 export const boolean_t = "boolean";
 
 // 文件类型
-export type FileType = File | string;
+export type FileType = UploadedFileHandle | string;
 
 export interface ModelOption {
 

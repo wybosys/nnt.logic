@@ -3,11 +3,12 @@ import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {IndexedObject} from "../core/kernel";
 import {Find} from "../manager/servers";
-import {Base} from "../session/model";
+import {Base, ModelError} from "../session/model";
 import {RestSession} from "../session/rest";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 import {integer, json, output} from "../core/proto";
 import {Config} from "../manager/config";
+import {STATUS} from "../core/models";
 
 interface RemoteConfig extends Node {
     // 远端服务器地址
@@ -51,17 +52,35 @@ class RpcModel extends Base {
     }
 }
 
+// S2S调用API，成功返回data字段，失败返回null而不是抛出异常
 export function Call(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
 export function Call(srvid: string, args: IndexedObject): Promise<IndexedObject>;
 export function Call(url: string): Promise<IndexedObject>;
+export function Call(..._: any[]): Promise<IndexedObject> {
+    return new Promise<IndexedObject>(resolve => {
+        ImpFetch.apply(this, arguments).then((data: any) => {
+            resolve(data);
+        }).catch((err: ModelError) => {
+            resolve(null);
+        });
+    });
+}
 
-export function Call(): Promise<IndexedObject> {
+// Fetch和Call的区别是需要业务层自行处理失败（可以用来获得错误码)
+export function Fetch(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
+export function Fetch(srvid: string, args: IndexedObject): Promise<IndexedObject>;
+export function Fetch(url: string): Promise<IndexedObject>;
+export function Fetch(..._: any[]): Promise<IndexedObject> {
+    return ImpFetch.apply(this, arguments);
+}
+
+function ImpFetch(): Promise<IndexedObject> {
     let srvid: string;
     let subpath: string;
     let args: IndexedObject;
     switch (arguments.length) {
         case 1: {
-            return new Promise<IndexedObject>(resolve => {
+            return new Promise<IndexedObject>((resolve, reject) => {
                 // 直接调用
                 args = [];
 
@@ -77,7 +96,9 @@ export function Call(): Promise<IndexedObject> {
                 m.url = arguments[0];
                 m.additionParams = args;
                 RestSession.Get(m).then(m => {
-                    resolve(m ? m.data : null);
+                    resolve(m.data);
+                }).catch(err => {
+                    reject(err);
                 });
             });
         }
@@ -95,17 +116,19 @@ export function Call(): Promise<IndexedObject> {
         }
             break;
     }
-    return new Promise<IndexedObject>(resolve => {
+    return new Promise<IndexedObject>((resolve, reject) => {
         let srv = <Remote>Find(srvid);
         if (!srv) {
-            logger.fatal("没有找到服务 " + srvid);
-            resolve(null);
+            let msg = "没有找到服务 " + srvid;
+            logger.fatal(msg);
+            reject(new ModelError(STATUS.FAILED, msg));
             return;
         }
 
         if (!(srv instanceof Remote)) {
-            logger.fatal("服务类型错误 " + srvid);
-            resolve(null);
+            let msg = "服务类型错误 " + srvid;
+            logger.fatal(msg);
+            reject(new ModelError(STATUS.FAILED, msg));
             return;
         }
 
@@ -121,25 +144,9 @@ export function Call(): Promise<IndexedObject> {
         m.url = srv.host + subpath;
         m.additionParams = args;
         RestSession.Get(m).then(m => {
-            resolve(m ? m.data : null);
-        });
-    });
-}
-
-// 比Call多出数据的后处理
-export function Fetch(srvid: string, subpath: string, args: IndexedObject): Promise<IndexedObject>;
-export function Fetch(srvid: string, args: IndexedObject): Promise<IndexedObject>;
-
-export function Fetch(): Promise<IndexedObject> {
-    let args = arguments;
-    return new Promise<IndexedObject>(resolve => {
-        Call.apply(this, args).then((resp: any) => {
-            if (!resp || resp.code != 0) {
-                resolve(null);
-            }
-            else {
-                resolve(resp.data || resp.message);
-            }
+            resolve(m.data);
+        }).catch(err => {
+            reject(err);
         });
     });
 }

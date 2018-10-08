@@ -8,8 +8,8 @@ import {vsprintf} from "sprintf-js";
 
 export type Class<T> = { new(...args: any[]): T, [key: string]: any };
 export type AnyClass = Class<any>;
-export type IndexedObject = { [key: string]: any };
 export type KvObject<V> = { [key: string]: V };
+export type IndexedObject = KvObject<any>;
 export type PodType = number | string | boolean;
 export type clazz_type = AnyClass | string;
 
@@ -54,6 +54,40 @@ export function Instance<T, R>(cls: Class<T>, cb: (obj: T) => void, ret?: (obj: 
 export function Self<T>(obj: T, cb: (obj: T) => void): T {
     cb(obj);
     return obj;
+}
+
+// nodejs基础的File对象仅是一个interface，所以需要包一层
+export class UploadedFileHandle {
+
+    constructor(file: File) {
+        this._f = file;
+    }
+
+    get lastModified(): number {
+        return this._f.lastModified;
+    }
+
+    get name(): string {
+        return this._f.name;
+    }
+
+    get file(): File {
+        return this._f;
+    }
+
+    get size(): number {
+        return this._f.size;
+    }
+
+    get type(): string {
+        return this._f.type;
+    }
+
+    get path(): string {
+        return (<any>this._f).path;
+    }
+
+    private _f: File;
 }
 
 // 生成IndexedObject
@@ -1315,6 +1349,18 @@ export class ObjectT {
             let v = m[k];
             if (proc(v, k))
                 r.push(v);
+        }
+        return r;
+    }
+
+    static PopTuplesByFilter<V>(m: KvObject<V>, filter: (v: V, k: string) => boolean): tuple2<string, V>[] {
+        let r = new Array();
+        for (let k in m) {
+            let v = m[k];
+            if (filter(v, k)) {
+                delete m[k];
+                r.push(make_tuple2(k, v));
+            }
         }
         return r;
     }

@@ -1,8 +1,7 @@
-import {Base} from "./model";
-import {logger} from "../core/logger";
+import {Base, ModelError} from "./model";
 
 export type SuccessCallback<T> = (m: T) => void;
-export type ErrorCallBack = (err: Error, resp?: any) => void;
+export type ErrorCallBack = (err: ModelError, resp?: any) => void;
 
 export abstract class Session {
 
@@ -16,12 +15,11 @@ export abstract class Session {
     }
 
     static Get<T extends Base>(m: T): Promise<T> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             this.shared.fetch(m, m => {
                 resolve(m);
             }, err => {
-                logger.warn(err.message);
-                resolve(null);
+                reject(err);
             });
         });
     }

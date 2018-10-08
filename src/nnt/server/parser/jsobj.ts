@@ -10,7 +10,7 @@ import {
     toBoolean,
     toFloat,
     toInt,
-    toJsonObject
+    toJsonObject, UploadedFileHandle
 } from "../../core/kernel";
 import {logger} from "../../core/logger";
 
@@ -215,6 +215,8 @@ export class Jsobj extends AbstractParser {
                 return toInt(val);
             else if (fp.json)
                 return toJsonObject(val);
+            else if (fp.file)
+                return new UploadedFileHandle(val);
             else
                 return val;
         }

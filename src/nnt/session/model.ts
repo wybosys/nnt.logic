@@ -1,6 +1,7 @@
 import {IndexedObject} from "../core/kernel";
 import {Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
 import {AbstractParser} from "../server/parser/parser";
+import {STATUS} from "../core/models";
 
 export enum HttpMethod {
     GET,
@@ -36,6 +37,15 @@ export interface IResponseData {
 
     // 数据
     data: any;
+}
+
+export class ModelError extends Error {
+    constructor(code?: number, msg?: string) {
+        super(msg);
+        this.code = code;
+    }
+
+    code: number;
 }
 
 // 服务端基础模型
@@ -90,7 +100,7 @@ export abstract class Base {
     additionParams: IndexedObject = null;
 
     // 处理响应的结果
-    parseData(data: IResponseData, parser: AbstractParser, suc: () => void, error: (err: Error) => void) {
+    parseData(data: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
         this.code = data.code == null ? -1 : data.code;
         this.error = data.message;
 
@@ -103,12 +113,12 @@ export abstract class Base {
             UpdateData(this);
         }
 
-        if (this.code < 0) {
+        if (this.code != 0) {
             let msg = "";
             if (this.error)
                 msg += this.error + " ";
             msg += "错误码:" + this.code;
-            let err = new Error(msg);
+            let err = new ModelError(this.code, msg);
             error(err);
         }
         else {
@@ -116,7 +126,7 @@ export abstract class Base {
                 suc();
             }
             catch (err) {
-                error(err);
+                error(new ModelError(STATUS.EXCEPTION, err.message));
             }
         }
     }
