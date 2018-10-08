@@ -349,6 +349,7 @@ export class RImageStore implements IRouter {
         }
 
         // 关闭压缩
+        trans.gzip = false;
         trans.compressed = true;
 
         let info = new FileInfo();

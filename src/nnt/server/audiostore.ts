@@ -329,6 +329,7 @@ export class RAudioStore implements IRouter {
         }
 
         // 关闭压缩
+        trans.gzip = false;
         trans.compressed = true;
 
         // 如果获取的是amr，则自动转成mp3
