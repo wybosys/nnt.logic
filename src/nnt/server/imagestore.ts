@@ -340,12 +340,17 @@ export class RImageStore implements IRouter {
         if (m.type == null)
             m.type = ImageSupport.IMAGE;
         let pat = this.supports[m.type];
+
         // 判断上传的类型是否正确
         if (!pat || pat.indexOf(typ) == -1) {
             trans.status = STATUS.TYPE_MISMATCH;
             trans.submit();
             return;
         }
+
+        // 关闭压缩
+        trans.compressed = true;
+
         let info = new FileInfo();
         info.name = m.name;
         info.storedir = srv.store;

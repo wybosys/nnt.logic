@@ -327,6 +327,10 @@ export class RAudioStore implements IRouter {
             trans.submit();
             return;
         }
+
+        // 关闭压缩
+        trans.compressed = true;
+
         // 如果获取的是amr，则自动转成mp3
         if (typ == "audio/amr") {
             let dir = path.dirname(m.name);
