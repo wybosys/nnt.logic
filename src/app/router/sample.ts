@@ -64,6 +64,7 @@ export class RSample implements IRouter {
             m.file = res.path;
         }
         catch (err) {
+            trans.status = err.code;
             logger.warn(err.message);
         }
         trans.submit();

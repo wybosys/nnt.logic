@@ -1,9 +1,8 @@
 import {ErrorCallBack, Session, SuccessCallback} from "./session";
 import {Base, HttpContentType, HttpMethod, IResponseData, ModelError} from "./model";
 import {logger} from "../core/logger";
-import {ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
+import {IndexedObject, ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
 import {AbstractParser, FindParser} from "../server/parser/parser";
-import qs = require("qs");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
 import fs = require("fs");
@@ -62,22 +61,24 @@ export class RestSession extends Session {
             });
         }
         else {
-            let contentType: string;
-            let form: any;
+            let data: request.CoreOptions & request.UrlOptions = {
+                url: url,
+                headers: {}
+            };
             if (m.requestType == HttpContentType.XML) {
-                contentType = "application/xml";
+                data.headers['Content-Type'] = "application/xml";
                 let f = xml.create(params.root);
                 for (let k in params.fields) {
                     f.ele(k, null, params.fields[k]);
                 }
-                form = f.end();
+                data.body = f.end();
                 if (files.length)
                     logger.warn("暂时不支持xml的请求附带文件");
             }
             else if (m.requestType == HttpContentType.JSON) {
-                contentType = "application/json";
+                data.headers['Content-Type'] = "application/json";
                 if (files.length) {
-                    form = {};
+                    let form: IndexedObject = {};
                     ObjectT.Foreach(params.fields, (v, k) => {
                         form[k] = v;
                     });
@@ -91,14 +92,15 @@ export class RestSession extends Session {
                             }
                         }
                     });
+                    data.formData = form;
                 } else {
-                    form = toJson(params.fields);
+                    data.body = toJson(params.fields);
                 }
             }
             else {
                 if (files.length) {
-                    contentType = "multipart/form-data";
-                    form = {};
+                    data.headers['Content-Type'] = "multipart/form-data";
+                    let form: IndexedObject = {};
                     ObjectT.Foreach(params.fields, (v, k) => {
                         form[k] = v;
                     });
@@ -112,18 +114,13 @@ export class RestSession extends Session {
                             }
                         }
                     });
+                    data.formData = form;
                 } else {
-                    contentType = "application/x-www-form-urlencoded";
-                    form = qs.stringify(params.fields);
+                    data.headers['Content-Type'] = "application/x-www-form-urlencoded";
+                    data.form = params.fields;
                 }
             }
-            request.post({
-                url: url,
-                headers: {
-                    'Content-Type': contentType
-                },
-                formData: form
-            }, (err, resp, body) => {
+            request.post(data, (err, resp, body) => {
                 if (err) {
                     cberr && cberr(err);
                 } else {
