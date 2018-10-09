@@ -26,17 +26,14 @@ export class RequestParams {
 
 export interface IResponseData {
 
-    // 返回的code
+    // 响应的code
     code: number,
-
-    // 返回消息体
-    message?: string,
 
     // 内容类型
     type: string,
 
-    // 数据
-    data: any;
+    // 返回的所有数据
+    body: any;
 }
 
 export class ModelError extends Error {
@@ -101,14 +98,18 @@ export abstract class Base {
 
     // 处理响应的结果
     parseData(data: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
-        this.code = data.code == null ? -1 : data.code;
-        this.error = data.message;
+        // 保护一下数据结构，标准的为 {code, message(error), data}
+        if (data.body && data.body.data === undefined && data.body.message !== undefined) {
+            data.body.data = data.body.message;
+            data.body.message = null;
+        }
+
+        this.code = STATUS.UNKNOWN;
 
         // 读取数据到对象，需要吧code、error放到前面处理，避免如果错误、或者返回的data中本来就包含code时，导致消息的code被通信的code覆盖
-        if (data.data) {
-            this.data = data.data;
+        if (data.body) {
             // 把data的数据写入model中
-            Decode(parser, this, this.data);
+            Decode(parser, this, data.body);
             // 更新
             UpdateData(this);
         }

@@ -143,12 +143,12 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
     let rd: IResponseData = {
         code: resp.statusCode,
         type: resp.headers["content-type"],
-        data: null
+        body: null
     };
 
     if (m.responseType == HttpContentType.JSON) {
-        rd.data = toJsonObject(resp.body);
-        if (!rd.data) {
+        rd.body = toJsonObject(resp.body);
+        if (!rd.body) {
             err && err(new ModelError(STATUS.FAILED, "收到的数据不符合定义"));
             return;
         }
@@ -164,7 +164,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
                 err && err(e);
                 return;
             }
-            rd.data = result;
+            rd.body = result;
             m.parseData(rd, parser, () => {
                 suc && suc(m);
             }, e => {
