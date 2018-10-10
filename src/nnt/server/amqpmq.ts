@@ -24,6 +24,8 @@ class AmqpmqClient extends AbstractMQClient {
 
     protected _hdl: amqplib.Channel;
     protected _tags = new Array<string>();
+    private _isqueue: boolean;
+    private _isexchange: boolean;
 
     open(chann: string, opt: MQClientOption): Promise<this> {
         return new Promise(resolve => {
@@ -36,6 +38,7 @@ class AmqpmqClient extends AbstractMQClient {
                         durable: this.durable,
                         autoDelete: !this.longliving
                     }).then(() => {
+                        this._isexchange = true;
                         resolve(this);
                     }).catch(logger.warn);
                 }
@@ -44,6 +47,7 @@ class AmqpmqClient extends AbstractMQClient {
                         durable: this.durable,
                         autoDelete: !this.longliving
                     }).then(() => {
+                        this._isqueue = true;
                         this._hdl.bindQueue(this._chann, "nnt.topic", this._chann).then(() => {
                             resolve(this);
                         }).catch(logger.warn);
@@ -118,6 +122,15 @@ class AmqpmqClient extends AbstractMQClient {
             logger.warn(err);
         }
         return this;
+    }
+
+    close() {
+        if (this._isqueue) {
+            this._hdl.deleteQueue(this._chann);
+        }
+        else if (this._isexchange) {
+            this._hdl.deleteExchange(this._chann);
+        }
     }
 }
 

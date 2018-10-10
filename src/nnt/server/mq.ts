@@ -24,7 +24,7 @@ export interface IMQClient {
     // 打开通道
     open(chann: string, opt?: MQClientOption): Promise<this>;
 
-    // 关闭客户端
+    // 关闭通道
     close(): void;
 
     // 订阅消息
@@ -73,10 +73,6 @@ export abstract class AbstractMQClient implements IMQClient {
         return this;
     }
 
-    close() {
-        // pass
-    }
-
     // 持久化
     durable: boolean = true;
 
@@ -98,6 +94,8 @@ export abstract class AbstractMQClient implements IMQClient {
     abstract broadcast(msg: Variant): Promise<this>;
 
     abstract receiver(transmitter: string, connect: boolean): Promise<this>;
+
+    abstract close(): void;
 
     protected _chann: string;
     get chann(): string {
