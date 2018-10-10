@@ -77,9 +77,9 @@ class RestSendMessage extends Base {
     message: string;
 
     parseData(resp: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
-        if (typeof resp.data == "string") {
+        if (typeof resp.body == "string") {
             // 解析xml到类型
-            xml2js.parseString(resp.data, (err, result) => {
+            xml2js.parseString(resp.body, (err, result) => {
                 if (err) {
                     error(err);
                     return;
@@ -94,7 +94,7 @@ class RestSendMessage extends Base {
                 }
                 else {
                     resp.code = 0;
-                    resp.data = result;
+                    resp.body = result;
                 }
 
                 super.parseData(resp, parser, suc, error);
