@@ -21,7 +21,6 @@ import {
 import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
-import {VueExport} from "./vue-export";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 
@@ -99,12 +98,6 @@ export class Router implements IRouter {
         if (!m.logic && !m.h5g && !m.vue) {
             trans.status = STATUS.PARAMETER_NOT_MATCH;
             trans.submit();
-            return;
-        }
-
-        if (m.vue) {
-            // vue的生成模型由 296963166@qq.com 维护
-            new VueExport(this._cfg).process(trans);
             return;
         }
 
@@ -212,6 +205,9 @@ export class Router implements IRouter {
             apis = "~/src/nnt/server/apidoc/apis-logic.dust";
         else if (m.h5g)
             apis = "~/src/nnt/server/apidoc/apis-h5g.dust";
+        else if (m.vue)
+            apis = "~/src/nnt/server/apidoc/apis-vue.dust";
+
         let src = fs.readFileSync(expand(apis), "utf8");
         let tplcfg = (<any>tpl).config;
         let old = tplcfg.whitespace;

@@ -1,32 +1,40 @@
-import {ApiBase, ApiOutBase} from './ApiBase'
+import {~lb}Model{~rb} from "./model-impl";
+
+namespace models {
+
+{#enums}
+    export enum {.name} {~lb}
+    {#.defs}
+        {.name} = {.value},
+    {/.defs}
+    {~rb}
+{/enums}
+
+{#consts}
+    export const {.name} = {.value|s};
+{/consts}
 
 {#clazzes}
-export class {.name}In extends ApiBase {
-constructor() {
-super()
-this.controller = "{.router|s}"
-this.action = "{.action|s}"
-this.returnData = new {.name}Out()
-}
-{#inputs}
-_{.name}
-get {.name}() {
-return this._{.name}
-}
-set {.name}(val) {
-this._{.name} = val
-this.params['{.name}'] = val
-}
-{/inputs}
-}
-export class {.name}Out extends ApiOutBase {
-constructor() {
-super()
-this.controller = "{.router|s}"
-this.action = "{.action|s}"
-}
-{#outputs}
-{.name}
-{/outputs}
-}
+    export class {.name} extends {.super} {~lb}
+    {#.fields}
+        {?.deco}{.deco|s}{/.deco}
+        {.name}{?.optional}?{/.optional}:{.type|s};
+    {/.fields}
+    {~rb}
 {/clazzes}
+}
+
+namespace routers {
+{#routers}
+    export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
+{/routers}
+}
+
+namespace api {
+{#routers}
+    export function {.name}():{.type} {~lb}
+    return Model.NewRequest(routers.{.name});
+    {~rb}
+{/routers}
+}
+
