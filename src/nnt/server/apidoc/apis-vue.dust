@@ -1,6 +1,6 @@
 import {~lb}Model{~rb} from "./model-impl";
 
-namespace models {
+export namespace models {
 
 {#enums}
     export enum {.name} {~lb}
@@ -24,13 +24,13 @@ namespace models {
 {/clazzes}
 }
 
-namespace routers {
+export namespace routers {
 {#routers}
     export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
 {/routers}
 }
 
-namespace api {
+export namespace api {
 {#routers}
     export function {.name}():{.type} {~lb}
     return Model.NewRequest(routers.{.name});
