@@ -191,12 +191,15 @@ export class Router implements IRouter {
             let as = GetAllActionNames(router);
             as.forEach(a => {
                 let ap = FindAction(router, a);
-                params.routers.push({
-                    name: UpcaseFirst(router.action) + UpcaseFirst(a),
-                    action: router.action + "." + a,
-                    type: "models." + ap.clazz["name"],
-                    comment: ap.comment
-                });
+                let d: IndexedObject = {};
+                d.name = UpcaseFirst(router.action) + UpcaseFirst(a);
+                d.action = router.action + "." + a;
+                if (m.vue)
+                    d.type = ap.clazz["name"];
+                else
+                    d.type = "models." + ap.clazz["name"];
+                d.comment = ap.comment;
+                params.routers.push(d);
             });
         });
         // 渲染模板

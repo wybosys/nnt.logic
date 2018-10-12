@@ -1,40 +1,32 @@
 import {~lb}Model{~rb} from "./model-impl";
 
-export namespace models {
-
 {#enums}
-    export enum {.name} {~lb}
-    {#.defs}
-        {.name} = {.value},
-    {/.defs}
-    {~rb}
+export enum {.name} {~lb}
+  {#.defs}
+      {.name} = {.value},
+  {/.defs}
+{~rb}
 {/enums}
 
 {#consts}
-    export const {.name} = {.value|s};
+export const {.name} = {.value|s};
 {/consts}
 
 {#clazzes}
-    export class {.name} extends {.super} {~lb}
-    {#.fields}
-        {?.deco}{.deco|s}{/.deco}
-        {.name}{?.optional}?{/.optional}:{.type|s};
-    {/.fields}
-    {~rb}
+export class {.name} extends {.super} {~lb}
+  {#.fields}
+      {?.deco}{.deco|s}{/.deco}
+      {.name}{?.optional}?{/.optional}:{.type|s};
+  {/.fields}
+{~rb}
 {/clazzes}
-}
 
-export namespace routers {
 {#routers}
-    export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
+export let R{.name} = ["{.action}", {.type}, "{.comment|s}"];
 {/routers}
-}
 
-export namespace api {
 {#routers}
-    export function {.name}():{.type} {~lb}
-    return Model.NewRequest(routers.{.name});
-    {~rb}
+export function {.name}():{.type} {~lb}
+  return Model.NewRequest(R{.name});
+{~rb}
 {/routers}
-}
-
