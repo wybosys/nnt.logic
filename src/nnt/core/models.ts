@@ -1,8 +1,6 @@
 // 预定义0输入输出的对象
 import {array, auth, enumerate, enumm, input, integer, json, model, optional, output, string} from "./proto";
-import {ArrayT, ICopyable, StringT} from "./kernel";
-import {colboolean, colinteger, coljson, colstring, coltype, table} from "../store/proto";
-import {DateTime} from "./time";
+import {colstring} from "../store/proto";
 
 // 空模型
 @model()
@@ -23,128 +21,6 @@ export class RestUpdate {
 
     @json(2, [output])
     models: Object;
-}
-
-// MID: message id，类似jid的概念为，user@domain/resource/ 的格式定义了消息的方向信息
-export type mid_t = string;
-
-export interface MidInfo {
-    user: string;
-    domain: string;
-    resources?: string[];
-}
-
-export function mid_clone(info: MidInfo): MidInfo {
-    return {
-        user: info.user,
-        domain: info.domain,
-        resources: ArrayT.Clone(info.resources)
-    }
-}
-
-export function mid_parse(mid: mid_t): MidInfo {
-    if (!mid)
-        return null;
-    let p = mid.split("/");
-    let p0 = p[0].split("@");
-    if (p0.length != 2)
-        return null;
-    return {
-        user: p0[0],
-        domain: StringT.Lowercase(p0[1]),
-        resources: ArrayT.RangeOf(p, 1)
-    };
-}
-
-export function mid_str(user: string, domain: string, ...res: string[]): string {
-    let r = user + "@" + domain;
-    if (res.length)
-        r += "/" + res.join("/");
-    return r;
-}
-
-export function mid_strv(user: string, domain: string, res: string[]): string {
-    let r = user + "@" + domain;
-    if (res.length)
-        r += "/" + res.join("/");
-    return r;
-}
-
-export function mid_unparse(info: MidInfo): mid_t {
-    let r = info.user + "@" + info.domain;
-    if (info.resources && info.resources.length)
-        r += "/" + info.resources.join("/");
-    return r;
-}
-
-export function mid_make(user: string, domain: string, ...res: string[]): MidInfo {
-    return {
-        user: user,
-        domain: domain,
-        resources: res
-    };
-}
-
-export function mid_makev(user: string, domain: string, res: string[]): MidInfo {
-    return {
-        user: user,
-        domain: domain,
-        resources: res
-    };
-}
-
-export function mid_equal(l: MidInfo, r: MidInfo): boolean {
-    if (!ArrayT.EqualTo(l.resources, r.resources))
-        return false;
-    return l.user == r.user && l.domain == r.domain;
-}
-
-export let IM_DBID = "im";
-export let IM_TBID = "chatmsgs";
-
-// 通用消息模型（服务如imchat)
-@model([auth])
-@table(IM_DBID, IM_TBID)
-export class Message implements ICopyable<Message> {
-
-    @json(1, [input, output, optional], "发送者mid对象")
-    @coljson()
-    fromi: MidInfo; // 接收时直接反序列化，提高性能
-
-    @coljson()
-    toi: MidInfo;
-
-    @integer(2, [input, output, optional], "消息类型，留给业务层定义，代表payload的具体数据结构")
-    @colinteger()
-    type: number;
-
-    @json(3, [input, output, optional], "消息体")
-    @coltype(Object)
-    payload: Object;
-
-    @integer(4, [output], "时间戳")
-    @colinteger()
-    timestamp: number = DateTime.Now();
-
-    @colboolean()
-    online: boolean; // 只发送在线的
-
-    copy(r: Message): boolean {
-        this.fromi = mid_clone(r.fromi);
-        this.toi = mid_clone(r.toi);
-        this.payload = r.payload;
-        this.timestamp = r.timestamp;
-        this.online = r.online;
-        return true;
-    }
-}
-
-@model([auth])
-export class Messages {
-    toi: MidInfo;
-
-    @array(1, Message, [output], "消息列表")
-    items: Array<Message>;
 }
 
 // 返回的数据格式
@@ -211,36 +87,6 @@ export class Paged {
     all: any[];
 }
 
-// 充值下单
-@model()
-export class PayOrder {
-
-    @string(1, [output], "订单号")
-    @colstring()
-    orderid: string;
-
-    @colinteger()
-    time: number; // 下单时间
-
-    @colinteger()
-    @string(2, [output], "价格")
-    price: number; // 价格
-
-    @colstring()
-    @string(3, [output], "说明文字")
-    desc: string; // 说明文字
-
-    @colstring()
-    @string(4, [output], "部分渠道需要配置商品id")
-    prodid: string;
-
-    @colstring()
-    type: string;
-
-    @colboolean()
-    close: boolean; // 关闭交易
-}
-
 // 定义内部的错误码
 // <0的代表系统级错误，>0代表成功，但是需要额外处理，=0代表完全成功
 @model([enumm])
@@ -275,7 +121,7 @@ export class STATUS {
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
 
-    static SOCK_WRONG_PORTOCOL  = -860; // SOCKET请求了错误的通讯协议
+    static SOCK_WRONG_PORTOCOL = -860; // SOCKET请求了错误的通讯协议
     static SOCK_AUTH_TIMEOUT = -859; // 因为连接后长期没有登录，所以服务端主动断开了链接
     static SOCK_SERVER_CLOSED = -858; // 服务器关闭
 
