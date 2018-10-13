@@ -23,6 +23,7 @@ import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
+import {GetDomain} from "../../core/devops";
 
 interface ParameterInfo {
     name: string;
@@ -103,6 +104,7 @@ export class Router implements IRouter {
 
         // 分析出的所有结构
         let params = {
+            domain: GetDomain(),
             clazzes: new Array(),
             enums: new Array(),
             consts: new Array(),
@@ -148,7 +150,7 @@ export class Router implements IRouter {
                     // 判断是否有父类
                     let clazz = {
                         name: name,
-                        super: mp.parent ? mp.parent["name"] : "Model",
+                        super: mp.parent ? mp.parent["name"] : "ApiModel",
                         fields: new Array()
                     };
                     params.clazzes.push(clazz);
@@ -177,6 +179,7 @@ export class Router implements IRouter {
                 }
             });
         });
+
         // 遍历所有接口，生成接口段
         let routers = new Array();
         this._cfg.export.router.forEach(e => {
@@ -202,6 +205,7 @@ export class Router implements IRouter {
                 params.routers.push(d);
             });
         });
+
         // 渲染模板
         let apis: string;
         if (m.logic)
@@ -223,7 +227,7 @@ export class Router implements IRouter {
                 out = err.toString();
 
             // 输出到客户端
-            trans.output('text/plain', RespFile.Plain(out).asDownload("apis.ts"));
+            trans.output('text/plain', RespFile.Plain(out).asDownload(GetDomain().replace('/', '-') + '-apis.ts'));
         });
     }
 
