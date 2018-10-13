@@ -1,5 +1,9 @@
 namespace app.models {
 
+class ApiModel extends Model {
+  domain = "{.domain}";
+}
+
 {#enums}
     export enum {.name} {~lb}
     {#.defs}
