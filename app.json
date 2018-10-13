@@ -21,6 +21,7 @@
               "entry://app/router/sample"
             ],
             "model": [
+              "entry://nnt/core/models",
               "entry://app/model/sample"
             ]
           }

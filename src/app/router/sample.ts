@@ -7,6 +7,7 @@ import {Trans} from "../model/trans";
 import {Get, Set} from "../../nnt/manager/dbmss";
 import {Fetch} from "../../nnt/server/remote";
 import {logger} from "../../nnt/core/logger";
+import {Null} from "../../nnt/core/models";
 
 export class RSample implements IRouter {
     action = "sample";
@@ -67,6 +68,11 @@ export class RSample implements IRouter {
             trans.status = err.code;
             logger.warn(err.message);
         }
+        trans.submit();
+    }
+
+    @action(Null, [], "不需要传参的模型")
+    async null(trans: Trans) {
         trans.submit();
     }
 }
