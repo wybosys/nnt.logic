@@ -1,6 +1,6 @@
+<!-- @formatter:off -->
 <html>
 <head>
-    <!-- @formatter:off -->
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/zepto.min.js"></script>
     <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/vue.min.js"></script>
     <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
@@ -12,6 +12,7 @@
             src="http://develop.91egame.com/devops/cdn/provider/file/vue-json-tree-view.min.js"></script>
 </head>
 
+<!-- @formatter:off -->
 <div id="app" class="container-fluid">
     <div class="row">
         <div class="col-md-2">
