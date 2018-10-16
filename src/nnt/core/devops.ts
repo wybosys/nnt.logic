@@ -13,8 +13,6 @@ const CONFIG_FILE = expand('~/devops.json');
 if (fs.existsSync(CONFIG_FILE)) {
     devopsConfig = <any>fs.readJsonSync(CONFIG_FILE);
     devopsConfig.domain = StringT.SubStr(devopsConfig.path, 16);
-    if (devopsConfig.domain.endsWith('/'))
-        devopsConfig.domain = StringT.SubStr(devopsConfig.domain, 0, devopsConfig.domain.length - 1);
 }
 
 export function GetPath(): string {
