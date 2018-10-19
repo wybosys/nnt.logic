@@ -80,6 +80,9 @@ export class RestSession extends Session {
                 if (files.length) {
                     let form: IndexedObject = {};
                     ObjectT.Foreach(params.fields, (v, k) => {
+                        // 测试时发现form不能传入bool，所以需要转换
+                        if (typeof v == "boolean")
+                            v = v ? 1 : 0;
                         form[k] = v;
                     });
                     files.forEach(e => {
@@ -102,6 +105,9 @@ export class RestSession extends Session {
                     data.headers['Content-Type'] = "multipart/form-data";
                     let form: IndexedObject = {};
                     ObjectT.Foreach(params.fields, (v, k) => {
+                        // 测试时发现form不能传入bool，所以需要转换
+                        if (typeof v == "boolean")
+                            v = v ? 1 : 0;
                         form[k] = v;
                     });
                     files.forEach(e => {
