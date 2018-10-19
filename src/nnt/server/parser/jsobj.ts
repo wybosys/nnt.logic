@@ -203,22 +203,25 @@ export class Jsobj extends AbstractParser {
             }
         }
         else {
-            if (fp.string)
+            if (fp.string) {
                 return asString(val);
-            else if (fp.integer)
+            } else if (fp.integer) {
                 return toInt(val);
-            else if (fp.double)
+            } else if (fp.double) {
                 return toFloat(val);
-            else if (fp.boolean)
+            } else if (fp.boolean) {
                 return toBoolean(val);
-            else if (fp.enum)
+            } else if (fp.enum) {
                 return toInt(val);
-            else if (fp.json)
+            } else if (fp.json) {
                 return toJsonObject(val);
-            else if (fp.file)
+            } else if (fp.file) {
+                if (typeof val == "string")
+                    return val;
                 return new UploadedFileHandle(val);
-            else
+            } else {
                 return val;
+            }
         }
     }
 
