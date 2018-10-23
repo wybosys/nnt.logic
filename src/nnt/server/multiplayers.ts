@@ -98,7 +98,7 @@ export class Connector extends BaseConnector {
             } else {
                 cb(mq);
             }
-        });
+        }).catch();
     }
 
     // 成功建立连接
