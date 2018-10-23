@@ -93,7 +93,7 @@ export class VueSite extends WebPage {
             });
         }
         this.compiler = webpack(sets);
-        app.use(webpackDevMiddleware(this.compiler, <any>{
+        app.use(webpackDevMiddleware(<any>this.compiler, <any>{
             noInfo: true,
             publicPath: null
         }));

@@ -75,6 +75,7 @@ export class Connector extends BaseConnector {
     // 是否是多端登陆正在退出
     isSumdClosing: boolean;
 
+    // socket长连后，使用同一个登录信息初始化每次的API请求
     init(trans: Transaction): boolean {
         if (!trans.auth())
             return false;
@@ -83,10 +84,24 @@ export class Connector extends BaseConnector {
         return r;
     }
 
+    // mmo使用的基础mq通道
     protected _mqA: IMQClient;
     protected _mqB: IMQClient;
     protected _mqC: IMQClient;
 
+    // 客户端快速连接/断开会因为mq连接的异步性，导致客户端断开后才建立起mq通道，所以提供保护的连接
+    protected acquire(chann: string, opts: IndexedObject, autoclose: boolean, cb: (mq: IMQClient) => void) {
+        Acquire(this.mqsrv).open(chann, opts).then(mq => {
+            if (this.isClosed) {
+                if (autoclose)
+                    mq.close();
+            } else {
+                cb(mq);
+            }
+        });
+    }
+
+    // 成功建立连接
     avaliable() {
         // 建立mq服务器
         // Z users.online <AD|fanout>
@@ -95,10 +110,10 @@ export class Connector extends BaseConnector {
         // A user.<uid> <D|topic>
 
         // 持久化通道
-        Acquire(this.mqsrv).open("user." + this.userIdentifier, {
+        this.acquire("user." + this.userIdentifier, {
             durable: true,
             longliving: true
-        }).then(mq => {
+        }, true, mq => {
             this._mqA = mq;
             mq.subscribe(data => {
                 this.processData(data);
@@ -107,10 +122,10 @@ export class Connector extends BaseConnector {
         });
 
         // 单用户独立在线通道
-        Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
+        this.acquire("user.online." + this.userIdentifier, {
             durable: false,
             longliving: false
-        }).then(mq => {
+        }, true, mq => {
             this._mqB = mq;
             mq.subscribe(data => {
                 this.processData(data);
@@ -119,16 +134,16 @@ export class Connector extends BaseConnector {
         });
 
         // 多机通道
-        Acquire(this.mqsrv).open("user.online." + this.userIdentifier, {
+        this.acquire("user.online." + this.userIdentifier, {
             transmitter: true,
             longliving: false,
             durable: false
-        }).then(mqsumd => {
+        }, false, mqsumd => {
             // 多机通道下的单机独立队列
-            Acquire(this.mqsrv).open("user.online." + this.userIdentifier + "." + this.device, {
+            this.acquire("user.online." + this.userIdentifier + "." + this.device, {
                 durable: false,
                 longliving: false
-            }).then(mq => {
+            }, true, mq => {
                 this._mqC = mq;
                 mq.subscribe(data => {
                     this.processData(data);
@@ -224,6 +239,7 @@ export class Connector extends BaseConnector {
         }
     }
 
+    // 连接断开，回收资源
     unavaliable() {
         if (this._mqA) {
             this._mqA.unsubscribe();
@@ -249,10 +265,12 @@ export class Connector extends BaseConnector {
             this._mqC = null;
         }
 
+        // 每一次连接成功都会重新建立监听，所以断开时需要清空
         this._listenings.clear();
         this._modelinfos.clear();
     }
 
+    // 建立对模型的监听
     listen(model: any, mid: number): boolean {
         // 已经监听
         if (this._modelinfos.has(mid))
@@ -265,6 +283,7 @@ export class Connector extends BaseConnector {
         return true;
     }
 
+    // 取消对模型的监听
     unlisten(model: any, mid: number): boolean {
         if (!this._modelinfos.has(mid))
             return false;
@@ -276,6 +295,7 @@ export class Connector extends BaseConnector {
 
     // 保存所有listen的modelclazz和cmid的对照表
     private _listenings = new Multimap<string, number>();
+
     // cmid和输入参数对照
     private _modelinfos = new Map<number, { f: IndexedObject }>();
 }

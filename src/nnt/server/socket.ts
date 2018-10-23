@@ -81,18 +81,25 @@ export class Connector {
         });
     }
 
-    close(retcode: number, msg?: string) {
-        Connector.CloseHandle(this._hdl, retcode, msg);
-        this._hdl = null;
+    get isClosed(): boolean {
+        return this._hdl = null;
     }
 
-    get disconnecting(): boolean {
-        return this._hdl == null;
+    // 主动关闭连接
+    close(retcode: number, msg?: string) {
+        Connector.CloseHandle(this._hdl, retcode, msg);
+        this.onClosed();
+    }
+
+    // 连接关闭的回调
+    onClosed() {
+        this._hdl = null;
     }
 
     // 是否已经登陆
     authed: boolean = false;
 
+    // 连接句柄
     private _hdl: ws;
 
     static CloseHandle(hdl: ws, code?: number, msg?: string) {
@@ -222,11 +229,12 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             io.on("close", (code, reason) => {
                 logger.log("{{=it.addr}} 断开连接", {addr: addr});
 
-                let cnt = ObjectT.Get(io, IO_CONNECTOR);
+                let cnt: Connector = ObjectT.Get(io, IO_CONNECTOR);
                 if (cnt) {
                     this.onConnectorUnavaliable(cnt);
                     BindHdlToConnector(cnt, null);
                     ObjectT.Set(io, IO_CONNECTOR, null);
+                    cnt.onClosed();
                 }
             });
 
