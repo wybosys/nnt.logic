@@ -82,7 +82,7 @@ export class Connector {
     }
 
     get isClosed(): boolean {
-        return this._hdl = null;
+        return this._hdl == null;
     }
 
     // 主动关闭连接
