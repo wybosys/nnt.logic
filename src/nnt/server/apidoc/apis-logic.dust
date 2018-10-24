@@ -1,3 +1,5 @@
+// 请不要修改该自动生成的文件
+
 import {~lb}Model{~rb} from "./model-impl";
 
 export module models {

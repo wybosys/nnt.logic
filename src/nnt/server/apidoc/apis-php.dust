@@ -1,0 +1,43 @@
+// 请不要修改该自动生成的文件
+
+namespace {namespace};
+
+include_once __DIR__ . "/model-impl.php";
+
+class ApiModel extends \Model {
+    public $domain = "{domain}";
+}
+
+{#enums}
+  class {.name} {~lb}
+    {#.defs}
+        static ${.name} = {.value};
+    {/.defs}
+  {~rb}
+{/enums}
+
+{#consts}
+  const {.name} = {.value|s};
+{/consts}
+
+{#clazzes}
+  class M{.name} extends {.super} {~lb}
+  {#.fields}
+      /** {?.deco}{.deco|s}{/.deco}
+      */
+      public ${.name};
+  {/.fields}
+  {~rb}
+{/clazzes}
+
+class Routers {~lb}
+{#routers}
+  static ${.name} = ["{.action}", "{namespace}\{.type}", "{.comment|s}"];
+{/routers}
+{~rb}
+
+{#routers}
+  function {.name}():{.type} {~lb}
+  return \Model::NewRequest(Routers::${.name});
+  {~rb}
+{/routers}

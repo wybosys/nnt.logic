@@ -1,3 +1,5 @@
+// 请不要修改该自动生成的文件
+
 namespace app.models {
 
 class ApiModel extends Model {
