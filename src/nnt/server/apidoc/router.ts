@@ -254,8 +254,16 @@ export class Router implements IRouter {
                     out = "<?php\n" + out;
                 }
             }
+
+            let apifile = params.domain.replace('/', '-') + '-apis';
+            if (m.php) {
+                apifile += ".php";
+            } else {
+                apifile += ".ts";
+            }
+
             // 输出到客户端
-            trans.output('text/plain', RespFile.Plain(out).asDownload(GetDomain().replace('/', '-') + '-apis.ts'));
+            trans.output('text/plain', RespFile.Plain(out).asDownload(apifile));
         });
     }
 
