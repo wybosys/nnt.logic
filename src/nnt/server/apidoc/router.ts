@@ -3,12 +3,12 @@ import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
 import {IsClass, Require, static_cast} from "../../core/core";
-import {AnyClass, ArrayT, clazz_type, IndexedObject, JsonObject, ObjectT, toJson} from "../../core/kernel";
+import {AnyClass, ArrayT, clazz_type, IndexedObject, JsonObject, ObjectT, StringT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
 import {
     boolean,
-    FpToDecoDef,
+    FpToDecoDef, FpToDecoDefPHP,
     FpToTypeDef,
     GetAllFields,
     GetAllOwnFields,
@@ -108,11 +108,17 @@ export class Router implements IRouter {
         // 分析出的所有结构
         let params = {
             domain: GetDomain(),
+            namespace: "",
             clazzes: new Array(),
             enums: new Array(),
             consts: new Array(),
             routers: new Array()
         };
+
+        if (m.php) {
+            let sp = params.domain.split('/');
+            params.namespace = UpcaseFirst(sp[0]) + '\\' + UpcaseFirst(sp[1]);
+        }
 
         // 遍历所有模型，生成模型段
         this._cfg.export.model.forEach(each => {
@@ -168,7 +174,12 @@ export class Router implements IRouter {
                         if (!fp.input && !fp.output)
                             return;
                         let type = FpToTypeDef(fp);
-                        let deco = FpToDecoDef(fp, "Model.");
+                        let deco: string;
+                        if (m.php) {
+                            deco = FpToDecoDefPHP(fp);
+                        } else {
+                            deco = FpToDecoDef(fp, "Model.");
+                        }
                         clazz.fields.push({
                             name: key,
                             type: type,
@@ -200,23 +211,31 @@ export class Router implements IRouter {
                 let d: IndexedObject = {};
                 d.name = UpcaseFirst(router.action) + UpcaseFirst(a);
                 d.action = router.action + "." + a;
-                if (m.vue)
-                    d.type = ap.clazz["name"];
-                else
-                    d.type = "models." + ap.clazz["name"];
+                let cn = ap.clazz["name"];
+                if (m.vue) {
+                    d.type = cn;
+                } else if (m.php) {
+                    d.type = 'M' + cn;
+                } else {
+                    d.type = "models." + cn;
+                }
                 d.comment = ap.comment;
                 params.routers.push(d);
             });
         });
 
         // 渲染模板
-        let apis: string;
+        let apis = "~/src/nnt/server/apidoc/";
         if (m.node) {
-            apis = "~/src/nnt/server/apidoc/apis-node.dust";
+            apis += "apis-node.dust";
         } else if (m.h5g) {
-            apis = "~/src/nnt/server/apidoc/apis-h5g.dust";
+            apis += "apis-h5g.dust";
         } else if (m.vue) {
-            apis = "~/src/nnt/server/apidoc/apis-vue.dust";
+            apis += "apis-vue.dust";
+        } else if (m.php) {
+            apis += "apis-php.dust";
+        } else {
+            apis += "apis.dust";
         }
 
         let src = fs.readFileSync(expand(apis), "utf8");
@@ -227,9 +246,14 @@ export class Router implements IRouter {
         tplcfg.whitespace = old;
         tpl.loadSource(compiled);
         tpl.render("api-generator", params, (err, out) => {
-            if (err)
+            if (err) {
                 out = err.toString();
-
+            } else {
+                // 需要加上php的头
+                if (m.php) {
+                    out = "<?php\n" + out;
+                }
+            }
             // 输出到客户端
             trans.output('text/plain', RespFile.Plain(out).asDownload(GetDomain().replace('/', '-') + '-apis.ts'));
         });

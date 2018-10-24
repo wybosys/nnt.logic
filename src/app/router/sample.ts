@@ -25,6 +25,11 @@ export class RSample implements IRouter {
         trans.submit();
     }
 
+    @action(Echoo)
+    callecho(trans: Trans) {
+        trans.submit();
+    }
+
     @action(Login)
     async login(trans: Trans) {
         let m: Login = trans.model;

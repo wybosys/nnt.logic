@@ -616,3 +616,41 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
     }
     return deco;
 }
+
+export function FpToDecoDefPHP(fp: FieldOption): string {
+    let deco = null;
+    if (fp.string) {
+        deco = "@Api(" + fp.id + ", [string], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+        deco += "\n\t* @var string";
+    } else if (fp.integer) {
+        deco = "@Api(" + fp.id + ", [integer], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+        deco += "\n\t* @var int";
+    } else if (fp.double) {
+        deco = "@Api(" + fp.id + ", [double], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+        deco += "\n\t* @var double";
+    } else if (fp.boolean) {
+        deco = "@Api(" + fp.id + ", [boolean], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+        deco += "\n\t* @var boolean";
+    } else if (fp.array) {
+        deco = "@Api(" + fp.id + ", [array, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.map) {
+        deco = "@Api(" + fp.id + ", [map, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.multimap) {
+        deco = "@Api(" + fp.id + ", [multimap, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.enum) {
+        deco = "@Api(" + fp.id + ", [enum, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.file) {
+        deco = "@Api(" + fp.id + ", [file], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else if (fp.json) {
+        deco = "@Api(" + fp.id + ", [json], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    else {
+        deco = "@Api(" + fp.id + ", [type, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    }
+    return deco;
+}
