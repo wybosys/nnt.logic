@@ -61,13 +61,16 @@ export interface RouterConfig {
 
 class ExportApis {
 
-    @boolean(1, [input, optional], "生成logic客户端使用的api")
-    logic: boolean;
+    @boolean(1, [input, optional], "生成 logic.node 使用的api")
+    node: boolean;
 
-    @boolean(2, [input, optional], "生成h5g游戏使用api")
+    @boolean(2, [input, optional], "生成 logic.php 使用的api")
+    php: boolean;
+
+    @boolean(3, [input, optional], "生成 game.h5 游戏使用api")
     h5g: boolean;
 
-    @boolean(3, [input, optional], "生成vue项目中使用的api")
+    @boolean(4, [input, optional], "生成 vue 项目中使用的api")
     vue: boolean;
 }
 
@@ -96,7 +99,7 @@ export class Router implements IRouter {
     @action(ExportApis, [], "生成api接口文件")
     export(trans: Transaction) {
         let m: ExportApis = trans.model;
-        if (!m.logic && !m.h5g && !m.vue) {
+        if (!m.node && !m.php && !m.h5g && !m.vue) {
             trans.status = STATUS.PARAMETER_NOT_MATCH;
             trans.submit();
             return;
@@ -208,12 +211,13 @@ export class Router implements IRouter {
 
         // 渲染模板
         let apis: string;
-        if (m.logic)
-            apis = "~/src/nnt/server/apidoc/apis-logic.dust";
-        else if (m.h5g)
+        if (m.node) {
+            apis = "~/src/nnt/server/apidoc/apis-node.dust";
+        } else if (m.h5g) {
             apis = "~/src/nnt/server/apidoc/apis-h5g.dust";
-        else if (m.vue)
+        } else if (m.vue) {
             apis = "~/src/nnt/server/apidoc/apis-vue.dust";
+        }
 
         let src = fs.readFileSync(expand(apis), "utf8");
         let tplcfg = (<any>tpl).config;
