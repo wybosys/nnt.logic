@@ -18,7 +18,7 @@ export class Logic extends AbstractServer {
     }
 
     async start() {
-        logger.info("连接 {{=it.id}}@remote", {id: this.id});
+        logger.info("连接 {{=it.id}}@logic", {id: this.id});
     }
 
     async stop() {

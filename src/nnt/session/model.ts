@@ -1,6 +1,6 @@
 import {IndexedObject} from "../core/kernel";
 import {
-    array, boolean, boolean_t, double_t,
+    array, boolean, boolean_t, double, double_t,
     Encode,
     enumerate,
     FieldOption, file,
@@ -158,6 +158,7 @@ export abstract class Base {
 
     // 把annotation链接到model，避免需要在api中导入大量函数
     static integer = integer;
+    static double = double;
     static output = output;
     static json = json;
     static boolean = boolean;

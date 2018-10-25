@@ -101,6 +101,21 @@
       "host": "http://localhost:8090/",
       "entry": "nnt.server.Logic",
       "enable": "local"
+    },
+    {
+      "id": "yigames",
+      "entry": "nnt.thirds.sdks.Yigames",
+      "gameid": 100,
+      "gamekey": "DBoNIGpU",
+      "debug": "true",
+      "enable": "local"
+    },
+    {
+      "id": "yigames",
+      "entry": "nnt.thirds.sdks.Yigames",
+      "gameid": 100,
+      "gamekey": "DBoNIGpU",
+      "enable": "distribution"
     }
   ],
   "dbms": [
