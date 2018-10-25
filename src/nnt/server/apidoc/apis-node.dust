@@ -19,7 +19,7 @@ class ApiModel extends Model {
 {/consts}
 
 {#clazzes}
-  export class M{.name} extends {.super} {~lb}
+  export class {.name} extends {.super} {~lb}
     {#.fields}
         {?.deco}{.deco|s}{/.deco}
         {.name}{?.optional}?{/.optional}:{.type|s};

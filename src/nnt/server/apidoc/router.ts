@@ -212,9 +212,9 @@ export class Router implements IRouter {
                 d.name = UpcaseFirst(router.action) + UpcaseFirst(a);
                 d.action = router.action + "." + a;
                 let cn = ap.clazz["name"];
-                if (m.vue) {
+                if (m.vue || m.node) {
                     d.type = cn;
-                } else if (m.php || m.node) {
+                } else if (m.php) {
                     d.type = 'M' + cn;
                 } else {
                     d.type = "models." + cn;

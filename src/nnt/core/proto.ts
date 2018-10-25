@@ -320,7 +320,7 @@ export function type(id: number, clz: clazz_type, opts: string[], comment?: stri
 }
 
 // 枚举
-export function enumerate(id: number, clz: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+export function enumerate(id: number, clz: clazz_type | {}, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
     fp.valtype = ensureClazz(clz);
     fp.enum = true;

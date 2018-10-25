@@ -1,6 +1,6 @@
 import {IndexedObject} from "../core/kernel";
 import {
-    array, boolean_t, double_t,
+    array, boolean, boolean_t, double_t,
     Encode,
     enumerate,
     FieldOption, file,
@@ -160,6 +160,7 @@ export abstract class Base {
     static integer = integer;
     static output = output;
     static json = json;
+    static boolean = boolean;
     static enumerate = enumerate;
     static string = string;
     static input = input;

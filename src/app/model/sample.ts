@@ -1,7 +1,7 @@
 import {
     array,
     auth,
-    double_t, file, FileType,
+    double_t, enumerate, enumm, file, FileType,
     input,
     integer,
     integer_t,
@@ -10,10 +10,16 @@ import {
     model,
     output,
     string,
-    string_t
+    string_t, type
 } from "../../nnt/core/proto";
 import {IndexedObject} from "../../nnt/core/kernel";
 import {colstring, table} from "../../nnt/store/proto";
+import {Null} from "../../nnt/core/models";
+
+@model([enumm])
+export class EchoType {
+    static TEST = 88;
+}
 
 @model()
 export class Echoo {
@@ -35,6 +41,12 @@ export class Echoo {
 
     @array(6, double_t, [output])
     array = new Array<number>();
+
+    @enumerate(7, EchoType, [output])
+    enm = EchoType.TEST;
+
+    @type(8, Null, [output])
+    nullval: Null;
 }
 
 @model()
