@@ -8,6 +8,8 @@ import {Get, Set} from "../../nnt/manager/dbmss";
 import {Fetch} from "../../nnt/server/remote";
 import {logger} from "../../nnt/core/logger";
 import {Null} from "../../nnt/core/models";
+import {SampleEcho} from "../model/framework-nntlogic-apis";
+import {Rest} from "../../nnt/session/rest";
 
 export class RSample implements IRouter {
     action = "sample";
@@ -26,7 +28,12 @@ export class RSample implements IRouter {
     }
 
     @action(Echoo)
-    callecho(trans: Trans) {
+    async callecho(trans: Trans) {
+        let mdl: Echoo = trans.model;
+        let m = SampleEcho();
+        m.input = mdl.input;
+        await Rest.Get(m);
+        mdl.output = m.output;
         trans.submit();
     }
 

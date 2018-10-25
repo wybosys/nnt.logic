@@ -1,6 +1,6 @@
 import {action, IRouter} from "../core/router";
 import {Transaction} from "./transaction";
-import {ProviderContent, ProviderContentType, STATUS} from "../core/models";
+import {STATUS} from "../core/models";
 import {StringT} from "../core/kernel";
 import {Config} from "../manager/config";
 import {logger} from "../core/logger";
@@ -10,6 +10,32 @@ import {Mime} from "../core/file";
 import fs = require("fs");
 import mini = require("minify");
 import zlib = require("zlib");
+import {enumerate, enumm, input, model, string} from "../core/proto";
+
+// 返回的数据格式
+@model([enumm])
+export class ProviderContentType {
+
+    // 原始格式
+    static RAW = 0;
+
+    // 按照纯js格式返回，可以直接用在script元素中
+    static JAVASCRIPT = 1;
+
+    // 返回字符串形式，方便客户端eval操作
+    static STRING = 2;
+}
+
+// 配合sdk的客户端组件提供模式
+@model()
+export class ProviderContent {
+
+    @enumerate(1, ProviderContentType, [input], "输出类型")
+    type: number;
+
+    @string(2, [input], "请求返回的脚本id")
+    id: string;
+}
 
 export class Provider implements IRouter {
     action = "provider";

@@ -37,16 +37,16 @@ export class RequestParams {
     root = "root";
 }
 
-export interface IResponseData {
+export class ResponseData {
 
     // 响应的code
-    code: number,
+    code: number;
 
     // 内容类型
-    type: string,
+    type: string;
 
     // 返回的所有数据
-    body: any;
+    body: any = null;
 }
 
 export class ModelError extends Error {
@@ -110,7 +110,7 @@ export abstract class Base {
     additionParams: IndexedObject = null;
 
     // 处理响应的结果
-    parseData(data: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
+    parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
         // 保护一下数据结构，标准的为 {code, message(error), data}
         if (data.body && data.body.data === undefined && data.body.message !== undefined) {
             data.body.data = data.body.message;
@@ -121,8 +121,13 @@ export abstract class Base {
 
         // 读取数据到对象，需要吧code、error放到前面处理，避免如果错误、或者返回的data中本来就包含code时，导致消息的code被通信的code覆盖
         if (data.body) {
-            // 把data的数据写入model中
-            Decode(parser, this, data.body);
+            if (this.submodel) {
+                // 把data的数据写入model中
+                Decode(parser, this, data.body);
+            } else {
+                this.code = data.body.code;
+                Decode(parser, this, data.body.data);
+            }
             // 更新
             UpdateData(this);
         }
@@ -147,6 +152,9 @@ export abstract class Base {
 
     // 此次访问服务端返回的数据
     data: any;
+
+    // data保存的时二级模型
+    submodel: boolean;
 
     // 把annotation链接到model，避免需要在api中导入大量函数
     static integer = integer;

@@ -6,8 +6,8 @@ import {Rest} from "../../server/rest";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {STATUS} from "../../core/models";
-import {Base, HttpContentType, HttpMethod, IResponseData, ModelError} from "../../session/model";
-import {RestSession} from "../../session/rest";
+import {Base, HttpContentType, HttpMethod, ResponseData, ModelError} from "../../session/model";
+import {Rest as RestSession} from "../../session/rest";
 import {REGEX_PHONE} from "../../component/pattern";
 import {ArrayT} from "../../core/kernel";
 import soap = require("soap");
@@ -76,7 +76,7 @@ class RestSendMessage extends Base {
     @string(4, [input])
     message: string;
 
-    parseData(resp: IResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
+    parseData(resp: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
         if (typeof resp.body == "string") {
             // 解析xml到类型
             xml2js.parseString(resp.body, (err, result) => {
@@ -166,9 +166,9 @@ class RSms implements IRouter {
             m.password = srv.passwd;
             m.smsType = srv.type;
             m.message = RestSendMessage.PayloadToXml(pl);
-            RestSession.Fetch(m, () => {
+            RestSession.Fetch(m).then(() => {
                 trans.submit();
-            }, err => {
+            }).catch(err => {
                 let msg = err.message;
                 logger.warn(msg);
                 trans.message = msg;

@@ -4,7 +4,7 @@ import {logger} from "../core/logger";
 import {IndexedObject} from "../core/kernel";
 import {Find} from "../manager/servers";
 import {Base, ModelError} from "../session/model";
-import {RestSession} from "../session/rest";
+import {Rest} from "../session/rest";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 import {integer, json, output} from "../core/proto";
 import {Config} from "../manager/config";
@@ -37,6 +37,11 @@ export class Remote extends AbstractServer {
 }
 
 class RpcModel extends Base {
+
+    constructor() {
+        super();
+        this.submodel = true;
+    }
 
     // 访问的url
     url: string;
@@ -95,7 +100,7 @@ function ImpFetch(): Promise<IndexedObject> {
                 let m = new RpcModel();
                 m.url = arguments[0];
                 m.additionParams = args;
-                RestSession.Get(m).then(m => {
+                Rest.Get(m).then(m => {
                     resolve(m.data);
                 }).catch(err => {
                     reject(err);
@@ -143,7 +148,7 @@ function ImpFetch(): Promise<IndexedObject> {
         let m = new RpcModel();
         m.url = srv.host + subpath;
         m.additionParams = args;
-        RestSession.Get(m).then(m => {
+        Rest.Fetch(m).then(m => {
             resolve(m.data);
         }).catch(err => {
             reject(err);

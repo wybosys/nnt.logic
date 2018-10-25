@@ -1,5 +1,5 @@
 import {ErrorCallBack, Session, SuccessCallback} from "./session";
-import {Base, HttpContentType, HttpMethod, IResponseData, ModelError} from "./model";
+import {Base, HttpContentType, HttpMethod, ResponseData, ModelError} from "./model";
 import {logger} from "../core/logger";
 import {IndexedObject, ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
 import {AbstractParser, FindParser} from "../server/parser/parser";
@@ -8,24 +8,27 @@ import xml2js = require("xml2js");
 import fs = require("fs");
 import request = require("request");
 import {STATUS} from "../core/models";
+import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "../server/devops/permissions";
+import {Config} from "../manager/config";
 
-export class RestSession extends Session {
-
-    constructor() {
-        super();
-    }
+export class Rest extends Session {
 
     // 全局统一调用对象
-    static shared = new RestSession();
+    static shared = new Rest();
 
     // 获取一个模型
     fetch<T extends Base>(m: T, cbsuc: SuccessCallback<T>, cberr: ErrorCallBack) {
-        let url = "";
-        if (m.host)
-            url += m.host;
-        url += m.requestUrl();
+        let url = m.requestUrl();
         if (url.indexOf("?") == -1)
             url += "?/";
+
+        // 添加devops的参数
+        if (Permissions) {
+            url += '&' + KEY_PERMISSIONID + '=' + Permissions.id;
+        }
+        else if (Config.LOCAL) {
+            url += '&' + KEY_SKIPPERMISSION + "=1";
+        }
 
         // 所有请求参数
         let params = m.requestParams();
@@ -51,11 +54,13 @@ export class RestSession extends Session {
             }
             if (p.length)
                 url += "&" + p.join("&");
+
+            // 发起请求
+            logger.log("S2S:" + url);
             request.get(url, (err, resp, body) => {
                 if (err) {
                     cberr && cberr(err);
                 } else {
-                    logger.log("S2S: " + url);
                     ProcessResponse(resp, parser, m, cbsuc, cberr);
                 }
             });
@@ -146,11 +151,9 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
         return;
     }
 
-    let rd: IResponseData = {
-        code: resp.statusCode,
-        type: resp.headers["content-type"],
-        body: null
-    };
+    let rd = new ResponseData();
+    rd.code = resp.statusCode;
+    rd.type = resp.headers["content-type"];
 
     if (m.responseType == HttpContentType.JSON) {
         rd.body = toJsonObject(resp.body);
