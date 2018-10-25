@@ -99,7 +99,7 @@
     {
       "id": "logic",
       "host": "http://localhost:8090/",
-      "entry": "nnt.server.Remote",
+      "entry": "nnt.server.Logic",
       "enable": "local"
     }
   ],
