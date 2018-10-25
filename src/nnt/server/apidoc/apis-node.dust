@@ -2,46 +2,39 @@
 
 import {~lb}Model{~rb} from "./model-impl";
 
-export module models {
-
 class ApiModel extends Model {
   domain = "{.domain}";
 }
 
 {#enums}
-    export enum {.name} {~lb}
+  export enum {.name} {~lb}
     {#.defs}
         {.name} = {.value},
     {/.defs}
-    {~rb}
+  {~rb}
 {/enums}
 
 {#consts}
-    export const {.name} = {.value|s};
+  export const {.name} = {.value|s};
 {/consts}
 
 {#clazzes}
-    export class {.name} extends {.super} {~lb}
+  export class M{.name} extends {.super} {~lb}
     {#.fields}
         {?.deco}{.deco|s}{/.deco}
         {.name}{?.optional}?{/.optional}:{.type|s};
     {/.fields}
-    {~rb}
+  {~rb}
 {/clazzes}
-}
 
-export module routers {
+class Routers {
 {#routers}
-    export let {.name} = ["{.action}", {.type}, "{.comment|s}"];
+  static {.name} = ["{.action}", {.type}, "{.comment|s}"];
 {/routers}
 }
 
-export module api {
 {#routers}
-    export function {.name}():{.type} {~lb}
-    return Model.NewRequest(routers.{.name});
-    {~rb}
+  export function {.name}():{.type} {~lb}
+    return Model.NewRequest(Routers.{.name});
+  {~rb}
 {/routers}
-}
-
-Model.BindImpl(api, models, routers);

@@ -1,7 +1,20 @@
 import {IndexedObject} from "../core/kernel";
-import {Encode, FieldOption, FP_KEY, UpdateData} from "../core/proto";
+import {
+    array, boolean_t, double_t,
+    Encode,
+    enumerate,
+    FieldOption, file,
+    FP_KEY,
+    input,
+    integer, integer_t,
+    json, map, multimap,
+    optional,
+    output,
+    string, string_t, type,
+    UpdateData
+} from "../core/proto";
 import {AbstractParser} from "../server/parser/parser";
-import {STATUS} from "../core/models";
+import {Null, STATUS} from "../core/models";
 
 export enum HttpMethod {
     GET,
@@ -134,6 +147,31 @@ export abstract class Base {
 
     // 此次访问服务端返回的数据
     data: any;
+
+    // 把annotation链接到model，避免需要在api中导入大量函数
+    static integer = integer;
+    static output = output;
+    static json = json;
+    static enumerate = enumerate;
+    static string = string;
+    static input = input;
+    static optional = optional;
+    static array = array;
+    static string_t = string_t;
+    static boolean_t = boolean_t;
+    static integer_t = integer_t;
+    static double_t = double_t;
+    static map = map;
+    static file = file;
+    static multimap = multimap;
+    static type = type;
+
+    static NewRequest<T extends Base>(req: any): T {
+        let clz: any = req[1];
+        let r = new clz();
+        r.action = req[0];
+        return r;
+    }
 }
 
 // 和proto中的方向正好相反，是把数据填入output的字段

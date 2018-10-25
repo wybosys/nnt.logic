@@ -92,7 +92,13 @@
     },
     {
       "id": "media",
-      "host": "http://localhost:8001/",
+      "host": "http://localhost:8090/",
+      "entry": "nnt.server.Remote",
+      "enable": "local"
+    },
+    {
+      "id": "logic",
+      "host": "http://localhost:8090/",
       "entry": "nnt.server.Remote",
       "enable": "local"
     }

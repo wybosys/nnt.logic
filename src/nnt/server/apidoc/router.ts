@@ -214,7 +214,7 @@ export class Router implements IRouter {
                 let cn = ap.clazz["name"];
                 if (m.vue) {
                     d.type = cn;
-                } else if (m.php) {
+                } else if (m.php || m.node) {
                     d.type = 'M' + cn;
                 } else {
                     d.type = "models." + cn;

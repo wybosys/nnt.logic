@@ -23,53 +23,6 @@ export class RestUpdate {
     models: Object;
 }
 
-// 返回的数据格式
-@model([enumm])
-export class ProviderContentType {
-
-    // 原始格式
-    static RAW = 0;
-
-    // 按照纯js格式返回，可以直接用在script元素中
-    static JAVASCRIPT = 1;
-
-    // 返回字符串形式，方便客户端eval操作
-    static STRING = 2;
-}
-
-// 配合sdk的客户端组件提供模式
-@model()
-export class ProviderContent {
-
-    @enumerate(1, ProviderContentType, [input], "输出类型")
-    type: number;
-
-    @string(2, [input], "请求返回的脚本id")
-    id: string;
-}
-
-// 容器使用的基础模型
-@model()
-export class TemplateModel {
-
-    @string(1, [input])
-    @colstring()
-    tid: string;
-
-    @string(2, [input])
-    @colstring()
-    iid: string;
-}
-
-// 容器使用的基础通知模型
-@model()
-export class TemplatePayload {
-
-    @string(1, [input, output], "自定义的通知标记")
-    @colstring()
-    channel: string;
-}
-
 // 处理分页的模型
 @model()
 export class Paged {
