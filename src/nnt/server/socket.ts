@@ -344,7 +344,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 }
                 else {
                     // 新连接执行成功后，作为用户上线的标记
-                    this._routers.process(t).then(() => {
+                    t.hookSubmit = () => {
                         if (!connector.authed && t.status == STATUS.OK && connector.init(t)) {
                             connector.authed = true;
                             // 登陆清除timeout
@@ -355,7 +355,8 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                             // 登陆成功
                             this.onConnectorAvaliable(connector);
                         }
-                    });
+                    };
+                    this._routers.process(t);
                 }
             }
             else {
@@ -387,7 +388,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     }
                     else {
                         // 需要额外处理登录
-                        this._routers.process(t).then(() => {
+                        t.hookSubmit = () => {
                             if (t.status == STATUS.OK && connector.init(t)) {
                                 // 如果没有登录，需要初始化登录数据
                                 connector.authed = true;
@@ -400,7 +401,8 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                                 // 登陆成功
                                 this.onConnectorAvaliable(connector);
                             }
-                        });
+                        };
+                        this._routers.process(t);
                     }
                 }
             }
