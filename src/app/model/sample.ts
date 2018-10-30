@@ -1,19 +1,19 @@
 import {
     array,
-    auth,
+    auth, boolean,
     double_t, enumerate, enumm, file, FileType,
     input,
     integer,
     integer_t,
     json,
     map,
-    model,
+    model, optional,
     output,
     string,
     string_t, type
 } from "../../nnt/core/proto";
 import {IndexedObject} from "../../nnt/core/kernel";
-import {colstring, table} from "../../nnt/store/proto";
+import {colstring, coltype, table} from "../../nnt/store/proto";
 import {Null} from "../../nnt/core/models";
 
 @model([enumm])
@@ -60,6 +60,14 @@ export class Login {
     @string(2, [output])
     @colstring()
     sid: string;
+
+    @string(3, [input, optional], "sdk返回的数据")
+    @colstring()
+    raw: string;
+
+    @string(4, [input, optional], "渠道")
+    @colstring()
+    channel: string;
 }
 
 @model([auth])
@@ -67,6 +75,22 @@ export class User {
 
     @string(1, [output], "当前用户id")
     uid: string;
+}
+
+@model()
+export class LoginSDK {
+
+    @string(1, [input], "sdk返回的数据")
+    raw: string;
+
+    @string(2, [input], "渠道")
+    channel: string;
+
+    @type(3, User, [output])
+    user: User;
+
+    @string(4, [output])
+    sid: string;
 }
 
 @model([auth])

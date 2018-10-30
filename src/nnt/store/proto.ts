@@ -279,10 +279,10 @@ export function coltype(clz: clazz_type, opts?: string[], set?: FieldSetting): (
 }
 
 // 填数据库对象
-export function Decode(mdl: any, params: IndexedObject) {
+export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): T {
     let fps = mdl[FP_KEY];
     if (fps == null)
-        return;
+        return mdl;
     for (let key in params) {
         let fp: FieldOption = fps[key];
         if (fp == null)
@@ -357,6 +357,7 @@ export function Decode(mdl: any, params: IndexedObject) {
             mdl[key] = val;
         }
     }
+    return mdl;
 }
 
 export function Output(mdl: any, def: any = {}): IndexedObject {

@@ -103,8 +103,8 @@
       "enable": "local"
     },
     {
-      "id": "yigames",
-      "entry": "nnt.thirds.sdks.Yigames",
+      "id": "sdk",
+      "entry": "nnt.thirds.sdks.Sdks",
       "attach": "sample",
       "gameid": 100,
       "gamekey": "DBoNIGpU",
@@ -112,8 +112,8 @@
       "enable": "local"
     },
     {
-      "id": "yigames",
-      "entry": "nnt.thirds.sdks.Yigames",
+      "id": "sdk",
+      "entry": "nnt.thirds.sdks.Sdks",
       "gameid": 100,
       "gamekey": "DBoNIGpU",
       "debug": "true",
