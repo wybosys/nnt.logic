@@ -1,7 +1,7 @@
 import {action, IRouter} from "../../nnt/core/router";
 import {DateTime} from "../../nnt/core/time";
 import {TODAY_RANGE} from "../../nnt/component/today";
-import {Echoo, Login, LoginSDK, Message, Upload, User} from "../model/sample";
+import {Echoo, Login, LoginSDK, LoginVerifySDK, Message, Upload, User} from "../model/sample";
 import {UUID} from "../../nnt/core/core";
 import {Trans} from "../model/trans";
 import {Get, Set} from "../../nnt/manager/dbmss";
@@ -10,7 +10,7 @@ import {logger} from "../../nnt/core/logger";
 import {Null} from "../../nnt/core/models";
 import {SampleEcho} from "../model/framework-nntlogic-apis";
 import {Rest} from "../../nnt/session/rest";
-import {Sdks, SdkUserLogin} from "../../nnt/thirds/sdks/sdks";
+import {Sdks, SdkUserLogin, SdkUserVerify} from "../../nnt/thirds/sdks/sdks";
 import {Find} from "../../nnt/manager/servers";
 
 export class RSample implements IRouter {
@@ -69,6 +69,23 @@ export class RSample implements IRouter {
             user.uid = ret.user.userid;
             m.user = user;
             m.sid = ret.sid;
+        } catch (err) {
+            trans.status = err.code;
+        }
+        trans.submit();
+    }
+
+    @action(LoginVerifySDK)
+    async loginverifysdk(trans: Trans) {
+        let m: LoginVerifySDK = trans.model;
+        let sdk: Sdks = <Sdks>Find("sdk");
+        let ml = new SdkUserVerify();
+        ml.sid = m.sid;
+        try {
+            let ret = await sdk.userVerify(ml);
+            let user = new User();
+            user.uid = ret.user.userid;
+            m.user = user;
         } catch (err) {
             trans.status = err.code;
         }

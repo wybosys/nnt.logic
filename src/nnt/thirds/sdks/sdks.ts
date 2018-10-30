@@ -45,7 +45,7 @@ export class SdkUserInfo {
     avatar: string;
 }
 
-@model([expose])
+@model()
 export class SdkUserLogin {
 
     @string(1, [input], "sdks返回的原始数据")
@@ -59,6 +59,16 @@ export class SdkUserLogin {
 
     @string(4, [output], "sid")
     sid: string;
+}
+
+@model()
+export class SdkUserVerify {
+
+    @string(1, [input], "sid")
+    sid: string;
+
+    @type(2, SdkUserInfo, [output], "用户信息")
+    user: SdkUserInfo;
 }
 
 export class Sdks extends AbstractServer {
@@ -148,18 +158,18 @@ export class Sdks extends AbstractServer {
         return null;
     }
 
-    // 普通用户注册
-    async userRegister() {
-
-    }
-
     // 获取普通用户信息
-    async userInfo() {
-
-    }
-
-    // 更新普通用户信息
-    async userUpdateInfo() {
-
+    async userVerify(m: SdkUserVerify): Promise<SdkUserVerify> {
+        try {
+            let ret = await Fetch(this.users, {
+                action: 'user.info',
+                _sid: m.sid
+            });
+            m.user = Decode(new SdkUserInfo(), ret.user, false, true);
+            return m;
+        } catch (err) {
+            throw err;
+        }
+        return null;
     }
 }

@@ -93,6 +93,16 @@ export class LoginSDK {
     sid: string;
 }
 
+@model()
+export class LoginVerifySDK {
+
+    @string(1, [input])
+    sid: string;
+
+    @type(2, User, [output])
+    user: User;
+}
+
 @model([auth])
 export class Message {
 
