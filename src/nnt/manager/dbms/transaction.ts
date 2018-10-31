@@ -26,6 +26,8 @@ export type TransactionDef<T> = Class<T> | TransactionTupleDef<T>;
 
 export interface ITransaction {
 
+    // 获取当前模型的字段列表
+    columns(): string[];
 }
 
 export class Transaction<T, R> implements ITransaction {

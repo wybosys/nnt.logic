@@ -7,6 +7,7 @@ import {Variant} from "../core/object";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
 import mongo = require("mongodb");
+import {ITransaction} from "../manager/dbms/transaction";
 
 let DEFAULT_PORT = 27017;
 
@@ -192,14 +193,27 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    query(page: string, cmd: NosqlCmdType, limit: number, cb: (res: RecordObject[]) => void) {
+    query(page: string, cmd: NosqlCmdType, limit: number, t: ITransaction, cb: (res: RecordObject[]) => void) {
         if (typeof cmd == "string") {
             // 传入了IID
             cmd = {_id: StrToObjectId(cmd)};
         }
+
+        let opts: mongo.FindOneOptions = {};
+
+        // 根据模型减少查询返回的数据列数
+        let cols = t.columns();
+        if (cols) {
+            let proj: IndexedObject = {};
+            cols.forEach(col => {
+                proj[col] = 1;
+            });
+            opts.projection = proj;
+        }
+
         let col = this._db.collection(page);
         if (limit == 1) {
-            col.findOne(cmd, (err, res) => {
+            col.findOne(cmd, opts, (err, res) => {
                 if (err) {
                     logerr(err, ["query", cmd]);
                     cb(null);
@@ -213,7 +227,7 @@ export class KvMongo extends AbstractNosql {
             });
         }
         else {
-            let cursor = col.find(cmd);
+            let cursor = col.find(cmd, opts);
             if (limit > 1)
                 cursor.limit(limit);
             cursor.toArray((err, rcds) => {

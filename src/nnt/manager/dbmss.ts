@@ -252,7 +252,7 @@ export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: numbe
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, limit, res => {
+        db.query(t.table, <Object>cmd, limit, t, res => {
             if (res == null)
                 t.resolve([]);
             else {
@@ -294,7 +294,7 @@ export async function QueryOne<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, 1, res => {
+        db.query(t.table, <Object>cmd, 1, t, res => {
             if (res == null || !res.length)
                 t.resolve(null);
             else if (res.length > 1)
