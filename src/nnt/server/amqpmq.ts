@@ -127,12 +127,15 @@ class AmqpmqClient extends AbstractMQClient {
             await this._hdl.checkQueue(this._chann);
         } catch (err) {
             logger.fatal("amqp-receiver: Queue " + this._chann + " 不存在");
+            return this;
         }
         try {
             await this._hdl.checkExchange(transmitter);
         } catch (err) {
             logger.fatal("amqp-receiver: Exchange " + transmitter + " 不存在");
+            return this;
         }
+
         try {
             if (connect) {
                 await this._hdl.bindQueue(this._chann, transmitter, "");
@@ -144,6 +147,7 @@ class AmqpmqClient extends AbstractMQClient {
         catch (err) {
             logger.warn(err);
         }
+        
         return this;
     }
 
