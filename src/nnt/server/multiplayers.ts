@@ -91,14 +91,11 @@ export class Connector extends BaseConnector {
     protected _mqC: IMQClient;
 
     // 客户端快速连接/断开会因为mq连接的异步性，导致客户端断开后才建立起mq通道，所以提供保护的连接
-    protected async acquire(chann: string, opts: IndexedObject, autoclose: boolean): Promise<IMQClient> {
+    protected async acquire(chann: string, opts: IndexedObject): Promise<IMQClient> {
         try {
             let mq = await Acquire(this.mqsrv).open(chann, opts);
             if (this.isClosed) {
-                if (autoclose) {
-                    mq.close();
-                    return null;
-                }
+                return null;
             } else {
                 return mq;
             }
@@ -122,7 +119,7 @@ export class Connector extends BaseConnector {
                 let mq = await this.acquire("user." + this.userIdentifier, {
                     durable: true,
                     longliving: true
-                }, true);
+                });
                 if (mq) {
                     this._mqA = mq;
                     mq.subscribe(data => {
@@ -136,7 +133,7 @@ export class Connector extends BaseConnector {
                 let mq = await this.acquire("user.online." + this.userIdentifier, {
                     durable: false,
                     longliving: false
-                }, true);
+                });
                 if (mq) {
                     this._mqB = mq;
                     mq.subscribe(data => {
@@ -152,14 +149,14 @@ export class Connector extends BaseConnector {
             transmitter: true,
             longliving: false,
             durable: false
-        }, false).then(mqsumd => {
+        }).then(mqsumd => {
             if (!mqsumd)
                 return;
             // 多机通道下的单机独立队列
             this.acquire("user.online." + this.userIdentifier + "." + this.device, {
                 durable: false,
                 longliving: false
-            }, true).then(mq => {
+            }).then(mq => {
                 if (!mq)
                     return;
                 this._mqC = mq;
@@ -261,22 +258,17 @@ export class Connector extends BaseConnector {
     async unavaliable() {
         if (this._mqA) {
             this._mqA.unsubscribe();
-            this._mqA.close();
             this._mqA = null;
         }
 
         if (this._mqB) {
             this._mqB.unsubscribe();
-            this._mqB.close();
             this._mqB = null;
         }
 
         if (this._mqC) {
             // 取消普通得监听
             this._mqC.unsubscribe();
-
-            // 取消对sumd得监听
-            this._mqC.receiver("user.online." + this.userIdentifier, false);
 
             // 关闭连接
             this._mqC.close();

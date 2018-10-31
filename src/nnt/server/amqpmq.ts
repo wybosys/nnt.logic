@@ -147,7 +147,7 @@ class AmqpmqClient extends AbstractMQClient {
         catch (err) {
             logger.warn(err);
         }
-        
+
         return this;
     }
 
