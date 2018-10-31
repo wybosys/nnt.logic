@@ -2,11 +2,12 @@ import {Connector as BaseConnector, Socket, Transaction as BaseTransaction} from
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {GetObjectClassName, UUID} from "../core/core";
-import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
+import {ArrayT, AsyncArray, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";
 import {STATUS} from "../core/models";
+import {Parellel} from "../core/operation";
 
 export interface IMPMessage {
 
@@ -90,60 +91,77 @@ export class Connector extends BaseConnector {
     protected _mqC: IMQClient;
 
     // 客户端快速连接/断开会因为mq连接的异步性，导致客户端断开后才建立起mq通道，所以提供保护的连接
-    protected acquire(chann: string, opts: IndexedObject, autoclose: boolean, cb: (mq: IMQClient) => void) {
-        Acquire(this.mqsrv).open(chann, opts).then(mq => {
+    protected async acquire(chann: string, opts: IndexedObject, autoclose: boolean): Promise<IMQClient> {
+        try {
+            let mq = await Acquire(this.mqsrv).open(chann, opts);
             if (this.isClosed) {
-                if (autoclose)
+                if (autoclose) {
                     mq.close();
+                    return null;
+                }
             } else {
-                cb(mq);
+                return mq;
             }
-        }).catch();
+        } catch (err) {
+            // pass
+        }
+        return null;
     }
 
     // 成功建立连接
-    avaliable() {
+    async avaliable() {
         // 建立mq服务器
         // Z users.online <AD|fanout>
         // Y users <D|fanout>
         // B user.online.<uid> <AD|topic>
         // A user.<uid> <D|topic>
 
-        // 持久化通道
-        this.acquire("user." + this.userIdentifier, {
-            durable: true,
-            longliving: true
-        }, true, mq => {
-            this._mqA = mq;
-            mq.subscribe(data => {
-                this.processData(data);
-            });
-            mq.receiver("users", true);
-        });
+        await Parellel()
+            .async(async () => {
+                // 用户的持久性消息通道（通常用来投递关键消息)
+                let mq = await this.acquire("user." + this.userIdentifier, {
+                    durable: true,
+                    longliving: true
+                }, true);
+                if (mq) {
+                    this._mqA = mq;
+                    mq.subscribe(data => {
+                        this.processData(data);
+                    });
+                    mq.receiver("users", true);
+                }
+            })
+            .async(async () => {
+                // 用户独立在线通道(下线时自动断开，用来投递即时消息)
+                let mq = await this.acquire("user.online." + this.userIdentifier, {
+                    durable: false,
+                    longliving: false
+                }, true);
+                if (mq) {
+                    this._mqB = mq;
+                    mq.subscribe(data => {
+                        this.processData(data);
+                    });
+                    mq.receiver("users.online", true);
+                }
+            })
+            .run();
 
-        // 单用户独立在线通道
-        this.acquire("user.online." + this.userIdentifier, {
-            durable: false,
-            longliving: false
-        }, true, mq => {
-            this._mqB = mq;
-            mq.subscribe(data => {
-                this.processData(data);
-            });
-            mq.receiver("users.online", true);
-        });
-
-        // 多机通道
+        // 多机通道，同一个用户登录不同客户端时相互发送消息的通道)
         this.acquire("user.online." + this.userIdentifier, {
             transmitter: true,
             longliving: false,
             durable: false
-        }, false, mqsumd => {
+        }, false).then(mqsumd => {
+            if (!mqsumd)
+                return;
             // 多机通道下的单机独立队列
             this.acquire("user.online." + this.userIdentifier + "." + this.device, {
                 durable: false,
                 longliving: false
-            }, true, mq => {
+            }, true).then(mq => {
+                if (!mq)
+                    return;
                 this._mqC = mq;
                 mq.subscribe(data => {
                     this.processData(data);
@@ -240,7 +258,7 @@ export class Connector extends BaseConnector {
     }
 
     // 连接断开，回收资源
-    unavaliable() {
+    async unavaliable() {
         if (this._mqA) {
             this._mqA.unsubscribe();
             this._mqA.close();
@@ -331,19 +349,23 @@ export abstract class Multiplayers extends Socket {
         return new Connector();
     }
 
-    protected onConnectorAvaliable(connector: Connector) {
+    protected async onConnectorAvaliable(connector: Connector) {
         // 绑定mq服务，后面会自动打开消息通道
         connector.mqsrv = this.mqsrv;
         super.onConnectorAvaliable(connector);
 
-        // 准备消息通道等
-        connector.avaliable();
+        // 准备消息通道等（同步处理，避免客户端立即处理相关通信，但是服务端尚未建立成功)
+        await connector.avaliable();
+
         logger.log("{{=it.userIdentifier}} 连接服务器", connector);
     }
 
-    protected onConnectorUnavaliable(connector: Connector) {
+    protected async onConnectorUnavaliable(connector: Connector) {
         super.onConnectorUnavaliable(connector);
+
+        // 断开消息通道（可以异步处理）
         connector.unavaliable();
+
         logger.log("{{=it.userIdentifier}} 断开连接", connector);
     }
 

@@ -172,7 +172,7 @@ export abstract class Transaction {
     private _submited: boolean;
     private _submited_timeout: boolean;
 
-    submit(opt?: TransactionSubmitOption) {
+    async submit(opt?: TransactionSubmitOption) {
         if (this._submited) {
             if (!this._submited_timeout)
                 logger.warn("数据已经发送");
@@ -187,7 +187,7 @@ export abstract class Transaction {
         this._outputed = true;
         if (this.hookSubmit) {
             try {
-                this.hookSubmit();
+                await this.hookSubmit();
             } catch (err) {
                 logger.exception(err);
             }
@@ -200,7 +200,7 @@ export abstract class Transaction {
     }
 
     // 当提交的时候修改
-    hookSubmit: () => void;
+    hookSubmit: () => Promise<void>;
 
     // 输出文件
     implOutput: (type: string, obj: any) => void;

@@ -2,7 +2,7 @@ import {ArrayT, asString, toJson, toJsonObject} from "../core/kernel";
 import {UpcaseFirst} from "../core/string";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
-import {AsyncQueue} from "../core/operation";
+import {Parellel} from "../core/operation";
 import {static_cast} from "../core/core";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
@@ -303,10 +303,10 @@ export function GenConfig(cfg: ConfigCfg) {
     tplcfg.whitespace = old;
     tpl.loadSource(compiled);
 
-    new AsyncQueue()
-        .add(next => {
+    Parellel()
+        .callback(done => {
             if (!cfg.server) {
-                next();
+                done();
                 return;
             }
 
@@ -318,12 +318,12 @@ export function GenConfig(cfg: ConfigCfg) {
                 let outfile = expand(cfg.server);
                 fs.writeFileSync(outfile, out);
 
-                next();
+                done();
             });
         })
-        .add(next => {
+        .callback(done => {
             if (!cfg.client) {
-                next();
+                done();
                 return;
             }
 
@@ -335,10 +335,8 @@ export function GenConfig(cfg: ConfigCfg) {
                 let outfile = expand(cfg.client);
                 fs.writeFileSync(outfile, out);
 
-                next();
+                done();
             });
-        })
-        .done(() => {
         })
         .run();
 }
