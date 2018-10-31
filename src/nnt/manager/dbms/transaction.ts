@@ -2,7 +2,7 @@ import {AbstractDbms} from "../../store/store";
 import {AbstractRdb} from "../../store/rdb";
 import {AbstractKv, AbstractNosql} from "../../store/kv";
 import {Class, IsTuple, tuple} from "../../core/kernel";
-import {Decode, GetStoreInfo} from "../../store/proto";
+import {Decode, GetFieldInfos, GetStoreInfo} from "../../store/proto";
 import {logger} from "../../core/logger";
 import {Find} from "../dbmss";
 
@@ -24,7 +24,11 @@ type TransactionTupleDef<T> = tuple<Class<T>, StorePath> |
 
 export type TransactionDef<T> = Class<T> | TransactionTupleDef<T>;
 
-export class Transaction<T, R> {
+export interface ITransaction {
+
+}
+
+export class Transaction<T, R> implements ITransaction {
 
     constructor(def: TransactionDef<T>) {
         if (IsTuple(def)) {
@@ -97,6 +101,14 @@ export class Transaction<T, R> {
     // 表名
     dbid: string;
     table: string;
+
+    // 存储类的字段列表
+    columns(): string[] {
+        if (!this.clazz)
+            return null;
+        let fp = GetFieldInfos(this.clazz.prototype);
+        return Object.keys(fp);
+    }
 
     // 生成对象
     produce<R>(res: R): T {

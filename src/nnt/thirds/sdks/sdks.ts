@@ -24,8 +24,13 @@ interface SdksConfig {
     attach: string;
 }
 
-@model([expose])
-export class SdkAdminLogin {
+@model()
+export class SdkAdminInfo {
+
+}
+
+@model()
+export class SdkMerchantInfo {
 
 }
 
@@ -66,9 +71,20 @@ export class SdkUserVerify {
 
     @string(1, [input], "sid")
     sid: string;
+}
 
-    @type(2, SdkUserInfo, [output], "用户信息")
-    user: SdkUserInfo;
+@model()
+export class SdkAdminVerify {
+
+    @string(1, [input], "sid")
+    sid: string;
+}
+
+@model()
+export class SdkMerchantVerify {
+
+    @string(1, [input], "sid")
+    sid: string;
 }
 
 export class Sdks extends AbstractServer {
@@ -121,24 +137,30 @@ export class Sdks extends AbstractServer {
         // pass
     }
 
-    // 管理员登录
-    async adminLogin(m: SdkUserLogin) {
-
-    }
-
     // 获取管理员信息
-    async adminInfo() {
-
-    }
-
-    // 商户登录
-    async merchantLogin() {
-
+    async adminVerify(m: SdkAdminVerify): Promise<SdkAdminInfo> {
+        try {
+            let ret = await Fetch(this.admins, {
+                action: 'app.info',
+                _sid: m.sid
+            });
+            return Decode(new SdkAdminInfo(), ret.user, false, true);
+        } catch (err) {
+            throw err;
+        }
     }
 
     // 商户信息
-    async merchantInfo() {
-
+    async merchantVerify(m: SdkMerchantVerify): Promise<SdkMerchantInfo> {
+        try {
+            let ret = await Fetch(this.admins, {
+                action: 'app.info',
+                _sid: m.sid
+            });
+            return Decode(new SdkMerchantInfo(), ret.user, false, true);
+        } catch (err) {
+            throw err;
+        }
     }
 
     // 普通用户登录
@@ -155,21 +177,18 @@ export class Sdks extends AbstractServer {
         } catch (err) {
             throw err
         }
-        return null;
     }
 
     // 获取普通用户信息
-    async userVerify(m: SdkUserVerify): Promise<SdkUserVerify> {
+    async userVerify(m: SdkUserVerify): Promise<SdkUserInfo> {
         try {
             let ret = await Fetch(this.users, {
                 action: 'user.info',
                 _sid: m.sid
             });
-            m.user = Decode(new SdkUserInfo(), ret.user, false, true);
-            return m;
+            return Decode(new SdkUserInfo(), ret.user, false, true);
         } catch (err) {
             throw err;
         }
-        return null;
     }
 }

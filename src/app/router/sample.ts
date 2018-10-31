@@ -12,6 +12,7 @@ import {SampleEcho} from "../model/framework-nntlogic-apis";
 import {Rest} from "../../nnt/session/rest";
 import {Sdks, SdkUserLogin, SdkUserVerify} from "../../nnt/thirds/sdks/sdks";
 import {Find} from "../../nnt/manager/servers";
+import {GetFieldInfos} from "../../nnt/store/proto";
 
 export class RSample implements IRouter {
     action = "sample";
@@ -84,7 +85,7 @@ export class RSample implements IRouter {
         try {
             let ret = await sdk.userVerify(ml);
             let user = new User();
-            user.uid = ret.user.userid;
+            user.uid = ret.userid;
             m.user = user;
         } catch (err) {
             trans.status = err.code;
