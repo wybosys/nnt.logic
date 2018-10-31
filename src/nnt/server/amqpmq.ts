@@ -101,7 +101,8 @@ class AmqpmqClient extends AbstractMQClient {
                 logger.warn("amqp: 发送消息失败");
             }
         } catch (err) {
-            logger.exception(err);
+            //logger.exception(err);
+            logger.fatal("amqp-produce: Queue " + this._chann + " 不存在");
         }
         return this;
     }
@@ -114,7 +115,8 @@ class AmqpmqClient extends AbstractMQClient {
                 logger.warn("amqp: 广播消息失败");
             }
         } catch (err) {
-            logger.exception(err);
+            //logger.exception(err);
+            logger.fatal("amqp-broadcast: Exchange " + this._chann + " 不存在");
         }
         return this;
     }
@@ -131,23 +133,28 @@ class AmqpmqClient extends AbstractMQClient {
             }
         }
         catch (err) {
-            logger.warn(err);
+            //logger.warn(err);
+            logger.fatal("amqp-receiver: Queue " + this._chann + " 不存在");
         }
         return this;
     }
 
     async close() {
-        try {
-            if (this._isqueue) {
+        if (this._isqueue) {
+            try {
                 await this._hdl.checkQueue(this._chann);
                 await this._hdl.deleteQueue(this._chann);
+            } catch (err) {
+                logger.fatal("amqp-close: Queue " + this._chann + " 不存在");
             }
-            else if (this._isexchange) {
+        }
+        else if (this._isexchange) {
+            try {
                 await this._hdl.checkExchange(this._chann);
                 await this._hdl.deleteExchange(this._chann);
+            } catch (err) {
+                logger.fatal("amqp-close: Exchange  " + this._chann + " 不存在");
             }
-        } catch (err) {
-            logger.warn(err);
         }
     }
 }
