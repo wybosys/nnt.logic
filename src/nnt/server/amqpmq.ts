@@ -124,12 +124,16 @@ class AmqpmqClient extends AbstractMQClient {
         return this;
     }
 
-    close() {
-        if (this._isqueue) {
-            this._hdl.deleteQueue(this._chann);
-        }
-        else if (this._isexchange) {
-            this._hdl.deleteExchange(this._chann);
+    async close() {
+        try {
+            if (this._isqueue) {
+                await this._hdl.deleteQueue(this._chann);
+            }
+            else if (this._isexchange) {
+                await this._hdl.deleteExchange(this._chann);
+            }
+        } catch (err) {
+            logger.warn(err);
         }
     }
 }

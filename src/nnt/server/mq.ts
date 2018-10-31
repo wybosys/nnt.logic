@@ -95,7 +95,7 @@ export abstract class AbstractMQClient implements IMQClient {
 
     abstract receiver(transmitter: string, connect: boolean): Promise<this>;
 
-    abstract close(): void;
+    abstract close(): Promise<void>;
 
     protected _chann: string;
     get chann(): string {
