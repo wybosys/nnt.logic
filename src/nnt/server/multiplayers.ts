@@ -352,7 +352,7 @@ export abstract class Multiplayers extends Socket {
     protected async onConnectorAvaliable(connector: Connector) {
         // 绑定mq服务，后面会自动打开消息通道
         connector.mqsrv = this.mqsrv;
-        super.onConnectorAvaliable(connector);
+        await super.onConnectorAvaliable(connector);
 
         // 准备消息通道等（同步处理，避免客户端立即处理相关通信，但是服务端尚未建立成功)
         await connector.avaliable();
