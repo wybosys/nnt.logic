@@ -5,9 +5,7 @@ import {IndexedObject} from "../core/kernel";
 import {Find} from "../manager/servers";
 import {Base, ModelError} from "../session/model";
 import {Rest} from "../session/rest";
-import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 import {integer, json, output} from "../core/proto";
-import {Config} from "../manager/config";
 import {STATUS} from "../core/models";
 
 interface RemoteConfig extends Node {
@@ -58,9 +56,9 @@ class RpcModel extends Base {
 }
 
 // S2S调用API，成功返回data字段，失败返回null而不是抛出异常
-export function Call(srvidOrUrl: string, args?: IndexedObject): Promise<IndexedObject> {
+export function Call(srvidOrUrl: string, args?: IndexedObject, subpath?: string): Promise<IndexedObject> {
     return new Promise<IndexedObject>(resolve => {
-        Fetch(srvidOrUrl, args).then(m => {
+        Fetch(srvidOrUrl, args, subpath).then(m => {
             resolve(m);
         }).catch(() => {
             resolve(null);
@@ -69,7 +67,7 @@ export function Call(srvidOrUrl: string, args?: IndexedObject): Promise<IndexedO
 }
 
 // Fetch 和 Call的区别是需要业务层自行处理失败（可以用来获得错误码)
-export function Fetch(srvidOrUrl: string, args?: IndexedObject): Promise<IndexedObject> {
+export function Fetch(srvidOrUrl: string, args?: IndexedObject, subpath?: string): Promise<IndexedObject> {
     return new Promise<IndexedObject>((resolve, reject) => {
         let host: string;
         if (srvidOrUrl.indexOf('http') != -1) {
@@ -94,6 +92,9 @@ export function Fetch(srvidOrUrl: string, args?: IndexedObject): Promise<Indexed
             }
             host = srv.host;
         }
+
+        if (subpath)
+            host += subpath;
 
         let m = new RpcModel();
         m.url = host;
