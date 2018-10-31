@@ -14,7 +14,7 @@ class RedisClient extends AbstractMQClient {
 
     protected _hdl: redis.RedisClient;
 
-    close() {
+    async close() {
         this._hdl.quit();
         this._hdl = null;
     }
