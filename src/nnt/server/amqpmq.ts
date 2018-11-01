@@ -257,8 +257,13 @@ export class Amqpmq extends AbstractServer implements IMQServer {
                     this._trychannels = new TryChannelPool(this._hdl);
                 }
 
+                /* 加上后，当遇到错误时会自动断掉连接
                 hdl.on("error", err => {
                     logger.error(err);
+                });
+                */
+                hdl.on("close", () => {
+                    logger.log("amqp 关闭了连接");
                 });
 
                 // 建立初始的通道
@@ -304,9 +309,11 @@ export class Amqpmq extends AbstractServer implements IMQServer {
                         });
                     });
 
+                    /*
                     cnn.on("error", err => {
                         logger.error(err);
                     });
+                    */
 
                     resolve();
                 });
