@@ -28,7 +28,7 @@ import {FindParser} from "./parser/parser";
 export type SocketOutputType = string | Buffer | ArrayBuffer;
 
 // 超过时间后不登陆，断开连接
-const TIMEOUT = 10;
+const DEFAULT_AUTH_TIMEOUT = 10;
 
 interface WsNode extends Node {
 
@@ -43,6 +43,9 @@ interface WsNode extends Node {
 
     // 是否加密
     wss?: boolean;
+
+    // 验证超时事件
+    authtimeout: number;
 }
 
 RegisterDecoder("/json", new JsonDecoder());
@@ -163,6 +166,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 }
             }
         }
+        this.authtimeout = c.authtimeout ? c.authtimeout : DEFAULT_AUTH_TIMEOUT;
         return true;
     }
 
@@ -170,6 +174,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
     port: number;
     wss: boolean;
     attach: string;
+    authtimeout: number;
 
     protected _srv: http.Server | https.Server;
     protected _hdl: ws.Server;
@@ -253,7 +258,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             });
 
             // 如果长期不登录，则断开连接
-            let tmr = Delay(TIMEOUT, () => {
+            let tmr = Delay(this.authtimeout, () => {
                 logger.log("{{=it.addr}} 断开无效连接", {addr: addr});
                 Connector.CloseHandle(io, STATUS.SOCK_AUTH_TIMEOUT);
             });
