@@ -3,7 +3,7 @@ import {logger} from "./logger";
 import {Classname} from "./v8";
 import {IsDebug} from "../manager/config";
 import {CancelDelay, Delay, DelayHandler} from "./time";
-import {IndexedObject, toJson, toJsonObject} from "./kernel";
+import {Class, IndexedObject, toJson, toJsonObject} from "./kernel";
 import fs = require("fs");
 import stmbuf = require("stream-buffers");
 
@@ -412,4 +412,31 @@ export class Stream {
 
     private _from: NodeJS.ReadableStream;
     private _output: boolean = true;
+}
+
+export class ReusableObjects<T> {
+
+    constructor(clazz?: Class<T>) {
+        this._clazz = clazz;
+    }
+
+    async use(clazz?: Class<T>): Promise<T> {
+        if (this._objects.length != 0) {
+            return this._objects.pop();
+        }
+        return this.instance(clazz);
+    }
+
+    async unuse(obj: T) {
+        this._objects.push(obj);
+    }
+
+    protected async instance(clazz?: Class<T>): Promise<T> {
+        if (!clazz)
+            clazz = this._clazz;
+        return new clazz();
+    }
+
+    private _clazz: Class<T>;
+    private _objects: T[] = [];
 }

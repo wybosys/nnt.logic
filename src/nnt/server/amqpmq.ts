@@ -2,24 +2,36 @@ import {Node} from "../config/config";
 import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
-import {Variant} from "../core/object";
+import {ReusableObjects, Variant} from "../core/object";
 import {IndexedObject, KvObject, ObjectT, SyncArray} from "../core/kernel";
 import {static_cast} from "../core/core";
 import amqplib = require("amqplib");
 
 interface AmqpNode {
+
+    // rabbitmq 的主机名
     host: string;
+
+    // vhost
     vhost?: string;
+
+    // 登录
     user?: string;
     password?: string;
+
+    // 预先创建的通道
     channel?: KvObject<{ type: string, durable: boolean, longliving: boolean }>;
+
+    // 是否使用安全检查
+    safe?: boolean;
 }
 
 class AmqpmqClient extends AbstractMQClient {
 
-    constructor(hdl: amqplib.Channel) {
+    constructor(hdl: amqplib.Channel, trychannels?: TryChannelPool) {
         super();
         this._hdl = hdl;
+        this._trychannels = trychannels;
     }
 
     protected _hdl: amqplib.Channel;
@@ -57,8 +69,34 @@ class AmqpmqClient extends AbstractMQClient {
         });
     }
 
+    protected async checkQueue(name: string) {
+        if (!this._trychannels)
+            return;
+        let tc = await this._trychannels.use();
+        await tc.checkQueue(name);
+        this._trychannels.unuse(tc);
+    }
+
+    protected async checkExchange(name: string) {
+        if (!this._trychannels)
+            return;
+        let tc = await this._trychannels.use();
+        await tc.checkExchange(name);
+        this._trychannels.unuse(tc);
+    }
+
+    protected async checkQueueAndExchange(queue: string, exchange: string) {
+        if (!this._trychannels)
+            return;
+        let tc = await this._trychannels.use();
+        await tc.checkQueue(queue);
+        await tc.checkExchange(exchange);
+        this._trychannels.unuse(tc);
+    }
+
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
         try {
+            await this.checkQueue(this._chann);
             let c = await this._hdl.consume(this._chann, (msg => {
                 try {
                     let data = msg.content;
@@ -95,6 +133,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 直接给队列发消息
     async produce(msg: Variant): Promise<this> {
         try {
+            await this.checkQueue(this._chann);
             if (!this._hdl.sendToQueue(this._chann, msg.toBuffer())) {
                 logger.warn("amqp: 发送消息失败");
             }
@@ -108,6 +147,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 给通道发消息
     async broadcast(msg: Variant): Promise<this> {
         try {
+            await this.checkExchange(this._chann);
             if (!this._hdl.publish(this._chann, "", msg.toBuffer())) {
                 logger.warn("amqp: 广播消息失败");
             }
@@ -121,6 +161,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 建立群监听
     async receiver(transmitter: string, connect: boolean): Promise<this> {
         try {
+            await this.checkQueueAndExchange(this._chann, transmitter);
             if (connect) {
                 await this._hdl.bindQueue(this._chann, transmitter, "");
             }
@@ -138,6 +179,7 @@ class AmqpmqClient extends AbstractMQClient {
     async close() {
         if (this._isqueue) {
             try {
+                await this.checkQueue(this._chann);
                 await this._hdl.deleteQueue(this._chann);
             } catch (err) {
                 logger.fatal("amqp-close: Queue " + this._chann + " 不存在");
@@ -145,12 +187,15 @@ class AmqpmqClient extends AbstractMQClient {
         }
         else if (this._isexchange) {
             try {
+                await this.checkExchange(this._chann);
                 await this._hdl.deleteExchange(this._chann);
             } catch (err) {
                 logger.fatal("amqp-close: Exchange  " + this._chann + " 不存在");
             }
         }
     }
+
+    private _trychannels: TryChannelPool;
 }
 
 export class Amqpmq extends AbstractServer implements IMQServer {
@@ -168,6 +213,8 @@ export class Amqpmq extends AbstractServer implements IMQServer {
         this.password = c.password;
         this.vhost = c.vhost ? c.vhost : "/";
         this.channel = c.channel;
+        if (c.safe || c.safe == null)
+            this.safe = true;
         return true;
     }
 
@@ -177,6 +224,7 @@ export class Amqpmq extends AbstractServer implements IMQServer {
     user: string;
     password: string;
     channel: KvObject<{ type: string, durable: boolean, longliving: boolean }>;
+    safe: boolean;
 
     protected _hdl: amqplib.Connection;
     protected _cnn: amqplib.Channel;
@@ -203,6 +251,11 @@ export class Amqpmq extends AbstractServer implements IMQServer {
             amqplib.connect(opts).then(hdl => {
                 this._hdl = hdl;
                 logger.info("连接 {{=it.id}}@amqp", {id: this.id});
+
+                // 如果打开安全设置，则会通过独立的通道来检查关键步骤的可用性，避免notfound导致通信通道被关闭
+                if (this.safe) {
+                    this._trychannels = new TryChannelPool(this._hdl);
+                }
 
                 hdl.on("error", err => {
                     logger.error(err);
@@ -270,7 +323,65 @@ export class Amqpmq extends AbstractServer implements IMQServer {
     }
 
     instanceClient(): IMQClient {
-        return new AmqpmqClient(this._cnn);
+        return new AmqpmqClient(this._cnn, this._trychannels);
     }
 
+    private _trychannels: TryChannelPool;
+}
+
+// amqp当发生错误时，会主动断开 https://github.com/squaremo/amqp.node/issues/156
+// 目前来看，没有解决的方式。所以框架采用使用独立channel来检查可用性，将检查和工作进行隔离来达到确保安全
+class TryChannelPool extends ReusableObjects<TryChannel> {
+
+    constructor(hdl: amqplib.Connection) {
+        super();
+        this._hdl = hdl;
+    }
+
+    protected async instance(): Promise<TryChannel> {
+        let cnn = await this._hdl.createChannel();
+        return new TryChannel(cnn);
+    }
+
+    async unuse(chann: TryChannel) {
+        chann = await chann.instance(this._hdl);
+        await super.unuse(chann);
+    }
+
+    private _hdl: amqplib.Connection;
+}
+
+class TryChannel {
+
+    constructor(cnn: amqplib.Channel) {
+        this._cnn = cnn;
+        cnn.on("close", () => {
+            this.closed = true;
+        });
+    }
+
+    // 复用的时候用来重新创建连接
+    closed: boolean;
+
+    async instance(hdl: amqplib.Connection): Promise<this> {
+        if (!this.closed)
+            return this;
+        let cnn = await hdl.createChannel();
+        cnn.on("close", () => {
+            this.closed = true;
+        });
+        this._cnn = cnn;
+        this.closed = false;
+        return this;
+    }
+
+    async checkQueue(name: string) {
+        return this._cnn.checkQueue(name);
+    }
+
+    async checkExchange(name: string) {
+        return this._cnn.checkExchange(name);
+    }
+
+    private _cnn: amqplib.Channel;
 }
