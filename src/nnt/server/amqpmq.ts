@@ -204,6 +204,10 @@ export class Amqpmq extends AbstractServer implements IMQServer {
                 this._hdl = hdl;
                 logger.info("连接 {{=it.id}}@amqp", {id: this.id});
 
+                hdl.on("error", err => {
+                    logger.error(err);
+                });
+
                 // 建立初始的通道
                 hdl.createChannel().then(cnn => {
                     this._cnn = cnn;
