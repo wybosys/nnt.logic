@@ -731,6 +731,28 @@ export class KvMongo extends AbstractNosql {
             cb(res.value.val);
         });
     }
+
+    findIndex(name: string, cb: (info: any) => void) {
+        this._db.indexInformation(name, (err, res) => {
+            if (err) {
+                cb(null);
+            } else {
+                cb(res);
+            }
+        });
+    }
+
+    createIndex(name: string, cfg: string | IndexedObject, cb: (ret: any) => void) {
+        this._db.createIndex(name, cfg, {
+            background: true
+        }, (err, res) => {
+            if (err) {
+                cb(null);
+            } else {
+                cb(res);
+            }
+        });
+    }
 }
 
 function StrToObjectId(s: string): mongo.ObjectID {
