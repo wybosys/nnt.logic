@@ -23,7 +23,7 @@ class AmqpmqClient extends AbstractMQClient {
     }
 
     protected _hdl: amqplib.Channel;
-    protected _tags = new Array<string>();
+    protected _tags: string[] = [];
     private _isqueue: boolean;
     private _isexchange: boolean;
 
@@ -59,7 +59,6 @@ class AmqpmqClient extends AbstractMQClient {
 
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
         try {
-            await this._hdl.checkQueue(this._chann);
             let c = await this._hdl.consume(this._chann, (msg => {
                 try {
                     let data = msg.content;
@@ -96,7 +95,6 @@ class AmqpmqClient extends AbstractMQClient {
     // 直接给队列发消息
     async produce(msg: Variant): Promise<this> {
         try {
-            await this._hdl.checkQueue(this._chann);
             if (!this._hdl.sendToQueue(this._chann, msg.toBuffer())) {
                 logger.warn("amqp: 发送消息失败");
             }
@@ -110,7 +108,6 @@ class AmqpmqClient extends AbstractMQClient {
     // 给通道发消息
     async broadcast(msg: Variant): Promise<this> {
         try {
-            await this._hdl.checkExchange(this._chann);
             if (!this._hdl.publish(this._chann, "", msg.toBuffer())) {
                 logger.warn("amqp: 广播消息失败");
             }
@@ -123,19 +120,6 @@ class AmqpmqClient extends AbstractMQClient {
 
     // 建立群监听
     async receiver(transmitter: string, connect: boolean): Promise<this> {
-        try {
-            await this._hdl.checkQueue(this._chann);
-        } catch (err) {
-            logger.fatal("amqp-receiver: Queue " + this._chann + " 不存在");
-            return this;
-        }
-        try {
-            await this._hdl.checkExchange(transmitter);
-        } catch (err) {
-            logger.fatal("amqp-receiver: Exchange " + transmitter + " 不存在");
-            return this;
-        }
-
         try {
             if (connect) {
                 await this._hdl.bindQueue(this._chann, transmitter, "");
@@ -154,7 +138,6 @@ class AmqpmqClient extends AbstractMQClient {
     async close() {
         if (this._isqueue) {
             try {
-                await this._hdl.checkQueue(this._chann);
                 await this._hdl.deleteQueue(this._chann);
             } catch (err) {
                 logger.fatal("amqp-close: Queue " + this._chann + " 不存在");
@@ -162,7 +145,6 @@ class AmqpmqClient extends AbstractMQClient {
         }
         else if (this._isexchange) {
             try {
-                await this._hdl.checkExchange(this._chann);
                 await this._hdl.deleteExchange(this._chann);
             } catch (err) {
                 logger.fatal("amqp-close: Exchange  " + this._chann + " 不存在");
