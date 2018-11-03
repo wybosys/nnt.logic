@@ -358,8 +358,8 @@ export async function Modify<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<DbE
     return t.run();
 }
 
-export async function ModifyOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<boolean> {
-    let t = new Transaction<T, boolean>(clz);
+export async function ModifyOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t): Promise<DbExecuteStat> {
+    let t = new Transaction<T, DbExecuteStat>(clz);
     t.nosqlproc = db => {
         db.modifyone(t.table, iid, <NosqlCmdType>cmd, res => {
             t.resolve(res);

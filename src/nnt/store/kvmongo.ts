@@ -361,7 +361,7 @@ export class KvMongo extends AbstractNosql {
         }
     }
 
-    modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: boolean) => void) {
+    modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
         let match: any, modify: any, opt: any;
         if (iid) {
             if (typeof(iid) == "string")
@@ -403,10 +403,13 @@ export class KvMongo extends AbstractNosql {
             col.updateOne(match, modify, opt, (err, res) => {
                 if (err) {
                     logerr(err, ["modifyone", iid, cmd]);
-                    cb(false);
+                    cb(null);
                 }
                 else {
-                    cb(true);
+                    cb({
+                        insert: res.upsertedCount,
+                        update: res.modifiedCount
+                    });
                 }
             });
         }
@@ -414,10 +417,13 @@ export class KvMongo extends AbstractNosql {
             col.updateOne(match, modify, opt, (err, res) => {
                 if (err) {
                     logerr(err, ["modifyone", iid, cmd]);
-                    cb(false);
+                    cb(null);
                 }
                 else {
-                    cb(true);
+                    cb({
+                        insert: res.upsertedCount,
+                        update: res.modifiedCount
+                    });
                 }
             });
         }

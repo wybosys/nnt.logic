@@ -49,7 +49,7 @@ export abstract class AbstractNosql extends AbstractKv {
     // @iid innerId 如果有的话，则直接通过iid更新，否则cmd中需要写明更新规则
     abstract modify(page: string, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void): void;
 
-    abstract modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: boolean) => void): void;
+    abstract modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void): void;
 
     // 查找并更新
     abstract update(page: string, cmd: NosqlCmdType, cb: (res: RecordObject[]) => void): void;
