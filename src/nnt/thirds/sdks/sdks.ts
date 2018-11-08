@@ -220,7 +220,7 @@ export class Sdks extends AbstractServer {
                 money: m.money,
                 channel: m.channel,
                 gameid: this.gameid,
-                userid: m.uid
+                uid: m.uid
             });
             m.orderid = ret.orderid;
             m.raw = ret.raw;
