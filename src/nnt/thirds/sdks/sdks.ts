@@ -212,7 +212,7 @@ export class Sdks extends AbstractServer {
     async rechargeInfo(m: SdkRecharge): Promise<SdkRecharge> {
         try {
             let ret = await Fetch(this.open, {
-                action: 'user.rechargeinfo',
+                action: 'shop.rechargeinfo',
                 raw: m.raw,
                 channel: m.channel
             });
