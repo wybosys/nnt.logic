@@ -5,6 +5,7 @@ import {logger} from "../../core/logger";
 import {expose} from "../../core/router";
 import {Decode, input, integer, model, output, string, string_t, type} from "../../core/proto";
 import {Fetch} from "../../server/remote";
+import {IndexedObject} from "../../core/kernel";
 
 interface SdksConfig {
 
@@ -96,8 +97,8 @@ export class SdkRecharge {
     @string(2, [input], "渠道")
     channel: string;
 
-    @string(3, [input], "渠道支付的原始数据")
-    raw: string;
+    @string(3, [input, output], "渠道支付的原始数据")
+    raw: string | IndexedObject;
 
     @string(4, [output], "orderid")
     orderid: string;
@@ -217,6 +218,7 @@ export class Sdks extends AbstractServer {
                 channel: m.channel
             });
             m.orderid = ret.orderid;
+            m.raw = ret.raw;
             return m;
         } catch (err) {
             throw err
