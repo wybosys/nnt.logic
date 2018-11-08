@@ -42,7 +42,7 @@ export class SdkUserInfo {
     userid: string;
 
     @string(2, [output])
-    nickname: String;
+    nickname: string;
 
     @integer(3, [output])
     gender: number;
