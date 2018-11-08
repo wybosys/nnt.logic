@@ -218,7 +218,9 @@ export class Sdks extends AbstractServer {
             let ret = await Fetch(this.open, {
                 action: 'shop.rechargeinfo',
                 money: m.money,
-                channel: m.channel
+                channel: m.channel,
+                gameid: this.gameid,
+                uid: m.uid
             });
             m.orderid = ret.orderid;
             m.raw = ret.raw;
