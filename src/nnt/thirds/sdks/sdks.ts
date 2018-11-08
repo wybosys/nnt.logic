@@ -3,7 +3,7 @@ import {Node} from "../../config/config";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {expose} from "../../core/router";
-import {Decode, input, integer, model, output, string, type} from "../../core/proto";
+import {Decode, input, integer, model, output, string, string_t, type} from "../../core/proto";
 import {Fetch} from "../../server/remote";
 
 interface SdksConfig {
@@ -87,6 +87,22 @@ export class SdkMerchantVerify {
     sid: string;
 }
 
+@model()
+export class SdkRecharge {
+
+    @string(1, [input], "uid")
+    uid: string;
+
+    @string(2, [input], "渠道")
+    channel: string;
+
+    @string(3, [input], "渠道支付的原始数据")
+    raw: string;
+
+    @string(4, [output], "orderid")
+    orderid: string;
+}
+
 export class Sdks extends AbstractServer {
 
     config(cfg: Node): boolean {
@@ -165,11 +181,11 @@ export class Sdks extends AbstractServer {
 
     // 普通用户登录
     async userLogin(m: SdkUserLogin): Promise<SdkUserLogin> {
-        let host = this.host + '/platform/channel_' + m.channel;
         try {
-            let ret = await Fetch(host, {
-                action: 'users.login',
-                raw: m.raw
+            let ret = await Fetch(this.open, {
+                action: 'user.login',
+                raw: m.raw,
+                channel: m.channel
             });
             m.user = Decode(new SdkUserInfo(), ret.user, false, true);
             m.sid = ret.sid;
@@ -189,6 +205,21 @@ export class Sdks extends AbstractServer {
             return Decode(new SdkUserInfo(), ret.user, false, true);
         } catch (err) {
             throw err;
+        }
+    }
+
+    // 获取支付信息
+    async rechargeInfo(m: SdkRecharge): Promise<SdkRecharge> {
+        try {
+            let ret = await Fetch(this.open, {
+                action: 'user.rechargeinfo',
+                raw: m.raw,
+                channel: m.channel
+            });
+            m.orderid = ret.orderid;
+            return m;
+        } catch (err) {
+            throw err
         }
     }
 }
