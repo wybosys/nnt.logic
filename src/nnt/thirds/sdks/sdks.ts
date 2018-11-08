@@ -97,10 +97,13 @@ export class SdkRecharge {
     @string(2, [input], "渠道")
     channel: string;
 
-    @string(3, [input, output], "渠道支付的原始数据")
+    @integer(3, [input], "分")
+    money: number;
+
+    @string(4, [output], "渠道支付的原始数据")
     raw: string | IndexedObject;
 
-    @string(4, [output], "orderid")
+    @string(5, [output], "orderid")
     orderid: string;
 }
 
@@ -214,7 +217,7 @@ export class Sdks extends AbstractServer {
         try {
             let ret = await Fetch(this.open, {
                 action: 'shop.rechargeinfo',
-                raw: m.raw,
+                money: m.money,
                 channel: m.channel
             });
             m.orderid = ret.orderid;
