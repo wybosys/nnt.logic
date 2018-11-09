@@ -405,11 +405,18 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                     t.info.agent = req.headers['user-agent'] as string;
                 t.info.host = req.headers['host'];
                 t.info.origin = req.headers['origin'] as string;
-                t.info.addr = req.connection.remoteAddress || req.headers['x-forwarded-for'] as string;
                 t.info.referer = req.headers['referer'] as string;
                 t.info.path = url.pathname;
                 if ('accept-encoding' in req.headers)
                     t.gzip = req.headers['accept-encoding'].indexOf('gzip') != -1;
+
+                // 获取客户端真实ip
+                if (!t.info.addr) // docker
+                    t.info.addr = req.headers['http_x_forwarded_for'] as string;
+                if (!t.info.addr) // proxy
+                    t.info.addr = req.headers['x-forwarded-for'] as string;
+                if (!t.info.addr) // normal
+                    t.info.addr = req.connection.remoteAddress;
             }
 
             // 绑定解析器
