@@ -137,7 +137,7 @@ export class Sdks extends AbstractServer {
             if (c.debug) {
                 this.host = "http://develop.91egame.com";
             } else {
-                this.host = "https://www.91yigame.com";
+                this.host = "https://apps.91yigame.com";
             }
         }
         this.open = this.host + "/platform/open";
