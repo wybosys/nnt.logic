@@ -2,9 +2,8 @@ import {AbstractServer} from "../../server/server";
 import {Node} from "../../config/config";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
-import {expose} from "../../core/router";
-import {Decode, input, integer, model, output, string, string_t, type} from "../../core/proto";
-import {Fetch} from "../../server/remote";
+import {Decode, input, integer, json, model, optional, output, string, string_t, type} from "../../core/proto";
+import {Fetch, Call} from "../../server/remote";
 import {IndexedObject} from "../../core/kernel";
 
 interface SdksConfig {
@@ -107,6 +106,22 @@ export class SdkRecharge {
     orderid: string;
 }
 
+@model()
+export class SdkReport {
+
+    @string(1, [input, optional])
+    uid: string;
+
+    @string(2, [input, optional])
+    channelid: string;
+
+    @string(3, [input])
+    type: string;
+
+    @json(4, [input])
+    data: IndexedObject;
+}
+
 export class Sdks extends AbstractServer {
 
     config(cfg: Node): boolean {
@@ -129,6 +144,7 @@ export class Sdks extends AbstractServer {
         this.admins = this.host + "/platform/admins";
         this.users = this.host + "/platform/users";
         this.merchants = this.host + "/platform/merchants";
+        this.bi = this.host + "/platform/bi";
 
         this.gameid = c.gameid;
         this.gamekey = c.gamekey;
@@ -141,6 +157,7 @@ export class Sdks extends AbstractServer {
     admins: string;
     users: string;
     merchants: string;
+    bi: string;
 
     gameid: number;
     gamekey: string;
@@ -228,5 +245,17 @@ export class Sdks extends AbstractServer {
         } catch (err) {
             throw err
         }
+    }
+
+    // 汇报数据
+    async report(m: SdkReport): Promise<void> {
+        Call(this.bi, {
+            action: 'bi.report',
+            gameid: this.gameid,
+            uid: m.uid,
+            channelid: m.channelid,
+            type: m.type,
+            data: m.data
+        });
     }
 }
