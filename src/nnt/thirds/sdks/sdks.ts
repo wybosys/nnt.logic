@@ -4,7 +4,7 @@ import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {Decode, input, integer, json, model, optional, output, string, string_t, type} from "../../core/proto";
 import {Fetch, Call} from "../../server/remote";
-import {IndexedObject} from "../../core/kernel";
+import {ArrayT, IndexedObject} from "../../core/kernel";
 
 interface SdksConfig {
 
@@ -122,6 +122,31 @@ export class SdkReport {
     data: IndexedObject;
 }
 
+@model()
+export class SdkExchangableItem {
+
+    @integer(1, [output])
+    itemid: number;
+
+    @string(2, [output])
+    brand: string;
+
+    @string(3, [output])
+    color: string;
+
+    @integer(4, [output])
+    price: number;
+
+    @integer(5, [output])
+    inventory: number;
+
+    @string(6, [output])
+    images: string;
+
+    @string(7, [output])
+    thumb: string;
+}
+
 export class Sdks extends AbstractServer {
 
     config(cfg: Node): boolean {
@@ -145,6 +170,7 @@ export class Sdks extends AbstractServer {
         this.users = this.host + "/platform/users";
         this.merchants = this.host + "/platform/merchants";
         this.bi = this.host + "/platform/bi";
+        this.shops = this.host + "/platform/shops";
 
         this.gameid = c.gameid;
         this.gamekey = c.gamekey;
@@ -158,6 +184,7 @@ export class Sdks extends AbstractServer {
     users: string;
     merchants: string;
     bi: string;
+    shops: string;
 
     gameid: number;
     gamekey: string;
@@ -257,5 +284,25 @@ export class Sdks extends AbstractServer {
             type: m.type,
             data: m.data
         });
+    }
+
+    // 兑换商品列表
+    async exchangableItems(channelid: string, pagecount = 999, page = 1): Promise<SdkExchangableItem[]> {
+        try {
+            let ret = await Fetch(this.shops, {
+                action: 'items.lists',
+                count: pagecount,
+                page: page,
+                channelid: channelid,
+                gameid: this.gameid,
+            });
+            return ArrayT.Convert(ret.info, e => {
+                let t = new SdkExchangableItem();
+                Decode(t, e, false, true);
+                return t;
+            });
+        } catch (err) {
+            throw err
+        }
     }
 }
