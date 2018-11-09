@@ -236,7 +236,7 @@ export class Amqpmq extends AbstractServer implements IMQServer {
             port: this.port,
             vhost: this.vhost,
             frameMax: 0,
-            heartbeat: 0
+            heartbeat: 10 // 默认心跳，解决haproxy做lb时的unexcept closed错误
         };
         if (this.user) {
             opts.username = this.user;
