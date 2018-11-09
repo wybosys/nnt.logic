@@ -107,7 +107,8 @@ export class KvMongo extends AbstractNosql {
                 opts.auth = {
                     user: this.user,
                     password: this.password
-                }
+                };
+                opts.authSource = this.scheme;
             }
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
