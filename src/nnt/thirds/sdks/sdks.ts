@@ -125,8 +125,8 @@ export class SdkReport {
 @model()
 export class SdkExchangableItem {
 
-    @integer(1, [output])
-    itemid: number;
+    @string(1, [output])
+    itemid: string;
 
     @string(2, [output])
     brand: string;
@@ -145,6 +145,27 @@ export class SdkExchangableItem {
 
     @string(7, [output])
     thumb: string;
+}
+
+@model()
+export class SdkExchangeItem {
+    @string(1, [input])
+    userid: string;
+
+    @string(2, [input])
+    itemid: string;
+
+    @string(3, [input])
+    channelid: string;
+
+    @string(4, [input])
+    mobile: string;
+
+    @string(5, [input])
+    address: string;
+
+    @string(6, [input])
+    receiver: string;
 }
 
 export class Sdks extends AbstractServer {
@@ -203,75 +224,55 @@ export class Sdks extends AbstractServer {
 
     // 获取管理员信息
     async adminVerify(m: SdkAdminVerify): Promise<SdkAdminInfo> {
-        try {
-            let ret = await Fetch(this.admins, {
-                action: 'app.info',
-                _sid: m.sid
-            });
-            return Decode(new SdkAdminInfo(), ret.user, false, true);
-        } catch (err) {
-            throw err;
-        }
+        let ret = await Fetch(this.admins, {
+            action: 'app.info',
+            _sid: m.sid
+        });
+        return Decode(new SdkAdminInfo(), ret.user, false, true);
     }
 
     // 商户信息
     async merchantVerify(m: SdkMerchantVerify): Promise<SdkMerchantInfo> {
-        try {
-            let ret = await Fetch(this.admins, {
-                action: 'app.info',
-                _sid: m.sid
-            });
-            return Decode(new SdkMerchantInfo(), ret.user, false, true);
-        } catch (err) {
-            throw err;
-        }
+        let ret = await Fetch(this.admins, {
+            action: 'app.info',
+            _sid: m.sid
+        });
+        return Decode(new SdkMerchantInfo(), ret.user, false, true);
     }
 
     // 普通用户登录
     async userLogin(m: SdkUserLogin): Promise<SdkUserLogin> {
-        try {
-            let ret = await Fetch(this.open, {
-                action: 'user.login',
-                raw: m.raw,
-                channel: m.channel
-            });
-            m.user = Decode(new SdkUserInfo(), ret.user, false, true);
-            m.sid = ret.sid;
-            return m;
-        } catch (err) {
-            throw err
-        }
+        let ret = await Fetch(this.open, {
+            action: 'user.login',
+            raw: m.raw,
+            channel: m.channel
+        });
+        m.user = Decode(new SdkUserInfo(), ret.user, false, true);
+        m.sid = ret.sid;
+        return m;
     }
 
     // 获取普通用户信息
     async userVerify(m: SdkUserVerify): Promise<SdkUserInfo> {
-        try {
-            let ret = await Fetch(this.users, {
-                action: 'user.info',
-                _sid: m.sid
-            });
-            return Decode(new SdkUserInfo(), ret.user, false, true);
-        } catch (err) {
-            throw err;
-        }
+        let ret = await Fetch(this.users, {
+            action: 'user.info',
+            _sid: m.sid
+        });
+        return Decode(new SdkUserInfo(), ret.user, false, true);
     }
 
     // 获取支付信息
     async rechargeInfo(m: SdkRecharge): Promise<SdkRecharge> {
-        try {
-            let ret = await Fetch(this.open, {
-                action: 'shop.rechargeinfo',
-                money: m.money,
-                channel: m.channel,
-                gameid: this.gameid,
-                uid: m.uid
-            });
-            m.orderid = ret.orderid;
-            m.raw = ret.raw;
-            return m;
-        } catch (err) {
-            throw err
-        }
+        let ret = await Fetch(this.open, {
+            action: 'shop.rechargeinfo',
+            money: m.money,
+            channel: m.channel,
+            gameid: this.gameid,
+            uid: m.uid
+        });
+        m.orderid = ret.orderid;
+        m.raw = ret.raw;
+        return m;
     }
 
     // 汇报数据
@@ -288,21 +289,31 @@ export class Sdks extends AbstractServer {
 
     // 兑换商品列表
     async exchangableItems(channelid: string, pagecount = 999, page = 1): Promise<SdkExchangableItem[]> {
-        try {
-            let ret = await Fetch(this.shops, {
-                action: 'items.lists',
-                count: pagecount,
-                page: page,
-                channelid: channelid,
-                gameid: this.gameid,
-            });
-            return ArrayT.Convert(ret.info, e => {
-                let t = new SdkExchangableItem();
-                Decode(t, e, false, true);
-                return t;
-            });
-        } catch (err) {
-            throw err
-        }
+        let ret = await Fetch(this.shops, {
+            action: 'items.lists',
+            count: pagecount,
+            page: page,
+            channelid: channelid,
+            gameid: this.gameid,
+        });
+        return ArrayT.Convert(ret.info, e => {
+            let t = new SdkExchangableItem();
+            Decode(t, e, false, true);
+            return t;
+        });
+    }
+
+    // 兑换商品
+    async exchange(m: SdkExchangeItem): Promise<void> {
+        await Fetch(this.shops, {
+            action: 'items.exchange',
+            userid: m.userid,
+            itemid: m.itemid,
+            channelid: m.channelid,
+            mobile: m.mobile,
+            address: m.address,
+            receiver: m.receiver,
+            gameid: this.gameid,
+        });
     }
 }
