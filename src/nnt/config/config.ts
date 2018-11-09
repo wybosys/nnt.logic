@@ -55,10 +55,10 @@ export function NodeIsEnable(node: Node): boolean {
         if (e == "devops")
             return Config.DEVOPS;
         // 容器内网测试版
-        if (e == "devops-develop")
+        if (e == "devops-develop" || e == "devopsdevelop")
             return Config.DEVOPS_DEVELOP;
         // 容器发布版本
-        if (e == "devops-release")
+        if (e == "devops-release" || e == "devopsrelease")
             return Config.DEVOPS_RELEASE;
         // 本地运行
         if (e == "local")
