@@ -149,6 +149,7 @@ export class SdkExchangableItem {
 
 @model()
 export class SdkExchangeItem {
+
     @string(1, [input])
     userid: string;
 
@@ -166,6 +167,22 @@ export class SdkExchangeItem {
 
     @string(6, [input])
     receiver: string;
+}
+
+@model()
+export class SdkRechargeItem {
+
+    @string(1, [output], "商品id")
+    itemid: string;
+
+    @string(2, [input])
+    channelid: string;
+
+    @string(3, [input, optional])
+    userid: string;
+
+    @integer(4, [output], "价格，单位为分")
+    price: number;
 }
 
 export class Sdks extends AbstractServer {
@@ -192,6 +209,7 @@ export class Sdks extends AbstractServer {
         this.merchants = this.host + "/platform/merchants";
         this.bi = this.host + "/platform/bi";
         this.shops = this.host + "/platform/shops";
+        this.games = this.host + "/platform/games";
 
         this.gameid = c.gameid;
         this.gamekey = c.gamekey;
@@ -206,6 +224,7 @@ export class Sdks extends AbstractServer {
     merchants: string;
     bi: string;
     shops: string;
+    games: string;
 
     gameid: number;
     gamekey: string;
@@ -314,6 +333,22 @@ export class Sdks extends AbstractServer {
             address: m.address,
             receiver: m.receiver,
             gameid: this.gameid,
+        });
+    }
+
+    // 虚拟道具列表
+    async rechargableItems(channelid: string, pagecount = 999, page = 1): Promise<SdkRechargeItem[]> {
+        let ret = await Fetch(this.games, {
+            action: 'recharge.lists',
+            count: pagecount,
+            page: page,
+            channelid: channelid,
+            gameid: this.gameid,
+        });
+        return ArrayT.Convert(ret.info, e => {
+            let t = new SdkRechargeItem();
+            Decode(t, e, false, true);
+            return t;
         });
     }
 }
