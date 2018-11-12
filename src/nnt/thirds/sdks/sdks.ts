@@ -31,8 +31,52 @@ export class SdkAdminInfo {
 
 @model()
 export class SdkMerchantInfo {
+    @integer(1, [output], "merchantid")
+    merchantid: number;
 
+    @string(2, [output], "name")
+    name: string;
+
+    @integer(3, [output], "admingroupid")
+    admingroupid: number;
+
+    @string(4, [output], "merchantkey")
+    merchantkey: string;
+
+    @string(5, [output], "account")
+    account: string;
 }
+
+export class SdkAdminLogin {
+    @string(1, [input], "account")
+    account: string;
+
+    @string(2, [input], "password")
+    password: string;
+
+    @string(3, [output], "sid")
+    sid: string;
+
+    @type(4,SdkAdminInfo, [output], "admin")
+    admin: SdkAdminInfo;
+}
+
+@model()
+export class SdkMerchantLogin {
+    @string(1, [input], "account")
+    account: string;
+
+    @string(2, [input], "password")
+    password: string;
+
+    @string(3, [output], "sid")
+    sid: string;
+
+    @type(4,SdkMerchantInfo, [output], "merchant")
+    merchant: SdkMerchantInfo;
+}
+
+
 
 @model()
 export class SdkUserInfo {
@@ -241,22 +285,63 @@ export class Sdks extends AbstractServer {
         // pass
     }
 
+    // 管理员登陆
+    async adminLogin(m: SdkAdminLogin): Promise<SdkAdminLogin> {
+        try {
+            let ret = await Fetch(this.admins, {
+                action: 'admin.login',
+                account: m.account,
+                password: m.password
+            });
+            m.sid = ret.sid;
+            m.admin = Decode(new SdkAdminInfo(), ret.admin, false, true);
+            return m;
+        } catch (err) {
+            throw err;
+        }
+    }
+
     // 获取管理员信息
     async adminVerify(m: SdkAdminVerify): Promise<SdkAdminInfo> {
-        let ret = await Fetch(this.admins, {
-            action: 'app.info',
-            _sid: m.sid
-        });
-        return Decode(new SdkAdminInfo(), ret.user, false, true);
+        try {
+            let ret = await Fetch(this.admins, {
+                action: 'admin.info',
+                _sid: m.sid
+            });
+            return Decode(new SdkAdminInfo(), ret.admin, false, true);
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    // 商户登陆
+    async merchantLogin(m: SdkMerchantLogin): Promise<SdkMerchantLogin> {
+        try {
+            let ret = await Fetch(this.merchants, {
+                action: 'app.login',
+                account: m.account,
+                password: m.password
+
+            });
+            m.sid = ret.sid;
+            m.merchant = Decode(new SdkMerchantInfo(), ret.merchant, false, true);
+            return m;
+        } catch (err) {
+            throw err;
+        }
     }
 
     // 商户信息
     async merchantVerify(m: SdkMerchantVerify): Promise<SdkMerchantInfo> {
-        let ret = await Fetch(this.admins, {
-            action: 'app.info',
-            _sid: m.sid
-        });
-        return Decode(new SdkMerchantInfo(), ret.user, false, true);
+        try {
+            let ret = await Fetch(this.merchants, {
+                action: 'app.info',
+                _sid: m.sid
+            });
+            return Decode(new SdkMerchantInfo(), ret.merchant, false, true);
+        } catch (err) {
+            throw err;
+        }
     }
 
     // 普通用户登录
