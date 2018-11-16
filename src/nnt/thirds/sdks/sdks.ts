@@ -57,7 +57,7 @@ export class SdkAdminLogin {
     @string(3, [output], "sid")
     sid: string;
 
-    @type(4,SdkAdminInfo, [output], "admin")
+    @type(4, SdkAdminInfo, [output], "admin")
     admin: SdkAdminInfo;
 }
 
@@ -72,11 +72,9 @@ export class SdkMerchantLogin {
     @string(3, [output], "sid")
     sid: string;
 
-    @type(4,SdkMerchantInfo, [output], "merchant")
+    @type(4, SdkMerchantInfo, [output], "merchant")
     merchant: SdkMerchantInfo;
 }
-
-
 
 @model()
 export class SdkUserInfo {

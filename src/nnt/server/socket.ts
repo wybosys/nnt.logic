@@ -107,13 +107,13 @@ export class Connector {
 
     static CloseHandle(hdl: ws, code?: number, msg?: string) {
         if (code) {
-            hdl.close(1000, toJson({
+            hdl.close(4000, toJson({
                 code: code,
                 message: msg
             }));
         }
         else {
-            hdl.close(1000);
+            hdl.close(4000);
         }
     }
 }
