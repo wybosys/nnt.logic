@@ -30,6 +30,9 @@ interface MongoCfg {
     // 授权
     user: string;
     password: string;
+
+    // 从集群的secondary读取数据
+    secondary: boolean;
 }
 
 function logerr(err: Error, cmd: any) {
@@ -45,6 +48,7 @@ export class KvMongo extends AbstractNosql {
     password: string;
     repl: MongoRsCfg;
     cluster: boolean;
+    secondary: boolean;
 
     config(cfg: Node): boolean {
         super.config(cfg);
@@ -65,6 +69,7 @@ export class KvMongo extends AbstractNosql {
         this.scheme = c.scheme;
         this.user = c.user;
         this.password = c.password;
+        this.secondary = c.secondary;
         return true;
     }
 
@@ -110,6 +115,8 @@ export class KvMongo extends AbstractNosql {
                 };
                 opts.authSource = this.scheme;
             }
+            if (this.secondary)
+                opts.readPreference = mongo.ReadPreference.SECONDARY_PREFERRED;
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
