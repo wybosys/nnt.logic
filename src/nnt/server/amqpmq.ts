@@ -80,25 +80,40 @@ class AmqpmqClient extends AbstractMQClient {
         if (!this._trychannels)
             return;
         let tc = await this._trychannels.use();
-        await tc.checkQueue(name);
-        this._trychannels.unuse(tc);
+        try {
+            await tc.checkQueue(name);
+            this._trychannels.unuse(tc);
+        } catch (e) {
+            this._trychannels.unuse(tc);
+            throw e;
+        }
     }
 
     protected async checkExchange(name: string) {
         if (!this._trychannels)
             return;
         let tc = await this._trychannels.use();
-        await tc.checkExchange(name);
-        this._trychannels.unuse(tc);
+        try {
+            await tc.checkExchange(name);
+            this._trychannels.unuse(tc);
+        } catch (e) {
+            this._trychannels.unuse(tc);
+            throw e;
+        }
     }
 
     protected async checkQueueAndExchange(queue: string, exchange: string) {
         if (!this._trychannels)
             return;
         let tc = await this._trychannels.use();
-        await tc.checkQueue(queue);
-        await tc.checkExchange(exchange);
-        this._trychannels.unuse(tc);
+        try {
+            await tc.checkQueue(queue);
+            await tc.checkExchange(exchange);
+            this._trychannels.unuse(tc);
+        } catch (e) {
+            this._trychannels.unuse(tc);
+            throw e;
+        }
     }
 
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
