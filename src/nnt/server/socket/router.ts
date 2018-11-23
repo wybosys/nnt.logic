@@ -11,4 +11,11 @@ export class RSocket implements IRouter {
         // 不做任何处理
         trans.submit();
     }
+
+    // socket客户端访问的心跳
+    @action(AuthedNull)
+    ping(trans: Transaction) {
+        // 不做任何处理
+        trans.submit();
+    }
 }
