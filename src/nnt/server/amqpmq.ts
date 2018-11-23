@@ -44,17 +44,18 @@ class AmqpmqClient extends AbstractMQClient {
             super.open(chann, opt).then(() => {
                 if (this.passive) {
                     resolve(this);
-                }
-                else if (this.transmitter) {
+                } else if (this.transmitter) {
                     this._hdl.assertExchange(this._chann, "fanout", {
                         durable: this.durable,
                         autoDelete: !this.longliving
                     }).then(() => {
                         this._isexchange = true;
                         resolve(this);
-                    }).catch(logger.warn);
-                }
-                else {
+                    }).catch(err => {
+                        logger.warn(err);
+                        resolve(null);
+                    });
+                } else {
                     this._hdl.assertQueue(this._chann, {
                         durable: this.durable,
                         autoDelete: !this.longliving
@@ -62,8 +63,14 @@ class AmqpmqClient extends AbstractMQClient {
                         this._isqueue = true;
                         this._hdl.bindQueue(this._chann, "nnt.topic", this._chann).then(() => {
                             resolve(this);
-                        }).catch(logger.warn);
-                    }).catch(logger.warn);
+                        }).catch(err => {
+                            logger.warn(err);
+                            resolve(null);
+                        });
+                    }).catch(err => {
+                        logger.warn(err);
+                        resolve(null);
+                    });
                 }
             });
         });
@@ -108,8 +115,7 @@ class AmqpmqClient extends AbstractMQClient {
                 this._hdl.ack(msg);
             }));
             this._tags.push(c.consumerTag);
-        }
-        catch (err) {
+        } catch (err) {
             logger.warn(err);
         }
         return this;
@@ -120,8 +126,7 @@ class AmqpmqClient extends AbstractMQClient {
             await SyncArray(this._tags).forEach(async e => {
                 try {
                     await this._hdl.cancel(e);
-                }
-                catch (err) {
+                } catch (err) {
                     logger.warn(err);
                 }
             });
@@ -164,12 +169,10 @@ class AmqpmqClient extends AbstractMQClient {
             await this.checkQueueAndExchange(this._chann, transmitter);
             if (connect) {
                 await this._hdl.bindQueue(this._chann, transmitter, "");
-            }
-            else {
+            } else {
                 await this._hdl.unbindQueue(this._chann, transmitter, "");
             }
-        }
-        catch (err) {
+        } catch (err) {
             logger.warn(err);
         }
 
@@ -184,8 +187,7 @@ class AmqpmqClient extends AbstractMQClient {
             } catch (err) {
                 logger.fatal("amqp-close: Queue " + this._chann + " 不存在");
             }
-        }
-        else if (this._isexchange) {
+        } else if (this._isexchange) {
             try {
                 await this.checkExchange(this._chann);
                 await this._hdl.deleteExchange(this._chann);
