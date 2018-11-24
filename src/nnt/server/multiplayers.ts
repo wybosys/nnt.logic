@@ -113,6 +113,7 @@ export class Connector extends BaseConnector {
         // B user.online.<uid> <AD|topic>
         // A user.<uid> <D|topic>
 
+        logger.log("开始创建用户通道 " + this.userIdentifier);
         await Parellel()
             .async(async () => {
                 // 用户的持久性消息通道（通常用来投递关键消息)
@@ -143,6 +144,7 @@ export class Connector extends BaseConnector {
                 }
             })
             .run();
+        logger.log("完成创建用户通道 " + this.userIdentifier);
 
         // 多机通道，同一个用户登录不同客户端时相互发送消息的通道)
         this.acquire("user.online." + this.userIdentifier, {

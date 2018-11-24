@@ -54,12 +54,6 @@ export interface IMQServer {
 export abstract class AbstractMQClient implements IMQClient {
 
     async open(chann: string, opt: MQClientOption): Promise<this> {
-        if (this._chann && this._chann != chann) {
-            // 不能重复打开同一个通道
-            logger.warn("MQ通道已经打开 {{=it.chann}}", {chann: this._chann});
-            return this;
-        }
-        this._chann = chann;
         if (opt) {
             if ("durable" in opt)
                 this.durable = opt.durable;
@@ -96,11 +90,6 @@ export abstract class AbstractMQClient implements IMQClient {
     abstract receiver(transmitter: string, connect: boolean): Promise<this>;
 
     abstract close(): Promise<void>;
-
-    protected _chann: string;
-    get chann(): string {
-        return this._chann;
-    }
 }
 
 // 订阅消息

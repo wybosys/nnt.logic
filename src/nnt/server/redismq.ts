@@ -1,5 +1,5 @@
 import {AbstractServer} from "./server";
-import {AbstractMQClient, IMQClient, IMQServer} from "./mq";
+import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {Variant} from "../core/object";
@@ -13,6 +13,12 @@ class RedisClient extends AbstractMQClient {
     }
 
     protected _hdl: redis.RedisClient;
+    private _chann: string;
+
+    async open(chann: string, opt: MQClientOption): Promise<this> {
+        this._chann = chann;
+        return super.open(chann, opt);
+    }
 
     async close() {
         this._hdl.quit();
@@ -33,8 +39,7 @@ class RedisClient extends AbstractMQClient {
                         cb(msg, ch);
                     }
                 });
-            }
-            else {
+            } else {
                 this._hdl.subscribe(chann, err => {
                     if (err)
                         logger.warn(err.message);

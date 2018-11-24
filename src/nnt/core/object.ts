@@ -213,22 +213,18 @@ export class Variant implements ISerializableObject {
         if (o instanceof Buffer) {
             this._type = VariantType.BUFFER;
             this._buf = o;
-        }
-        else {
+        } else {
             const typ = typeof o;
             if (typ == "string") {
                 this._type = VariantType.STRING;
                 this._str = o;
-            }
-            else if (typ == "boolean") {
+            } else if (typ == "boolean") {
                 this._type = VariantType.BOOLEAN;
                 this._bol = o;
-            }
-            else if (typ == "number") {
+            } else if (typ == "number") {
                 this._type = VariantType.NUMBER;
                 this._num = o;
-            }
-            else {
+            } else {
                 this._type = VariantType.OBJECT;
                 this._jsobj = o;
             }
@@ -421,14 +417,25 @@ export class ReusableObjects<T> {
     }
 
     async use(clazz?: Class<T>): Promise<T> {
-        if (this._objects.length != 0) {
-            return this._objects.pop();
-        }
+        let r = this._objects.pop();
+        if (r)
+            return r;
         return this.instance(clazz);
     }
 
-    async unuse(obj: T) {
+    async unuse(obj: T, err?: any) {
         this._objects.push(obj);
+    }
+
+    async safe(cb: (obj: T) => Promise<void>, clazz?: Class<T>) {
+        let t = await this.use(clazz);
+        try {
+            await cb(t);
+            this.unuse(t);
+        } catch (e) {
+            this.unuse(t, e);
+            throw e;
+        }
     }
 
     protected async instance(clazz?: Class<T>): Promise<T> {
