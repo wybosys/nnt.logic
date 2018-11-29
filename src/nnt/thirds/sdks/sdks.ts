@@ -187,6 +187,9 @@ export class SdkExchangableItem {
 
     @string(7, [output])
     thumb: string;
+
+    @string(8, [output])
+    itemname: string;
 }
 
 @model()
