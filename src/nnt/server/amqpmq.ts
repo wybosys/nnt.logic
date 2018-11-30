@@ -196,6 +196,20 @@ class AmqpmqClient extends AbstractMQClient {
         }
     }
 
+    async clear(): Promise<this> {
+        if (this._queue) {
+            try {
+                await this._trychannels.safe(async hdl => {
+                    await hdl.purgeQueue(this._queue);
+                });
+            } catch (err) {
+                logger.fatal("amqp-close: Queue " + this._queue + " 不存在");
+            }
+        }
+
+        return this;
+    }
+
     private _trychannels: TryChannelPool;
     private _consumers: ConsumerChannelPool;
 }
@@ -458,6 +472,10 @@ class TryChannel {
 
     sendToQueue(queue: string, content: Buffer, options?: amqplib.Options.Publish) {
         return this._cnn.sendToQueue(queue, content, options);
+    }
+
+    async purgeQueue(queue: string): Promise<amqplib.Replies.PurgeQueue> {
+        return this._cnn.purgeQueue(queue);
     }
 
     private _cnn: amqplib.Channel;

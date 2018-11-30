@@ -137,10 +137,14 @@ export class Connector extends BaseConnector {
                 });
                 if (mq) {
                     this._mqB = mq;
-                    mq.subscribe(data => {
+                    // 清楚没有删掉的queue接受的数据
+                    await mq.clear();
+                    // 定于通知自己的消息
+                    await mq.subscribe(data => {
                         this.processData(data);
                     });
-                    mq.receiver("users.online", true);
+                    // 接受通知所有在线用户的消息
+                    await mq.receiver("users.online", true);
                 }
             })
             .run();

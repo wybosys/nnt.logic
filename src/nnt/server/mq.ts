@@ -39,6 +39,9 @@ export interface IMQClient {
     // 广播消息
     broadcast(msg: Variant): Promise<this>;
 
+    // 清楚历史数据
+    clear(): Promise<this>;
+
     // 广播链接中的接收机
     // @connect =true 链接，false 断开链接
     receiver(transmitter: string, connect: boolean): Promise<this>;
@@ -90,6 +93,8 @@ export abstract class AbstractMQClient implements IMQClient {
     abstract receiver(transmitter: string, connect: boolean): Promise<this>;
 
     abstract close(): Promise<void>;
+
+    abstract clear(): Promise<this>;
 }
 
 // 订阅消息
