@@ -241,8 +241,7 @@ export class Connector extends BaseConnector {
                     };
                     this.send(new Variant(t).toBuffer());
                 });
-            }
-            else {
+            } else {
                 // 转发独立通道
                 arr.forEach(e => {
                     let t = {
@@ -265,12 +264,15 @@ export class Connector extends BaseConnector {
 
         if (this._mqB) {
             this._mqB.unsubscribe();
+            if (!this.isSumdClosing)
+                this._mqB.close();
             this._mqB = null;
         }
 
         if (this._mqC) {
             // 取消普通得监听
             this._mqC.unsubscribe();
+            this._mqC.receiver("user.online." + this.userIdentifier, false);
 
             // 关闭连接
             this._mqC.close();

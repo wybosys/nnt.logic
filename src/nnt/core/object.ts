@@ -445,5 +445,5 @@ export class ReusableObjects<T> {
     }
 
     private _clazz: Class<T>;
-    private _objects: T[] = [];
+    protected _objects: T[] = [];
 }
