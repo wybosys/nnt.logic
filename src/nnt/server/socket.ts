@@ -90,8 +90,10 @@ export class Connector {
 
     // 主动关闭连接
     close(retcode: number, msg?: string) {
-        Connector.CloseHandle(this._hdl, retcode, msg);
-        this.onClosed();
+        if (this._hdl) {
+            Connector.CloseHandle(this._hdl, retcode, msg);
+            this.onClosed();
+        }
     }
 
     // 连接关闭的回调

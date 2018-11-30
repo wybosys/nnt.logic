@@ -100,11 +100,12 @@ class AmqpmqClient extends AbstractMQClient {
                     if (data)
                         cb(new Variant(data), this._queue);
                 }
-                chann.ack(msg);
             } catch (err) {
                 logger.error(err);
             }
-        }));
+        }), {
+            noAck: true
+        });
         this._tags.set(res.consumerTag, chann);
 
         await this._consumers.unuse(chann);
@@ -203,7 +204,7 @@ class AmqpmqClient extends AbstractMQClient {
                     await hdl.purgeQueue(this._queue);
                 });
             } catch (err) {
-                logger.fatal("amqp-close: Queue " + this._queue + " 不存在");
+                // 不输出任何日志
             }
         }
 
@@ -365,7 +366,7 @@ class ConsumerChannel {
     }
 
     // 最大负载consumer的数量
-    max = 32;
+    max = 128
 
     // 当前负载的数量
     cur = 0;
