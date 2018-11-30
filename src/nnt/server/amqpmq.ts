@@ -391,7 +391,7 @@ class TryChannel {
         return this._cnn.sendToQueue(queue, content, options);
     }
 
-    async consume(queue: string, onMessage: (msg: amqplib.ConsumeMessage | null) => any, options?: amqplib.Options.Consume) {
+    async consume(queue: string, onMessage: (msg: amqplib.Message | null) => any, options?: amqplib.Options.Consume) {
         return this._cnn.consume(queue, onMessage, options);
     }
 
