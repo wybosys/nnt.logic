@@ -78,7 +78,7 @@ class AmqpmqClient extends AbstractMQClient {
     }
 
     // 当前客户端实例订阅的消费者列表
-    protected _tags = new Map<string, Channel>();
+    protected _subscribers: Channel[] = [];
 
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
         // 预先检查queue的存在
@@ -96,7 +96,7 @@ class AmqpmqClient extends AbstractMQClient {
         await chann.prefetch(1);
 
         // 使用消费者独立的通道来订阅
-        let res = await chann.consume(this._queue, (msg => {
+        await chann.consume(this._queue, (msg => {
             if (msg) {
                 let data = msg.content;
                 if (data) {
@@ -109,19 +109,19 @@ class AmqpmqClient extends AbstractMQClient {
                 chann.ack(msg);
             }
         }));
-        this._tags.set(res.consumerTag, chann);
+        this._subscribers.push(chann);
 
         return this;
     }
 
     async unsubscribe(): Promise<this> {
-        if (!this._tags.size)
+        if (!this._subscribers.length)
             return this;
 
-        this._tags.forEach((v, k) => {
-            v.cancel(k);
+        this._subscribers.forEach(e => {
+            e.close();
         });
-        this._tags.clear();
+        this._subscribers.length = 0;
 
         return this;
     }
