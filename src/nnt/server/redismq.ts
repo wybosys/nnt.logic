@@ -25,6 +25,10 @@ class RedisClient extends AbstractMQClient {
         this._hdl = null;
     }
 
+    async clear(): Promise<this> {
+        return this;
+    }
+
     subscribe(cb: (msg: any, chann: string) => void): Promise<this> {
         return new Promise(resolve => {
             let chann = this._chann;

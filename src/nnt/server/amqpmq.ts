@@ -3,9 +3,10 @@ import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
 import {ReusableObjects, Variant} from "../core/object";
-import {Class, IndexedObject, KvObject, ObjectT, SyncArray, SyncMap} from "../core/kernel";
+import {ArrayT, Class, clazz_type, IndexedObject, KvObject, ObjectT, SyncArray, SyncMap} from "../core/kernel";
 import {static_cast} from "../core/core";
 import amqplib = require("amqplib");
+import log = logger.log;
 
 interface AmqpNode {
 
@@ -25,10 +26,10 @@ interface AmqpNode {
 
 class AmqpmqClient extends AbstractMQClient {
 
-    constructor(consumers: ConsumerChannelPool, trychannels: TryChannelPool) {
+    constructor(consumers: Channels, producers: Channels) {
         super();
         this._consumers = consumers;
-        this._trychannels = trychannels;
+        this._producers = producers;
     }
 
     // 如果是队列，则队列名
@@ -47,7 +48,7 @@ class AmqpmqClient extends AbstractMQClient {
                         this._queue = chann;
                     resolve(this);
                 } else if (this.transmitter) {
-                    this._trychannels.safe(async hdl => {
+                    this._producers.safe(async hdl => {
                         await hdl.assertExchange(chann, "fanout", {
                             durable: this.durable,
                             autoDelete: !this.longliving
@@ -59,7 +60,7 @@ class AmqpmqClient extends AbstractMQClient {
                         resolve(null);
                     });
                 } else {
-                    this._trychannels.safe(async hdl => {
+                    this._producers.safe(async hdl => {
                         await hdl.assertQueue(chann, {
                             durable: this.durable,
                             autoDelete: !this.longliving
@@ -77,12 +78,12 @@ class AmqpmqClient extends AbstractMQClient {
     }
 
     // 当前客户端实例订阅的消费者列表
-    protected _tags = new Map<string, ConsumerChannel>();
+    protected _tags = new Map<string, Channel>();
 
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
         // 预先检查queue的存在
         try {
-            await this._trychannels.safe(async hdl => {
+            await this._consumers.safe(async hdl => {
                 await hdl.checkQueue(this._queue);
             });
         } catch (err) {
@@ -132,7 +133,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 直接给队列发消息
     async produce(msg: Variant): Promise<this> {
         try {
-            await this._trychannels.safe(async hdl => {
+            await this._producers.safe(async hdl => {
                 if (!hdl.sendToQueue(this._queue, msg.toBuffer())) {
                     logger.warn("amqp: 发送消息失败");
                 }
@@ -146,7 +147,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 给通道发消息
     async broadcast(msg: Variant): Promise<this> {
         try {
-            await this._trychannels.safe(async hdl => {
+            await this._producers.safe(async hdl => {
                 if (!hdl.publish(this._exchange, "", msg.toBuffer())) {
                     logger.warn("amqp: 广播消息失败");
                 }
@@ -160,7 +161,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 建立群监听
     async receiver(transmitter: string, connect: boolean): Promise<this> {
         try {
-            await this._trychannels.safe(async hdl => {
+            await this._producers.safe(async hdl => {
                 await hdl.checkQueue(this._queue);
                 await hdl.checkExchange(transmitter);
 
@@ -180,7 +181,7 @@ class AmqpmqClient extends AbstractMQClient {
     async close() {
         if (this._queue) {
             try {
-                await this._trychannels.safe(async hdl => {
+                await this._producers.safe(async hdl => {
                     await hdl.deleteQueue(this._queue);
                 });
             } catch (err) {
@@ -188,7 +189,7 @@ class AmqpmqClient extends AbstractMQClient {
             }
         } else if (this._exchange) {
             try {
-                await this._trychannels.safe(async hdl => {
+                await this._producers.safe(async hdl => {
                     await hdl.deleteExchange(this._exchange);
                 });
             } catch (err) {
@@ -200,7 +201,7 @@ class AmqpmqClient extends AbstractMQClient {
     async clear(): Promise<this> {
         if (this._queue) {
             try {
-                await this._trychannels.safe(async hdl => {
+                await this._producers.safe(async hdl => {
                     await hdl.purgeQueue(this._queue);
                 });
             } catch (err) {
@@ -211,8 +212,8 @@ class AmqpmqClient extends AbstractMQClient {
         return this;
     }
 
-    private _trychannels: TryChannelPool;
-    private _consumers: ConsumerChannelPool;
+    private _producers: Channels;
+    private _consumers: Channels;
 }
 
 export class Amqpmq extends AbstractServer implements IMQServer {
@@ -240,10 +241,6 @@ export class Amqpmq extends AbstractServer implements IMQServer {
     password: string;
     channel: KvObject<{ type: string, durable: boolean, longliving: boolean }>;
 
-    // 每一个进程维持一个mq连接
-    private _connection_producer: amqplib.Connection;
-    private _connection_consumer: amqplib.Connection;
-
     async start(): Promise<void> {
         let opts: IndexedObject = {
             protocol: 'amqp',
@@ -262,17 +259,11 @@ export class Amqpmq extends AbstractServer implements IMQServer {
     }
 
     private async doConnect(opts: amqplib.Options.Connect): Promise<void> {
-        this._connection_consumer = await amqplib.connect(opts);
-        this._connection_producer = await amqplib.connect(opts);
-
-        // 如果打开安全设置，则会通过独立的通道来检查关键步骤的可用性，避免notfound导致通信通道被关闭
-        this._trychannels = new TryChannelPool(this._connection_producer);
+        this._producers = new Channels(opts);
+        this._consumers = new Channels(opts);
 
         // 建立初始的信道
-        let cnn = await this._connection_producer.createChannel();
-
-        // 建立用来承载消费者的信道
-        this._consumers = new ConsumerChannelPool(this._connection_consumer);
+        let cnn = await this._producers.channel();
 
         cnn.assertExchange("nnt.topic", "topic", {
             durable: true,
@@ -310,174 +301,247 @@ export class Amqpmq extends AbstractServer implements IMQServer {
     async stop(): Promise<void> {
         this.onStop();
 
-        this._connection_producer.close();
-        this._connection_producer = null;
+        this._producers.close();
+        this._producers = null;
 
-        this._connection_consumer.close();
-        this._connection_consumer = null;
+        this._consumers.close();
+        this._consumers = null;
     }
 
     instanceClient(): IMQClient {
-        return new AmqpmqClient(this._consumers, this._trychannels);
+        return new AmqpmqClient(this._consumers, this._producers);
     }
 
-    private _trychannels: TryChannelPool;
-    private _consumers: ConsumerChannelPool;
+    private _producers: Channels;
+    private _consumers: Channels;
 }
 
-// 避免使用一个channel负载多个consumer导致的消息挤压问题
-class ConsumerChannelPool extends ReusableObjects<ConsumerChannel> {
+// 生产者和消费者使用不同的connection池来提供channel
+class Channel {
 
-    constructor(connection: amqplib.Connection) {
-        super();
+    constructor(channel: amqplib.Channel, connection: Connection) {
+        this._channel = channel;
         this._connection = connection;
-    }
-
-    protected async instance(): Promise<ConsumerChannel> {
-        let cnn = await this._connection.createChannel();
-        return new ConsumerChannel(cnn);
-    }
-
-    async use(clazz?: Class<ConsumerChannel>): Promise<ConsumerChannel> {
-        return super.use(clazz);
-    }
-
-    async unuse(chann: ConsumerChannel, e?: any) {
-        if (e) {
-            // 如果是遇到异常的重用，则不进行重用
-            logger.log("ampq::consumer::channel::pool::遇到异常");
-            return;
-        }
-
-        // 没有空位的时候不能复用
-        if (chann.cur >= chann.max)
-            return;
-
-        await super.unuse(chann);
-    }
-
-    private _connection: amqplib.Connection;
-}
-
-class ConsumerChannel {
-
-    constructor(cnn: amqplib.Channel) {
-        this._cnn = cnn;
-    }
-
-    // 最大负载consumer的数量
-    max = 128
-
-    // 当前负载的数量
-    cur = 0;
-
-    async consume(queue: string, onMessage: (msg: amqplib.Message | null) => any, options?: amqplib.Options.Consume) {
-        this.cur += 1;
-        return this._cnn.consume(queue, onMessage, options);
-    }
-
-    async cancel(consumerTag: string) {
-        this.cur -= 1;
-        return this._cnn.cancel(consumerTag);
-    }
-
-    ack(message: amqplib.Message, allUpTo?: boolean) {
-        this._cnn.ack(message, allUpTo);
-    }
-
-    private _cnn: amqplib.Channel;
-}
-
-// amqp当发生错误时，会主动断开 https://github.com/squaremo/amqp.node/issues/156
-// 目前来看，没有解决的方式。所以框架采用使用独立channel来检查可用性，将检查和工作进行隔离来达到确保安全
-class TryChannelPool extends ReusableObjects<TryChannel> {
-
-    constructor(connection: amqplib.Connection) {
-        super();
-        this._connection = connection;
-    }
-
-    protected async instance(): Promise<TryChannel> {
-        //logger.log("ampq::创建一个复用的Channel");
-        let cnn = await this._connection.createChannel();
-        return new TryChannel(cnn);
-    }
-
-    async use(clazz?: Class<TryChannel>): Promise<TryChannel> {
-        return await super.use(clazz);
-    }
-
-    async unuse(chann: TryChannel, e?: any) {
-        if (e) {
-            // 如果是遇到异常的重用，则不进行重用
-            logger.log("ampq::抛弃发生错误的Channel");
-            return;
-        }
-
-        //logger.log("amqp::收回复用Channel");
-        await super.unuse(chann);
-    }
-
-    private _connection: amqplib.Connection;
-}
-
-class TryChannel {
-
-    constructor(cnn: amqplib.Channel) {
-        this._cnn = cnn;
     }
 
     async checkQueue(name: string) {
-        return this._cnn.checkQueue(name);
+        return this._channel.checkQueue(name);
     }
 
     async checkExchange(name: string) {
-        return this._cnn.checkExchange(name);
+        return this._channel.checkExchange(name);
     }
 
     async assertQueue(queue: string, options?: amqplib.Options.AssertQueue) {
-        return this._cnn.assertQueue(queue, options);
+        return this._channel.assertQueue(queue, options);
     }
 
     async deleteQueue(queue: string, options?: amqplib.Options.DeleteQueue) {
-        return this._cnn.deleteQueue(queue, options);
+        return this._channel.deleteQueue(queue, options);
     }
 
     async bindQueue(queue: string, source: string, pattern: string, args?: any) {
-        return this._cnn.bindQueue(queue, source, pattern, args);
+        return this._channel.bindQueue(queue, source, pattern, args);
     }
 
     async unbindQueue(queue: string, source: string, pattern: string, args?: any) {
-        return this._cnn.unbindQueue(queue, source, pattern, args);
+        return this._channel.unbindQueue(queue, source, pattern, args);
     }
 
     async assertExchange(exchange: string, type: string, options?: amqplib.Options.AssertExchange) {
-        return this._cnn.assertExchange(exchange, type, options);
+        return this._channel.assertExchange(exchange, type, options);
     }
 
     async deleteExchange(exchange: string, options?: amqplib.Options.DeleteExchange) {
-        return this._cnn.deleteExchange(exchange, options);
+        return this._channel.deleteExchange(exchange, options);
     }
 
     async bindExchange(destination: string, source: string, pattern: string, args?: any) {
-        return this._cnn.bindExchange(destination, source, pattern, args);
+        return this._channel.bindExchange(destination, source, pattern, args);
     }
 
     async unbindExchange(destination: string, source: string, pattern: string, args?: any) {
-        return this._cnn.unbindExchange(destination, source, pattern, args);
+        return this._channel.unbindExchange(destination, source, pattern, args);
     }
 
     publish(exchange: string, routingKey: string, content: Buffer, options?: amqplib.Options.Publish) {
-        return this._cnn.publish(exchange, routingKey, content, options);
+        return this._channel.publish(exchange, routingKey, content, options);
     }
 
     sendToQueue(queue: string, content: Buffer, options?: amqplib.Options.Publish) {
-        return this._cnn.sendToQueue(queue, content, options);
+        return this._channel.sendToQueue(queue, content, options);
     }
 
     async purgeQueue(queue: string): Promise<amqplib.Replies.PurgeQueue> {
-        return this._cnn.purgeQueue(queue);
+        return this._channel.purgeQueue(queue);
     }
 
-    private _cnn: amqplib.Channel;
+    async consume(queue: string, onMessage: (msg: amqplib.Message | null) => any, options?: amqplib.Options.Consume) {
+        return this._channel.consume(queue, onMessage, options);
+    }
+
+    async cancel(consumerTag: string) {
+        return this._channel.cancel(consumerTag);
+    }
+
+    ack(message: amqplib.Message, allUpTo?: boolean) {
+        this._channel.ack(message, allUpTo);
+    }
+
+    private _channel: amqplib.Channel;
+    private _connection: Connection;
+}
+
+class Connection {
+
+    constructor(opts: amqplib.Options.Connect) {
+        this._opts = opts;
+    }
+
+    async open(): Promise<this> {
+        this._connection = await amqplib.connect(this._opts);
+        return this;
+    }
+
+    async channel(): Promise<Channel> {
+        let r: Channel = null;
+        try {
+            let channel = await this._connection.createChannel();
+            r = new Channel(channel, this);
+            // 当关闭时，恢复该连接可用
+            channel.on('error', () => {
+                this.channels_count -= 1;
+                if (!this.valid)
+                    this.valid = true;
+            });
+            this.channels_count += 1;
+        } catch (e) {
+            this.valid = false;
+        }
+        return r;
+    }
+
+    close() {
+        this._connection.close();
+        this._connection = null;
+    }
+
+    // 当前channels的数量
+    channels_count = 0;
+
+    // 是否还可以用来创建新的channel
+    valid: boolean = true;
+
+    private _opts: amqplib.Options.Connect;
+    private _connection: amqplib.Connection;
+}
+
+class Channels {
+
+    constructor(opts: amqplib.Options.Connect) {
+        this._opts = opts;
+        this._connections = new Connections(opts);
+    }
+
+    // 创建一个新channel
+    async channel(): Promise<Channel> {
+        let r: Channel = null;
+        let retry = 5;
+        while (!r && retry--) {
+            let connection = await this._connections.connection();
+            r = await connection.channel();
+        }
+        if (!r)
+            throw new Error('amqp::channel::创建channel失败');
+        return r;
+    }
+
+    async connection(): Promise<Connection> {
+        return this._connections.connection();
+    }
+
+    async use(clazz?: Class<Channel>): Promise<Channel> {
+        return this._pool.use(clazz);
+    }
+
+    async unuse(chann: Channel, e?: any) {
+        return this._pool.unuse(chann, e);
+    }
+
+    async safe(cb: (obj: Channel) => Promise<void>, clazz?: Class<Channel>) {
+        await this._pool.safe(cb, clazz);
+    }
+
+    close() {
+        this._connections.close();
+        this._pool.clear();
+    }
+
+    private _opts: amqplib.Options.Connect;
+    private _connections: Connections;
+    private _pool = new ChannelPool(this);
+}
+
+class Connections {
+
+    constructor(opts: amqplib.Options.Connect) {
+        this._opts = opts;
+    }
+
+    // 当前可用的连接
+    async connection(): Promise<Connection> {
+        if (this._connection && !this._connection.valid)
+            this._connection = null;
+        if (this._connection == null) {
+            // 提取组里当前可用的
+            this._connection = ArrayT.QueryObject(this._connections, e => {
+                return e.valid;
+            });
+            // 生成新的
+            if (this._connection == null) {
+                this._connection = new Connection(this._opts);
+                await this._connection.open();
+                this._connections.push(this._connection);
+                //logger.log('amqp::connection::打开一个新连接');
+            }
+        }
+        return this._connection;
+    }
+
+    close() {
+        this._connections.forEach(e => {
+            e.close();
+        });
+        this._connections.length = 0;
+        this._connection = null;
+    }
+
+    private _opts: amqplib.Options.Connect;
+    private _connection: Connection = null;
+    private _connections: Connection[] = [];
+}
+
+class ChannelPool extends ReusableObjects<Channel> {
+
+    constructor(channels: Channels) {
+        super();
+        this._channels = channels;
+    }
+
+    protected async instance(): Promise<Channel> {
+        return this._channels.channel();
+    }
+
+    async use(clazz?: Class<Channel>): Promise<Channel> {
+        return super.use(clazz);
+    }
+
+    async unuse(chann: Channel, e?: any) {
+        if (e)
+            return;
+
+        await super.unuse(chann);
+    }
+
+    private _channels: Channels;
 }

@@ -444,6 +444,10 @@ export class ReusableObjects<T> {
         return new clazz();
     }
 
+    clear() {
+        this._objects.length = 0;
+    }
+
     private _clazz: Class<T>;
     protected _objects: T[] = [];
 }
