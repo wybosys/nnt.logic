@@ -93,7 +93,7 @@ class AmqpmqClient extends AbstractMQClient {
 
         // 直接获取channbel，消费者-channel实现1对1的关系，不重用
         let chann = await this._consumers.channel();
-        //await chann.prefetch(1);
+        await chann.prefetch(1);
 
         // 使用消费者独立的通道来订阅
         let res = await chann.consume(this._queue, (msg => {
