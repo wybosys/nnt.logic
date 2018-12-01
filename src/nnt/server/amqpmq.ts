@@ -97,18 +97,18 @@ class AmqpmqClient extends AbstractMQClient {
 
         // 使用消费者独立的通道来订阅
         let res = await chann.consume(this._queue, (msg => {
-            try {
-                if (msg) {
-                    let data = msg.content;
-                    if (data)
+            if (msg) {
+                let data = msg.content;
+                if (data) {
+                    try {
                         cb(new Variant(data), this._queue);
+                    } catch (err) {
+                        logger.error(err);
+                    }
                 }
-            } catch (err) {
-                logger.error(err);
+                chann.ack(msg);
             }
-        }), {
-            noAck: true
-        });
+        }));
         this._subscribes.push(chann);
 
         return this;
