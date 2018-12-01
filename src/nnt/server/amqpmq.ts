@@ -78,7 +78,7 @@ class AmqpmqClient extends AbstractMQClient {
     }
 
     // 当前客户端实例订阅的消费者列表
-    protected _tags = new Map<string, Channel>();
+    protected _subscribes: Channel[] = [];
 
     async subscribe(cb: (msg: Variant, chann: string) => void): Promise<this> {
         // 预先检查queue的存在
@@ -91,7 +91,9 @@ class AmqpmqClient extends AbstractMQClient {
             return this;
         }
 
-        let chann = await this._consumers.use();
+        // 直接获取channbel，消费者-channel实现1对1的关系，不重用
+        let chann = await this._consumers.channel();
+        await chann.prefetch(1);
 
         // 使用消费者独立的通道来订阅
         let res = await chann.consume(this._queue, (msg => {
@@ -107,25 +109,19 @@ class AmqpmqClient extends AbstractMQClient {
         }), {
             noAck: true
         });
-        this._tags.set(res.consumerTag, chann);
+        this._subscribes.push(chann);
 
-        await this._consumers.unuse(chann);
         return this;
     }
 
     async unsubscribe(): Promise<this> {
-        if (!this._tags.size)
+        if (!this._subscribes.length)
             return this;
 
-        await SyncMap(this._tags).forEach(async (v, k) => {
-            await v.cancel(k);
-
-            // 取消后尝试添加到复用中
-            await this._consumers.unuse(v);
-
-            return true;
+        this._subscribes.forEach(e => {
+            e.close();
         });
-        this._tags.clear();
+        this._subscribes.length = 0;
 
         return this;
     }
@@ -262,6 +258,10 @@ export class Amqpmq extends AbstractServer implements IMQServer {
         this._producers = new Channels(opts);
         this._consumers = new Channels(opts);
 
+        // 默认打开
+        await this._producers.open();
+        await this._consumers.open();
+
         // 建立初始的信道
         let cnn = await this._producers.channel();
 
@@ -388,6 +388,14 @@ class Channel {
         this._channel.ack(message, allUpTo);
     }
 
+    async prefetch(count: number, global?: boolean): Promise<amqplib.Replies.Empty> {
+        return this._channel.prefetch(count, global);
+    }
+
+    async close(): Promise<void> {
+        return this._channel.close();
+    }
+
     private _channel: amqplib.Channel;
     private _connection: Connection;
 }
@@ -405,19 +413,28 @@ class Connection {
 
     async channel(): Promise<Channel> {
         let r: Channel = null;
+        if (this.channels_count >= this.channels_max) {
+            return r;
+        }
+
         try {
+            this.channels_count += 1;
             let channel = await this._connection.createChannel();
             r = new Channel(channel, this);
             // 当关闭时，恢复该连接可用
             channel.on('error', () => {
-                this.channels_count -= 1;
-                if (!this.valid)
-                    this.valid = true;
+                // pass 不写时，不会激发close的消息
             });
-            this.channels_count += 1;
+            channel.on('close', () => {
+                this.channels_count -= 1;
+                this.channels_overflow = false;
+            });
         } catch (e) {
-            this.valid = false;
+            this.channels_count -= 1;
+            this.channels_overflow = true;
+            //logger.error(e);
         }
+
         return r;
     }
 
@@ -429,8 +446,16 @@ class Connection {
     // 当前channels的数量
     channels_count = 0;
 
-    // 是否还可以用来创建新的channel
-    valid: boolean = true;
+    // 预定义可以打开的最大数量
+    channels_max = 1024;
+
+    // 当前不可用
+    channels_overflow = false;
+
+    get valid(): boolean {
+        return !this.channels_overflow &&
+            (this.channels_count < this.channels_max);
+    }
 
     private _opts: amqplib.Options.Connect;
     private _connection: amqplib.Connection;
@@ -441,6 +466,12 @@ class Channels {
     constructor(opts: amqplib.Options.Connect) {
         this._opts = opts;
         this._connections = new Connections(opts);
+    }
+
+    async open(): Promise<Channels> {
+        // 打开默认连接
+        await this.connection();
+        return this;
     }
 
     // 创建一个新channel
@@ -492,17 +523,22 @@ class Connections {
     async connection(): Promise<Connection> {
         if (this._connection && !this._connection.valid)
             this._connection = null;
+
         if (this._connection == null) {
             // 提取组里当前可用的
             this._connection = ArrayT.QueryObject(this._connections, e => {
                 return e.valid;
             });
+
             // 生成新的
             if (this._connection == null) {
-                this._connection = new Connection(this._opts);
-                await this._connection.open();
-                this._connections.push(this._connection);
-                //logger.log('amqp::connection::打开一个新连接');
+                let t = new Connection(this._opts);
+                await t.open();
+                this._connections.push(t);
+                logger.log('amqp::connection::打开一个新连接');
+
+                // 避免并发的问题，打开后再设置到全局打开的连接
+                this._connection = t;
             }
         }
         return this._connection;
