@@ -26,7 +26,17 @@ interface SdksConfig {
 
 @model()
 export class SdkAdminInfo {
+    @integer(1, [output], "adminid")
+    adminid: number;
 
+    @integer(2, [output], "groupid")
+    groupid: number;
+
+    @string(3, [output], "account")
+    account: string;
+
+    @string(4, [output], "adminkey")
+    adminkey: string;
 }
 
 @model()
@@ -69,10 +79,13 @@ export class SdkMerchantLogin {
     @string(2, [input], "password")
     password: string;
 
-    @string(3, [output], "sid")
+    @integer(3, [input], "groupid")
+    groupid: number;
+
+    @string(4, [output], "sid")
     sid: string;
 
-    @type(4, SdkMerchantInfo, [output], "merchant")
+    @type(5, SdkMerchantInfo, [output], "merchant")
     merchant: SdkMerchantInfo;
 }
 
@@ -321,7 +334,8 @@ export class Sdks extends AbstractServer {
             let ret = await Fetch(this.merchants, {
                 action: 'app.login',
                 account: m.account,
-                password: m.password
+                password: m.password,
+                groupid: m.groupid
 
             });
             m.sid = ret.sid;
