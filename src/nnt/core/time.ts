@@ -321,12 +321,16 @@ export class DateTime {
         this._date.setSeconds(val);
     }
 
+    // 获得符合国内习惯，周一到周日 0-6
     get weekday(): number {
-        return this._date.getDay() - 1;
+        let d = this._date.getDay(); // 周日是0
+        return d == 0 ? 6 : d - 1;
     }
 
+    // 获得符合国内习惯，周一到周日 1-7
     get hweekday(): number {
-        return this._date.getDay();
+        let d = this._date.getDay();
+        return d == 0 ? 7 : d;
     }
 
     /**
@@ -423,7 +427,7 @@ export class DateTime {
     /** 计算diff-year，根绝suffix的类型返回对应的类型 */
     dyears(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Dyears(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -431,7 +435,7 @@ export class DateTime {
     /** 计算diff-months */
     dmonths(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Dmonths(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -439,7 +443,7 @@ export class DateTime {
     /** 计算diff-days */
     ddays(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Ddays(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -447,7 +451,7 @@ export class DateTime {
     /** 计算diff-hours */
     dhours(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Dhours(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -455,7 +459,7 @@ export class DateTime {
     /** 计算diff-mins */
     dminutes(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Dminutes(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -463,7 +467,7 @@ export class DateTime {
     /** 计算diff-secs */
     dseconds(up: boolean = true, suffix: any | string = 0): any {
         let v = DateTime.Dseconds(this._timestamp, up);
-        if (typeof(suffix) == 'string')
+        if (typeof (suffix) == 'string')
             return v ? v + suffix : '';
         return v + suffix;
     }
@@ -586,8 +590,7 @@ export function Retry(cond: () => boolean, proc: () => void, interval = 1, delta
         setTimeout(() => {
             Retry(cond, proc, interval + delta, delta);
         }, interval * 1000);
-    }
-    else {
+    } else {
         proc();
     }
 }
