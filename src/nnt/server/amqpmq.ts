@@ -3,7 +3,17 @@ import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
 import {ReusableObjects, Variant} from "../core/object";
-import {ArrayT, Class, clazz_type, IndexedObject, KvObject, ObjectT, SyncArray, SyncMap} from "../core/kernel";
+import {
+    ArrayT,
+    AsyncArray,
+    Class,
+    clazz_type,
+    IndexedObject,
+    KvObject,
+    ObjectT,
+    SyncArray,
+    SyncMap
+} from "../core/kernel";
 import {static_cast} from "../core/core";
 import amqplib = require("amqplib");
 import log = logger.log;
@@ -118,6 +128,7 @@ class AmqpmqClient extends AbstractMQClient {
         if (!this._subscribers.length)
             return this;
 
+        // 注意，此处的channel和生产消息时用的不是同一个channel，所以可以直接close，而不用await
         this._subscribers.forEach(e => {
             e.close();
         });
