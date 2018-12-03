@@ -26,7 +26,17 @@ interface SdksConfig {
 
 @model()
 export class SdkAdminInfo {
+    @integer(1, [output], "adminid")
+    adminid: number;
 
+    @integer(2, [output], "groupid")
+    groupid: number;
+
+    @string(3, [output], "account")
+    account: string;
+
+    @string(4, [output], "adminkey")
+    adminkey: string;
 }
 
 @model()
