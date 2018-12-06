@@ -230,7 +230,7 @@ export class SdkExchangeItem {
 @model()
 export class SdkExchangeItemOrder {
 
-    @string(1, [input, output], "订单id")
+    @string(1, [output], "订单id")
     orderid: string;
 }
 
@@ -446,10 +446,10 @@ export class Sdks extends AbstractServer {
     }
 
     //兑换商品退货
-    async exchangeItemRefund(m: SdkExchangeItemOrder): Promise<void> {
+    async exchangeItemRefund(orderid: string): Promise<void> {
         Call(this.shops, {
             action: 'items.cancel',
-            orderid: m.orderid
+            orderid: orderid
         });
     }
 
