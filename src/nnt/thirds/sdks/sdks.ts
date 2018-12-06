@@ -228,6 +228,14 @@ export class SdkExchangeItem {
 }
 
 @model()
+export class SdkExchangeItemOrder {
+
+    @string(1, [input, output], "订单id")
+    orderid: string;
+}
+
+
+@model()
 export class SdkRechargeItem {
 
     @string(1, [output], "商品id")
@@ -423,8 +431,8 @@ export class Sdks extends AbstractServer {
     }
 
     // 兑换商品
-    async exchange(m: SdkExchangeItem): Promise<void> {
-        await Fetch(this.shops, {
+    async exchange(m: SdkExchangeItem): Promise<SdkExchangeItemOrder> {
+        let ret = await Fetch(this.shops, {
             action: 'items.exchange',
             userid: m.userid,
             itemid: m.itemid,
@@ -433,6 +441,15 @@ export class Sdks extends AbstractServer {
             address: m.address,
             receiver: m.receiver,
             gameid: this.gameid,
+        });
+        return Decode(new SdkExchangeItemOrder(), ret, false, true);
+    }
+
+    //兑换商品退货
+    async exchangeItemRefund(m: SdkExchangeItemOrder): Promise<void> {
+        Call(this.shops, {
+            action: 'items.cancel',
+            orderid: m.orderid
         });
     }
 
