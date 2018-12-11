@@ -383,3 +383,13 @@ export class RmqPurgeQueues {
     @integer(99, [output])
     purged: number = 0;
 }
+
+@model([], RmqQueueModel)
+export class RmqFindQueue extends RmqQueueModel {
+
+    @string(1, [input])
+    name: string;
+
+    @type(2, RmqQueue, [output])
+    result: RmqQueue;
+}

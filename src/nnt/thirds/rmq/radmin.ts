@@ -4,8 +4,8 @@ import {
     RmqConnections,
     RmqConsumers, RmqDeleteNoConsumerQueues,
     RmqDeleteQueue,
-    RmqExchanges,
-    RmqModel, RmqPurgeQueue, RmqPurgeQueues,
+    RmqExchanges, RmqFindQueue,
+    RmqModel, RmqPurgeQueue, RmqPurgeQueues, RmqQueue,
     RmqQueues,
     RmqVhosts
 } from "./model";
@@ -25,6 +25,13 @@ interface AdminConfig {
 
 export class RAdmin implements IRouter {
     action = "rmqadmin";
+
+    @action(RmqFindQueue)
+    async queue(trans: Transaction) {
+        let m = this._pack<RmqFindQueue>(trans);
+        await RestSession.Fetch(m);
+        trans.submit();
+    }
 
     @action(RmqVhosts)
     async vhosts(trans: Transaction) {
@@ -130,10 +137,19 @@ export class RAdmin implements IRouter {
                     let del = this._pack(trans, new RmqDeleteQueue());
                     del.vhost = m.vhost;
 
+                    // 获取目标queue的信息
+                    let query = this._pack(trans, new RmqFindQueue());
+                    query.vhost = m.vhost;
+
                     for (let i = 0; i < m.length; ++i) {
-                        del.name = m.prefix + (m.from + i);
-                        await RestSession.Get(del);
-                        ++m.deleted;
+                        // 只清除特定的queue
+                        query.name = del.name = m.prefix + (m.from + i);
+                        if (await RestSession.Get(query)) {
+                            if (query.result.consumers == 0) {
+                                await RestSession.Get(del);
+                                ++m.deleted;
+                            }
+                        }
                     }
                 }
             }
@@ -164,7 +180,7 @@ export class RAdmin implements IRouter {
 
                 for (let i = 0, l = queues.result.length; i < l; ++i) {
                     let q = queues.result[i];
-                    if (q.consumers == 0 && q.name.match(pat)) {
+                    if (q.name.match(pat)) {
                         del.name = q.name;
                         await RestSession.Get(del);
                         ++m.purged;
@@ -183,7 +199,7 @@ export class RAdmin implements IRouter {
 
                     for (let i = 0, l = queues.result.length; i < l; ++i) {
                         let q = queues.result[i];
-                        if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
+                        if (q.name.indexOf(m.prefix) == 0) {
                             del.name = q.name;
                             await RestSession.Get(del);
                             ++m.purged;
@@ -191,12 +207,13 @@ export class RAdmin implements IRouter {
                     }
                 } else {
                     // 遍历符合规则的queues，并删除
-                    let del = this._pack(trans, new RmqPurgeQueue());
-                    del.vhost = m.vhost;
+                    let purge = this._pack(trans, new RmqPurgeQueue());
+                    purge.vhost = m.vhost;
 
+                    // 不需要判断存在与否，直接purge
                     for (let i = 0; i < m.length; ++i) {
-                        del.name = m.prefix + (m.from + i);
-                        await RestSession.Get(del);
+                        purge.name = m.prefix + (m.from + i);
+                        await RestSession.Get(purge);
                         ++m.purged;
                     }
                 }
