@@ -87,23 +87,54 @@ export class RAdmin implements IRouter {
         trans.timeout(-1);
         let m: RmqDeleteNoConsumerQueues = trans.model;
         try {
-            let pat = new RegExp(m.pattern);
+            if (m.pattern) {
+                let pat = new RegExp(m.pattern);
 
-            // 获得所有的队列
-            let queues = this._pack(trans, new RmqQueues());
-            queues.vhost = m.vhost;
-            await RestSession.Fetch(queues);
+                // 获得所有的队列
+                let queues = this._pack(trans, new RmqQueues());
+                queues.vhost = m.vhost;
+                await RestSession.Fetch(queues);
 
-            // 遍历符合规则的queues，并删除
-            let del = this._pack(trans, new RmqDeleteQueue());
-            del.vhost = m.vhost;
+                // 遍历符合规则的queues，并删除
+                let del = this._pack(trans, new RmqDeleteQueue());
+                del.vhost = m.vhost;
 
-            for (let i = 0, l = queues.result.length; i < l; ++i) {
-                let q = queues.result[i];
-                if (q.consumers == 0 && q.name.match(pat)) {
-                    del.name = q.name;
-                    await RestSession.Get(del);
-                    ++m.deleted;
+                for (let i = 0, l = queues.result.length; i < l; ++i) {
+                    let q = queues.result[i];
+                    if (q.consumers == 0 && q.name.match(pat)) {
+                        del.name = q.name;
+                        await RestSession.Get(del);
+                        ++m.deleted;
+                    }
+                }
+            } else if (m.prefix) {
+                if (m.from === null) {
+                    // 获得所有的队列
+                    let queues = this._pack(trans, new RmqQueues());
+                    queues.vhost = m.vhost;
+                    await RestSession.Fetch(queues);
+
+                    // 遍历符合规则的queues，并删除
+                    let del = this._pack(trans, new RmqDeleteQueue());
+                    del.vhost = m.vhost;
+
+                    for (let i = 0, l = queues.result.length; i < l; ++i) {
+                        let q = queues.result[i];
+                        if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
+                            del.name = q.name;
+                            await RestSession.Get(del);
+                            ++m.deleted;
+                        }
+                    }
+                } else {
+                    let del = this._pack(trans, new RmqDeleteQueue());
+                    del.vhost = m.vhost;
+
+                    for (let i = 0; i < m.length; ++i) {
+                        del.name = m.prefix + (m.from + i);
+                        await RestSession.Get(del);
+                        ++m.deleted;
+                    }
                 }
             }
 
@@ -119,26 +150,57 @@ export class RAdmin implements IRouter {
         trans.timeout(-1);
         let m: RmqPurgeQueues = trans.model;
         try {
-            let pat = new RegExp(m.pattern);
+            if (m.pattern) {
+                let pat = new RegExp(m.pattern);
 
-            // 获得所有的队列
-            let queues = this._pack(trans, new RmqQueues());
-            queues.vhost = m.vhost;
-            await RestSession.Fetch(queues);
+                // 获得所有的队列
+                let queues = this._pack(trans, new RmqQueues());
+                queues.vhost = m.vhost;
+                await RestSession.Fetch(queues);
 
-            // 遍历符合规则的queues，并删除
-            let del = this._pack(trans, new RmqPurgeQueue());
-            del.vhost = m.vhost;
+                // 遍历符合规则的queues，并删除
+                let del = this._pack(trans, new RmqPurgeQueue());
+                del.vhost = m.vhost;
 
-            for (let i = 0, l = queues.result.length; i < l; ++i) {
-                let q = queues.result[i];
-                if (q.consumers == 0 && q.name.match(pat)) {
-                    del.name = q.name;
-                    await RestSession.Get(del);
-                    ++m.purged;
+                for (let i = 0, l = queues.result.length; i < l; ++i) {
+                    let q = queues.result[i];
+                    if (q.consumers == 0 && q.name.match(pat)) {
+                        del.name = q.name;
+                        await RestSession.Get(del);
+                        ++m.purged;
+                    }
+                }
+            } else if (m.prefix) {
+                if (m.from === null) {
+                    // 获得所有的队列
+                    let queues = this._pack(trans, new RmqQueues());
+                    queues.vhost = m.vhost;
+                    await RestSession.Fetch(queues);
+
+                    // 遍历符合规则的queues，并删除
+                    let del = this._pack(trans, new RmqPurgeQueue());
+                    del.vhost = m.vhost;
+
+                    for (let i = 0, l = queues.result.length; i < l; ++i) {
+                        let q = queues.result[i];
+                        if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
+                            del.name = q.name;
+                            await RestSession.Get(del);
+                            ++m.purged;
+                        }
+                    }
+                } else {
+                    // 遍历符合规则的queues，并删除
+                    let del = this._pack(trans, new RmqPurgeQueue());
+                    del.vhost = m.vhost;
+
+                    for (let i = 0; i < m.length; ++i) {
+                        del.name = m.prefix + (m.from + i);
+                        await RestSession.Get(del);
+                        ++m.purged;
+                    }
                 }
             }
-
         } catch (err) {
             trans.status = STATUS.EXCEPTION;
             trans.message = err.message;

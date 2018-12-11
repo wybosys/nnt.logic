@@ -346,10 +346,19 @@ export class RmqDeleteNoConsumerQueues {
     @string(1, [input])
     vhost: string;
 
-    @string(2, [input])
+    @string(2, [input, optional], "regex匹配")
     pattern: string;
 
-    @integer(3, [output])
+    @string(3, [input, optional], "prefix前缀")
+    prefix: string;
+
+    @integer(4, [input, optional], "当输入prefix时，用来从from迭代到to")
+    from: number;
+
+    @integer(5, [input, optional])
+    length: number;
+
+    @integer(99, [output])
     deleted: number = 0;
 }
 
@@ -359,9 +368,18 @@ export class RmqPurgeQueues {
     @string(1, [input])
     vhost: string;
 
-    @string(2, [input])
+    @string(2, [input, optional], "regex匹配")
     pattern: string;
 
-    @integer(3, [output])
+    @string(3, [input, optional], "prefix前缀")
+    prefix: string;
+
+    @integer(4, [input, optional], "当输入prefix时，用来从from迭代到to")
+    from: number;
+
+    @integer(5, [input, optional])
+    length: number;
+
+    @integer(99, [output])
     purged: number = 0;
 }
