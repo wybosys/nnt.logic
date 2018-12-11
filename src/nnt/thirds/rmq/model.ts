@@ -1,5 +1,17 @@
 import {Base, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
-import {array, boolean, GetAllFields, input, integer, model, optional, output, string, type} from "../../core/proto";
+import {
+    array,
+    auth,
+    boolean,
+    GetAllFields,
+    input,
+    integer,
+    model,
+    optional,
+    output,
+    string,
+    type
+} from "../../core/proto";
 import {AbstractParser} from "../../server/parser/parser";
 import {STATUS} from "../../core/models";
 import {AnyClass} from "../../core/kernel";
@@ -226,7 +238,7 @@ export class RmqExchangeModel extends RmqModel {
     }
 }
 
-@model()
+@model([auth])
 export class RmqVhosts extends RmqVHostModel {
 
     api = 'vhosts';
@@ -235,7 +247,7 @@ export class RmqVhosts extends RmqVHostModel {
     result: RmqVHost[];
 }
 
-@model([], RmqVHostModel)
+@model([auth], RmqVHostModel)
 export class RmqConnections extends RmqVHostModel {
 
     api = 'connections';
@@ -244,7 +256,7 @@ export class RmqConnections extends RmqVHostModel {
     result: RmqConnection[];
 }
 
-@model([], RmqVHostModel)
+@model([auth], RmqVHostModel)
 export class RmqChannels extends RmqVHostModel {
 
     api = 'channels';
@@ -253,7 +265,7 @@ export class RmqChannels extends RmqVHostModel {
     result: RmqChannel[];
 }
 
-@model([], RmqQueueModel)
+@model([auth], RmqQueueModel)
 export class RmqQueues extends RmqQueueModel {
 
     api = '';
@@ -262,7 +274,7 @@ export class RmqQueues extends RmqQueueModel {
     result: RmqQueue[];
 }
 
-@model([], RmqConsumerModel)
+@model([auth], RmqConsumerModel)
 export class RmqConsumers extends RmqConsumerModel {
 
     api = '';
@@ -271,7 +283,7 @@ export class RmqConsumers extends RmqConsumerModel {
     result: RmqConsumer[];
 }
 
-@model([], RmqExchangeModel)
+@model([auth], RmqExchangeModel)
 export class RmqExchanges extends RmqExchangeModel {
 
     api = '';
