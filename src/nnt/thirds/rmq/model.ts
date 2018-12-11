@@ -1,7 +1,8 @@
 import {Base, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
-import {array, boolean, input, integer, model, optional, output, string} from "../../core/proto";
+import {array, boolean, GetAllFields, input, integer, model, optional, output, string} from "../../core/proto";
 import {AbstractParser} from "../../server/parser/parser";
 import {STATUS} from "../../core/models";
+import {AnyClass} from "../../core/kernel";
 
 @model()
 export class RmqVHost {
@@ -45,6 +46,22 @@ export class RmqConnection {
 }
 
 @model()
+export class RmqChannel {
+
+    @integer(1, [output])
+    acks_uncommitted: number;
+
+    @integer(2, [output])
+    consumer_count: number;
+
+    @integer(3, [output])
+    messages_unacknowledged: number;
+
+    @integer(4, [output])
+    messages_uncommitted: number;
+}
+
+@model()
 export class RmqModel extends Base {
 
     constructor() {
@@ -61,7 +78,21 @@ export class RmqModel extends Base {
     }
 
     requestParams(): RequestParams {
-        return new RequestParams();
+        let r = new RequestParams();
+        // 获取所有用来输出的
+        let fps = GetAllFields(this);
+        let fp = fps['result'];
+        fps = GetAllFields((<AnyClass>fp.valtype).prototype);
+        let columns = [];
+        for (let key in fps) {
+            let fp = fps[key];
+            if (fp.output) {
+                columns.push(key);
+            }
+        }
+        if (columns)
+            r.fields['columns'] = columns.join(',');
+        return r;
     }
 
     parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
@@ -102,8 +133,13 @@ export class RmqConnections extends RmqModel {
     result: RmqConnection[];
 }
 
-export class RmqChannels {
+@model([], RmqModel)
+export class RmqChannels extends RmqModel {
 
+    api = 'channels';
+
+    @array(1, RmqChannel, [output])
+    result: RmqChannel[];
 }
 
 export class RmqQueues {

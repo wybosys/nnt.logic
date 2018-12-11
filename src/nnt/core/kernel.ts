@@ -6,7 +6,7 @@ import seedrandom = require("seed-random");
 import {logger} from "./logger";
 import {vsprintf} from "sprintf-js";
 
-export type Class<T> = { new(...args: any[]): T, [key: string]: any };
+export type Class<T> = { new(...args: any[]): T, [key: string]: any, prototype: any };
 export type AnyClass = Class<any>;
 export type KvObject<V> = { [key: string]: V };
 export type IndexedObject = KvObject<any>;
@@ -99,8 +99,7 @@ export function indexed(...args: any[]): IndexedObject {
     if (args.length % 2) {
         r = args[0];
         lb = 1;
-    }
-    else {
+    } else {
         r = {};
         lb = 0;
     }
@@ -118,8 +117,7 @@ export function indexed_safe(...args: any[]): IndexedObject {
     if (args.length % 2) {
         r = args[0];
         lb = 1;
-    }
-    else {
+    } else {
         r = {};
         lb = 0;
     }
@@ -217,16 +215,14 @@ export interface IString {
 export function IsEmpty(o: any): boolean {
     if (o == null)
         return true;
-    let tp = typeof(o);
+    let tp = typeof (o);
     if (tp == 'string') {
         if (tp.length == 0)
             return true;
         return o.match(/^\s*$/) != null;
-    }
-    else if (tp == "boolean") {
+    } else if (tp == "boolean") {
         return false;
-    }
-    else if (tp == "number") {
+    } else if (tp == "number") {
         return false;
     }
     if (o instanceof Array) {
@@ -506,8 +502,7 @@ export class KeysMap<V> {
         if (!ref) {
             this._values.push(v);
             this._valuerefs.set(v, 1);
-        }
-        else {
+        } else {
             this._valuerefs.set(v, ref + 1);
         }
         return this;
@@ -523,8 +518,7 @@ export class KeysMap<V> {
                 if (ref == 1) {
                     ArrayT.RemoveObject(this._values, fnd);
                     this._valuerefs.delete(fnd);
-                }
-                else {
+                } else {
                     this._valuerefs.set(fnd, ref - 1);
                 }
             }
@@ -1008,8 +1002,7 @@ export class ArrayT {
             let val = iter.next();
             if (!val.done) {
                 proc(val.value[1], val.value[0], next);
-            }
-            else {
+            } else {
                 complete(ret);
             }
         }
@@ -1105,8 +1098,7 @@ export class SetT {
                     return;
                 r.add(t);
             })
-        }
-        else {
+        } else {
             arr.forEach((e: any) => {
                 if (e == null && skipnull)
                     return;
@@ -1226,20 +1218,17 @@ export class ObjectT {
             let v = tgt[k];
             if (v == null) {
                 r[k] = v;
-            }
-            else if (v instanceof Array) {
+            } else if (v instanceof Array) {
                 let t = new Array();
                 v.forEach(e => {
                     t.push(ObjectT.DeepClone(e));
                 });
                 r[k] = t;
-            }
-            else {
-                let typ = typeof(v);
+            } else {
+                let typ = typeof (v);
                 if (typ == "string" || typ == "number" || typ == "boolean") {
                     r[k] = v;
-                }
-                else {
+                } else {
                     r[k] = ObjectT.DeepClone(v);
                 }
             }
@@ -1334,8 +1323,7 @@ export class ObjectT {
             let val = iter.next();
             if (!val.done) {
                 proc(obj[val.value[1]], keys[val.value[0]], next);
-            }
-            else {
+            } else {
                 complete(ret);
             }
         }
@@ -1513,8 +1501,7 @@ export class Fs {
         let suc = true;
         try {
             fs.writeFileSync(to, fs.readFileSync(from));
-        }
-        catch (err) {
+        } catch (err) {
             suc = false;
             console.error(err);
         }
@@ -1541,8 +1528,7 @@ export class Fs {
                 if (err) {
                     if (err.code === 'EXDEV') {
                         Fs.copyAndDelete(from, to, cb);
-                    }
-                    else {
+                    } else {
                         cb(err);
                     }
                     return;
@@ -1947,8 +1933,7 @@ export class MapT {
             let val = iter.next();
             if (!val.done) {
                 proc(val.value[1], val.value[0], next);
-            }
-            else {
+            } else {
                 complete(ret);
             }
         }
@@ -1982,8 +1967,7 @@ export class MapT {
                     return;
                 r.push(t);
             });
-        }
-        else {
+        } else {
             m.forEach((v) => {
                 r.push(<any>v);
             });
@@ -2006,8 +1990,7 @@ export class MapT {
             tps.sort((l, r) => {
                 return proc(l[1], r[1]);
             });
-        }
-        else {
+        } else {
             tps.sort((l, r) => {
                 return ObjectT.Minus(l[1], r[1]);
             });
@@ -2088,7 +2071,7 @@ function SafeNumber(o: any, def = 0): number {
 export function toFloat(o: any, def = 0): number {
     if (o == null)
         return def;
-    let tp = typeof(o);
+    let tp = typeof (o);
     if (tp == 'number')
         return SafeNumber(o, def);
     if (tp == 'string') {
@@ -2104,7 +2087,7 @@ export function toFloat(o: any, def = 0): number {
 export function toInt(o: any, def = 0): number {
     if (o == null)
         return def;
-    let tp = typeof(o);
+    let tp = typeof (o);
     if (tp == 'number' || tp == 'string') {
         let v = Number(<any>o);
         // 不使用 >>0 整数化的原因是bigint会被限制到32位
@@ -2128,7 +2111,7 @@ export function toInt(o: any, def = 0): number {
 export function toNumber<T extends INumber>(o: PodType | T, def = 0): number {
     if (o == null)
         return def;
-    let tp = typeof(o);
+    let tp = typeof (o);
     if (tp == 'number')
         return SafeNumber(o, def);
     if (tp == 'string') {
@@ -2156,7 +2139,7 @@ export function toBoolean(v: any): boolean {
 export function asString(o: any, def = ''): string {
     if (o == null)
         return def;
-    let tp = typeof(o);
+    let tp = typeof (o);
     if (tp == 'string')
         return <string>o;
     if (tp == 'number')
@@ -2180,49 +2163,44 @@ export function toJson(o: IndexedObject, def: string = null) {
     let r: string;
     try {
         r = JSON.stringify(o);
-    }
-    catch (err) {
+    } catch (err) {
         r = def;
     }
     return r;
 }
 
 export function toJsonObject(o: jsonobj, def: any = null): IndexedObject {
-    let t = typeof(o);
+    let t = typeof (o);
     if (t == 'string') {
         if (o == "undefined" || o == "null")
             return def;
         let r: any;
         try {
             r = JSON.parse(o as string);
-        }
-        catch (err) {
+        } catch (err) {
             logger.warn(o + " " + err);
             r = def;
         }
         return r;
-    }
-    else if (t == 'object')
+    } else if (t == 'object')
         return <any>o;
     return def;
 }
 
 export function toJsonArray(o: jsonobj, def: any[] = null): IndexedObject[] {
-    let t = typeof(o);
+    let t = typeof (o);
     if (t == 'string') {
         if (o == "undefined" || o == "null")
             return def;
         let r: any;
         try {
             r = JSON.parse(o as string);
-        }
-        catch (err) {
+        } catch (err) {
             logger.warn(o + " " + err);
             r = def;
         }
         return r;
-    }
-    else if (t == 'object')
+    } else if (t == 'object')
         return <any>o;
     return def;
 }
@@ -2250,8 +2228,7 @@ export function EvalFormula(f: string, vars: IndexedObject, upcase: boolean = tr
         }
         let cmd = "var " + vs.join(",") + ";" + f;
         return eval(cmd);
-    }
-    catch (err) {
+    } catch (err) {
         logger.log(err);
     }
 }
@@ -2338,8 +2315,7 @@ export class IndexedMap<K, V> {
             let idx = this._keys.indexOf(k);
             this._keys[idx] = k;
             this._vals[idx] = v;
-        }
-        else {
+        } else {
             this._map.set(k, v);
             this._keys.push(k);
             this._vals.push(v);

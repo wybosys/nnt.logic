@@ -1,5 +1,5 @@
 import {action, IRouter} from "../../core/router";
-import {RmqConnections, RmqModel, RmqVhosts} from "./model";
+import {RmqChannels, RmqConnections, RmqModel, RmqVhosts} from "./model";
 import {Transaction} from "../../server/transaction";
 import {static_cast} from "../../core/core";
 import {Admin} from "./admin";
@@ -26,6 +26,13 @@ export class RAdmin implements IRouter {
     @action(RmqConnections)
     async connections(trans: Transaction) {
         let m = this._pack<RmqConnections>(trans);
+        await RestSession.Fetch(m);
+        trans.submit();
+    }
+
+    @action(RmqChannels)
+    async channels(trans: Transaction) {
+        let m = this._pack<RmqChannels>(trans);
         await RestSession.Fetch(m);
         trans.submit();
     }
