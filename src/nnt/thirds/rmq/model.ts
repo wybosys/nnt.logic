@@ -103,6 +103,25 @@ export class RmqConsumer {
 }
 
 @model()
+export class RmqExchange {
+
+    @boolean(1, [output])
+    auto_delete: boolean;
+
+    @boolean(2, [output])
+    durable: boolean;
+
+    @boolean(3, [output])
+    internal: boolean;
+
+    @string(4, [output])
+    type: string;
+
+    @string(5, [output])
+    name: string;
+}
+
+@model()
 export class RmqModel extends Base {
 
     constructor() {
@@ -193,6 +212,20 @@ export class RmqConsumerModel extends RmqModel {
     }
 }
 
+@model([], RmqModel)
+export class RmqExchangeModel extends RmqModel {
+
+    requestUrl(): string {
+        let r = this.host;
+        r += '/exchanges';
+        if (this.vhost)
+            r += '/' + this.vhost;
+        if (this.api)
+            r += '/' + this.api;
+        return r;
+    }
+}
+
 @model()
 export class RmqVhosts extends RmqVHostModel {
 
@@ -236,4 +269,13 @@ export class RmqConsumers extends RmqConsumerModel {
 
     @array(1, RmqConsumer, [output])
     result: RmqConsumer[];
+}
+
+@model([], RmqExchangeModel)
+export class RmqExchanges extends RmqExchangeModel {
+
+    api = '';
+
+    @array(1, RmqExchange, [output])
+    result: RmqExchange[];
 }
