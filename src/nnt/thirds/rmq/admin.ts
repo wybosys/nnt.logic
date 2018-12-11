@@ -31,7 +31,7 @@ export class Admin extends Rest {
             return false;
         let arr = c.host.split(":");
         this.host = arr[0];
-        this.port = arr.length == 2 ? parseInt(arr[1]) : 5672;
+        this.port = arr.length == 2 ? parseInt(arr[1]) : 15672;
         this.user = c.user;
         this.password = c.password;
         return true;
