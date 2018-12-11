@@ -110,8 +110,8 @@ export class RAdmin implements IRouter {
                     let q = queues.result[i];
                     if (q.consumers == 0 && q.name.match(pat)) {
                         del.name = q.name;
-                        await RestSession.Get(del);
-                        ++m.deleted;
+                        if (await RestSession.Get(del))
+                            ++m.deleted;
                     }
                 }
             } else if (m.prefix) {
@@ -129,8 +129,8 @@ export class RAdmin implements IRouter {
                         let q = queues.result[i];
                         if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
                             del.name = q.name;
-                            await RestSession.Get(del);
-                            ++m.deleted;
+                            if (await RestSession.Get(del))
+                                ++m.deleted;
                         }
                     }
                 } else {
@@ -146,8 +146,8 @@ export class RAdmin implements IRouter {
                         query.name = del.name = m.prefix + (m.from + i);
                         if (await RestSession.Get(query)) {
                             if (query.result.consumers == 0) {
-                                await RestSession.Get(del);
-                                ++m.deleted;
+                                if (await RestSession.Get(del))
+                                    ++m.deleted;
                             }
                         }
                     }
@@ -182,8 +182,8 @@ export class RAdmin implements IRouter {
                     let q = queues.result[i];
                     if (q.name.match(pat)) {
                         purge.name = q.name;
-                        await RestSession.Get(purge);
-                        ++m.purged;
+                        if (await RestSession.Get(purge))
+                            ++m.purged;
                     }
                 }
             } else if (m.prefix) {
@@ -201,8 +201,8 @@ export class RAdmin implements IRouter {
                         let q = queues.result[i];
                         if (q.name.indexOf(m.prefix) == 0) {
                             purge.name = q.name;
-                            await RestSession.Get(purge);
-                            ++m.purged;
+                            if (await RestSession.Get(purge))
+                                ++m.purged;
                         }
                     }
                 } else {
@@ -213,8 +213,8 @@ export class RAdmin implements IRouter {
                     // 不需要判断存在与否，直接purge
                     for (let i = 0; i < m.length; ++i) {
                         purge.name = m.prefix + (m.from + i);
-                        await RestSession.Get(purge);
-                        ++m.purged;
+                        if (await RestSession.Get(purge))
+                            ++m.purged;
                     }
                 }
             }
