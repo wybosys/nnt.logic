@@ -91,6 +91,7 @@ export class RAdmin implements IRouter {
 
             // 获得所有的队列
             let queues = this._pack(trans, new RmqQueues());
+            queues.vhost = m.vhost;
             await RestSession.Fetch(queues);
 
             // 遍历符合规则的queues，并删除
@@ -122,6 +123,7 @@ export class RAdmin implements IRouter {
 
             // 获得所有的队列
             let queues = this._pack(trans, new RmqQueues());
+            queues.vhost = m.vhost;
             await RestSession.Fetch(queues);
 
             // 遍历符合规则的queues，并删除
