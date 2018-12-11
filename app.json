@@ -91,6 +91,15 @@
       "enable": "distribution"
     },
     {
+      "id": "amqp-admin",
+      "host": "develop.91egame.com",
+      "vhost": "sample",
+      "user": "sample",
+      "password": "sample",
+      "entry": "nnt.server.Amqpmq",
+      "enable": "debug"
+    },
+    {
       "id": "media",
       "host": "http://localhost:8090/",
       "entry": "nnt.server.Remote",
