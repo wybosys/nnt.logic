@@ -160,16 +160,38 @@ export class RmqModel extends Base {
                 r.fields['columns'] = columns.join(',');
         }
 
+        if (this.filter) {
+            r.fields['name'] = this.filter;
+            r.fields['use_regex'] = this.regex_filter;
+        }
+
+        if (this.page) {
+            r.fields['page'] = this.page;
+            r.fields['page_size'] = this.page_size;
+            r.fields['pagination'] = true;
+        }
+
         return r;
     }
 
     parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
-        data.body = {
-            data: {
-                result: data.body
-            },
-            code: 0
-        };
+        if (this.page) {
+            this.page_count = data.body.page_count;
+            this.total_count = data.body.total_count;
+            data.body = {
+                data: {
+                    result: data.body.items
+                },
+                code: 0
+            };
+        } else {
+            data.body = {
+                data: {
+                    result: data.body
+                },
+                code: 0
+            };
+        }
         super.parseData(data, parser, suc, error);
     }
 
@@ -189,11 +211,29 @@ export class RmqModel extends Base {
         return p.join('/');
     }
 
+    @string(1, [input, optional])
+    vhost: string;
+
     // 当前模型使用的api
     api: string;
 
-    @string(1, [input, optional])
-    vhost: string;
+    // 当前的页数
+    page: number;
+
+    // 单页容量
+    page_size: number = 100;
+
+    // 过滤用的字段
+    filter: string;
+
+    // 过滤是否时正则表达式
+    regex_filter: boolean = false;
+
+    // 一共有多少页
+    page_count: number;
+
+    // 一共的数量
+    total_count: number;
 }
 
 @model([], RmqModel)
