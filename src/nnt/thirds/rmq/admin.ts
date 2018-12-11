@@ -1,12 +1,8 @@
 import {Rest} from "../../server/rest";
 import {Node} from "../../config/config";
-import {IRouter} from "../../core/router";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
-
-class RAdmin implements IRouter {
-    action = "rmqadmin";
-}
+import {RAdmin} from "./radmin";
 
 interface AdminConfig {
     host: string;
