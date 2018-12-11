@@ -1,5 +1,5 @@
-import {Base, HttpMethod, ModelError, ResponseData} from "../../session/model";
-import {array, boolean, integer, model, output, string} from "../../core/proto";
+import {Base, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
+import {array, boolean, input, integer, model, optional, output, string} from "../../core/proto";
 import {AbstractParser} from "../../server/parser/parser";
 import {STATUS} from "../../core/models";
 
@@ -23,6 +23,28 @@ export class RmqVHost {
 }
 
 @model()
+export class RmqConnection {
+
+    @integer(1, [output])
+    channels: number;
+
+    @integer(2, [output])
+    channel_max: number;
+
+    @string(3, [output])
+    host: string;
+
+    @string(4, [output])
+    name: string;
+
+    @string(5, [output])
+    node: string;
+
+    @string(6, [output])
+    state: string;
+}
+
+@model()
 export class RmqModel extends Base {
 
     constructor() {
@@ -31,7 +53,15 @@ export class RmqModel extends Base {
     }
 
     requestUrl(): string {
-        return this.host + this.api;
+        let r = this.host;
+        if (this.vhost)
+            r += '/vhosts/' + this.vhost;
+        r += '/' + this.api;
+        return r;
+    }
+
+    requestParams(): RequestParams {
+        return new RequestParams();
     }
 
     parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
@@ -49,6 +79,9 @@ export class RmqModel extends Base {
     }
 
     api: string;
+
+    @string(1, [input, optional])
+    vhost: string;
 }
 
 @model()
@@ -60,8 +93,13 @@ export class RmqVhosts extends RmqModel {
     result: RmqVHost[];
 }
 
-export class RmqConnections {
+@model([], RmqModel)
+export class RmqConnections extends RmqModel {
 
+    api = 'connections';
+
+    @array(1, RmqConnection, [output])
+    result: RmqConnection[];
 }
 
 export class RmqChannels {

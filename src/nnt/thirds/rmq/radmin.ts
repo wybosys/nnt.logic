@@ -1,5 +1,5 @@
 import {action, IRouter} from "../../core/router";
-import {RmqModel, RmqVhosts} from "./model";
+import {RmqConnections, RmqModel, RmqVhosts} from "./model";
 import {Transaction} from "../../server/transaction";
 import {static_cast} from "../../core/core";
 import {Admin} from "./admin";
@@ -19,6 +19,13 @@ export class RAdmin implements IRouter {
     @action(RmqVhosts)
     async vhosts(trans: Transaction) {
         let m = this._pack<RmqVhosts>(trans);
+        await RestSession.Fetch(m);
+        trans.submit();
+    }
+
+    @action(RmqConnections)
+    async connections(trans: Transaction) {
+        let m = this._pack<RmqConnections>(trans);
         await RestSession.Fetch(m);
         trans.submit();
     }
@@ -47,11 +54,11 @@ export class RAdmin implements IRouter {
         let m: T = trans.model;
         if (trans.server instanceof Admin) {
             let srv = static_cast<Admin>(trans.server);
-            m.host = 'http://' + srv.host + ':' + srv.port + '/api/';
+            m.host = 'http://' + srv.host + ':' + srv.port + '/api';
             m.user = srv.user;
             m.passwd = srv.password;
         } else {
-            m.host = 'http://' + this.host + ':' + this.port + '/api/';
+            m.host = 'http://' + this.host + ':' + this.port + '/api';
             m.user = this.user;
             m.passwd = this.password;
         }
