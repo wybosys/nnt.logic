@@ -43,6 +43,7 @@ export class RAdmin implements IRouter {
 
     // 填充模型基础数据
     protected _pack<T extends RmqModel>(trans: Transaction): T {
+        trans.timeout(-1);
         let m: T = trans.model;
         if (trans.server instanceof Admin) {
             let srv = static_cast<Admin>(trans.server);
