@@ -181,6 +181,11 @@ export class RmqModel extends Base {
                 continue;
             p.push(encodeURIComponent(t[k]));
         }
+        if (this.additionParams) {
+            for (let k in this.additionParams) {
+                p.push(encodeURIComponent(this.additionParams[k]));
+            }
+        }
         return p.join('/');
     }
 
@@ -323,6 +328,18 @@ export class RmqDeleteQueue extends RmqQueueModel {
     name: string;
 }
 
+@model([auth], RmqQueueModel)
+export class RmqPurgeQueue extends RmqQueueModel {
+
+    api = '';
+    method = HttpMethod.DELETE;
+    responseType = HttpContentType.MANUAL;
+    additionParams = ['contents'];
+
+    @string(1, [input])
+    name: string;
+}
+
 @model([])
 export class RmqDeleteNoConsumerQueues {
 
@@ -334,4 +351,17 @@ export class RmqDeleteNoConsumerQueues {
 
     @integer(3, [output])
     deleted: number = 0;
+}
+
+@model([])
+export class RmqPurgeQueues {
+
+    @string(1, [input])
+    vhost: string;
+
+    @string(2, [input])
+    pattern: string;
+
+    @integer(3, [output])
+    purged: number = 0;
 }
