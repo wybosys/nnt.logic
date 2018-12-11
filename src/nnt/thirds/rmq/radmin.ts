@@ -115,7 +115,7 @@ export class RAdmin implements IRouter {
                     }
                 }
             } else if (m.prefix) {
-                if (m.from === null) {
+                if (m.from == null) {
                     // 获得所有的队列
                     let queues = this._pack(trans, new RmqQueues());
                     queues.vhost = m.vhost;
@@ -172,6 +172,8 @@ export class RAdmin implements IRouter {
                 // 获得所有的队列
                 let queues = this._pack(trans, new RmqQueues());
                 queues.vhost = m.vhost;
+                queues.filter = m.pattern;
+                queues.regex_filter = true;
 
                 // 分页处理数据
                 queues.page = 1;
@@ -196,10 +198,11 @@ export class RAdmin implements IRouter {
                     queues.page += 1;
                 }
             } else if (m.prefix) {
-                if (m.from === null) {
+                if (m.from == null) {
                     // 获得所有的队列
                     let queues = this._pack(trans, new RmqQueues());
                     queues.vhost = m.vhost;
+                    queues.filter = m.prefix;
 
                     // 分页处理数据
                     queues.page = 1;
