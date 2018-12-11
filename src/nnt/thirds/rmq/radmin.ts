@@ -172,25 +172,11 @@ export class RAdmin implements IRouter {
                 // 获得所有的队列
                 let queues = this._pack(trans, new RmqQueues());
                 queues.vhost = m.vhost;
-                await RestSession.Fetch(queues);
 
-                // 遍历符合规则的queues，并删除
-                let purge = this._pack(trans, new RmqPurgeQueue());
-                purge.vhost = m.vhost;
-
-                for (let i = 0, l = queues.result.length; i < l; ++i) {
-                    let q = queues.result[i];
-                    if (q.name.match(pat)) {
-                        purge.name = q.name;
-                        if (await RestSession.Get(purge))
-                            ++m.purged;
-                    }
-                }
-            } else if (m.prefix) {
-                if (m.from === null) {
-                    // 获得所有的队列
-                    let queues = this._pack(trans, new RmqQueues());
-                    queues.vhost = m.vhost;
+                // 分页处理数据
+                queues.page = 1;
+                queues.page_count = 999;
+                while (queues.page <= queues.page_count) {
                     await RestSession.Fetch(queues);
 
                     // 遍历符合规则的queues，并删除
@@ -199,11 +185,43 @@ export class RAdmin implements IRouter {
 
                     for (let i = 0, l = queues.result.length; i < l; ++i) {
                         let q = queues.result[i];
-                        if (q.name.indexOf(m.prefix) == 0) {
+                        if (q.name.match(pat)) {
                             purge.name = q.name;
                             if (await RestSession.Get(purge))
                                 ++m.purged;
                         }
+                    }
+
+                    // 下一页
+                    queues.page += 1;
+                }
+            } else if (m.prefix) {
+                if (m.from === null) {
+                    // 获得所有的队列
+                    let queues = this._pack(trans, new RmqQueues());
+                    queues.vhost = m.vhost;
+
+                    // 分页处理数据
+                    queues.page = 1;
+                    queues.page_count = 999;
+                    while (queues.page <= queues.page_count) {
+                        await RestSession.Fetch(queues);
+
+                        // 遍历符合规则的queues，并删除
+                        let purge = this._pack(trans, new RmqPurgeQueue());
+                        purge.vhost = m.vhost;
+
+                        for (let i = 0, l = queues.result.length; i < l; ++i) {
+                            let q = queues.result[i];
+                            if (q.name.indexOf(m.prefix) == 0) {
+                                purge.name = q.name;
+                                if (await RestSession.Get(purge))
+                                    ++m.purged;
+                            }
+                        }
+
+                        // 下一页
+                        queues.page += 1;
                     }
                 } else {
                     // 遍历符合规则的queues，并删除
