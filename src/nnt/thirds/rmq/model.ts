@@ -1,5 +1,5 @@
 import {Base, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
-import {array, boolean, GetAllFields, input, integer, model, optional, output, string} from "../../core/proto";
+import {array, boolean, GetAllFields, input, integer, model, optional, output, string, type} from "../../core/proto";
 import {AbstractParser} from "../../server/parser/parser";
 import {STATUS} from "../../core/models";
 import {AnyClass} from "../../core/kernel";
@@ -93,6 +93,16 @@ export class RmqQueue {
 }
 
 @model()
+export class RmqConsumer {
+
+    @string(1, [output])
+    consumer_tag: string;
+
+    @type(2, RmqQueue, [output])
+    queue: RmqQueue;
+}
+
+@model()
 export class RmqModel extends Base {
 
     constructor() {
@@ -169,6 +179,20 @@ export class RmqQueueModel extends RmqModel {
     }
 }
 
+@model([], RmqModel)
+export class RmqConsumerModel extends RmqModel {
+
+    requestUrl(): string {
+        let r = this.host;
+        r += '/consumers';
+        if (this.vhost)
+            r += '/' + this.vhost;
+        if (this.api)
+            r += '/' + this.api;
+        return r;
+    }
+}
+
 @model()
 export class RmqVhosts extends RmqVHostModel {
 
@@ -205,6 +229,11 @@ export class RmqQueues extends RmqQueueModel {
     result: RmqQueue[];
 }
 
-export class RmqConsumers {
+@model([], RmqConsumerModel)
+export class RmqConsumers extends RmqConsumerModel {
 
+    api = '';
+
+    @array(1, RmqConsumer, [output])
+    result: RmqConsumer[];
 }
