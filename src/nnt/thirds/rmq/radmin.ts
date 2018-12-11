@@ -175,14 +175,14 @@ export class RAdmin implements IRouter {
                 await RestSession.Fetch(queues);
 
                 // 遍历符合规则的queues，并删除
-                let del = this._pack(trans, new RmqPurgeQueue());
-                del.vhost = m.vhost;
+                let purge = this._pack(trans, new RmqPurgeQueue());
+                purge.vhost = m.vhost;
 
                 for (let i = 0, l = queues.result.length; i < l; ++i) {
                     let q = queues.result[i];
                     if (q.name.match(pat)) {
-                        del.name = q.name;
-                        await RestSession.Get(del);
+                        purge.name = q.name;
+                        await RestSession.Get(purge);
                         ++m.purged;
                     }
                 }
@@ -194,14 +194,14 @@ export class RAdmin implements IRouter {
                     await RestSession.Fetch(queues);
 
                     // 遍历符合规则的queues，并删除
-                    let del = this._pack(trans, new RmqPurgeQueue());
-                    del.vhost = m.vhost;
+                    let purge = this._pack(trans, new RmqPurgeQueue());
+                    purge.vhost = m.vhost;
 
                     for (let i = 0, l = queues.result.length; i < l; ++i) {
                         let q = queues.result[i];
                         if (q.name.indexOf(m.prefix) == 0) {
-                            del.name = q.name;
-                            await RestSession.Get(del);
+                            purge.name = q.name;
+                            await RestSession.Get(purge);
                             ++m.purged;
                         }
                     }
