@@ -340,7 +340,7 @@ export class RmqPurgeQueue extends RmqQueueModel {
     name: string;
 }
 
-@model([])
+@model([auth])
 export class RmqDeleteNoConsumerQueues {
 
     @string(1, [input])
@@ -353,7 +353,7 @@ export class RmqDeleteNoConsumerQueues {
     deleted: number = 0;
 }
 
-@model([])
+@model([auth])
 export class RmqPurgeQueues {
 
     @string(1, [input])
