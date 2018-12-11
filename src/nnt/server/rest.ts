@@ -195,6 +195,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 return false;
             }
         }
+
+        // 读取配置文件中配置的router
         if (c.router) {
             if (c.router instanceof Array) {
                 for (let i = 0; i < c.router.length; ++i) {

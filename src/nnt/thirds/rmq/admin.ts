@@ -6,7 +6,6 @@ import {RAdmin} from "./radmin";
 
 interface AdminConfig {
     host: string;
-    port: number;
     user: string;
     password: string;
 }

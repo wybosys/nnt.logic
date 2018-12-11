@@ -82,6 +82,10 @@ export abstract class Base {
     // 返回数据的格式
     responseType: HttpContentType = HttpContentType.JSON;
 
+    // 协议层授权
+    user: string;
+    passwd: string;
+
     // 组装请求的url
     abstract requestUrl(): string;
 
@@ -139,12 +143,10 @@ export abstract class Base {
             msg += "错误码:" + this.code;
             let err = new ModelError(this.code, msg);
             error(err);
-        }
-        else {
+        } else {
             try {
                 suc();
-            }
-            catch (err) {
+            } catch (err) {
                 error(new ModelError(STATUS.EXCEPTION, err.message));
             }
         }

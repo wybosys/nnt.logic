@@ -25,8 +25,7 @@ export class Rest extends Session {
         // 添加devops的参数
         if (Permissions) {
             url += '&' + KEY_PERMISSIONID + '=' + Permissions.id;
-        }
-        else if (Config.LOCAL) {
+        } else if (Config.LOCAL) {
             url += '&' + KEY_SKIPPERMISSION + "=1";
         }
 
@@ -57,15 +56,19 @@ export class Rest extends Session {
 
             // 发起请求
             logger.log("S2S:" + url);
-            request.get(url, (err, resp, body) => {
+            let data: request.CoreOptions & request.UrlOptions = {
+                url: url
+            };
+            let req = request.get(data, (err, resp, body) => {
                 if (err) {
                     cberr && cberr(err);
                 } else {
                     ProcessResponse(resp, parser, m, cbsuc, cberr);
                 }
             });
-        }
-        else {
+            if (m.user)
+                req.auth(m.user, m.passwd);
+        } else {
             let data: request.CoreOptions & request.UrlOptions = {
                 url: url,
                 headers: {}
@@ -79,8 +82,7 @@ export class Rest extends Session {
                 data.body = f.end();
                 if (files.length)
                     logger.warn("暂时不支持xml的请求附带文件");
-            }
-            else if (m.requestType == HttpContentType.JSON) {
+            } else if (m.requestType == HttpContentType.JSON) {
                 data.headers['Content-Type'] = "application/json";
                 if (files.length) {
                     let form: IndexedObject = {};
@@ -104,8 +106,7 @@ export class Rest extends Session {
                 } else {
                     data.body = toJson(params.fields);
                 }
-            }
-            else {
+            } else {
                 if (files.length) {
                     data.headers['Content-Type'] = "multipart/form-data";
                     let form: IndexedObject = {};
@@ -131,7 +132,7 @@ export class Rest extends Session {
                     data.form = params.fields;
                 }
             }
-            request.post(data, (err, resp, body) => {
+            let req = request.post(data, (err, resp, body) => {
                 if (err) {
                     cberr && cberr(err);
                 } else {
@@ -139,6 +140,8 @@ export class Rest extends Session {
                     ProcessResponse(resp, parser, m, cbsuc, cberr);
                 }
             });
+            if (m.user)
+                req.auth(m.user, m.passwd);
         }
     }
 }
@@ -166,8 +169,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
         }, e => {
             err && err(e);
         });
-    }
-    else if (m.responseType == HttpContentType.XML) {
+    } else if (m.responseType == HttpContentType.XML) {
         xml2js.parseString(resp.body, (e, result) => {
             if (e) {
                 err && err(e);
@@ -180,8 +182,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
                 err && err(e);
             });
         });
-    }
-    else {
+    } else {
         m.parseData(rd, parser, () => {
             suc && suc(m);
         }, e => {

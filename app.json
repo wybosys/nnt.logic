@@ -28,9 +28,8 @@
         },
         "nnt.thirds.rmq.RAdmin": {
           "host": "develop.91egame.com",
-          "vhost": "sample",
-          "user": "sample",
-          "password": "sample"
+          "user": "root",
+          "password": "root"
         }
       }
     },

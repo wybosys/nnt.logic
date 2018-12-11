@@ -70,7 +70,7 @@ export class STATUS {
     static OVERFLOW = -977; // 数据溢出
     static AUTH_EXPIRED = -976; // 授权过期
     static SIGNATURE_ERROR = -975; // 签名错误
-    static FORMAT_ERROR = -974; 
+    static FORMAT_ERROR = -974;  // 返回的数据格式错误
 
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
