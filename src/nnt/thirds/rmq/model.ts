@@ -62,19 +62,42 @@ export class RmqChannel {
 }
 
 @model()
+export class RmqQueue {
+
+    @integer(1, [output])
+    consumers: number;
+
+    @boolean(2, [output])
+    auto_delete: boolean;
+
+    @boolean(3, [output])
+    durable: boolean;
+
+    @boolean(4, [output])
+    exclusive: boolean;
+
+    @integer(5, [output])
+    messages: number;
+
+    @integer(6, [output])
+    messages_ready: number;
+
+    @integer(7, [output])
+    messages_unacknowledged: number;
+
+    @string(8, [output])
+    name: string;
+
+    @string(9, [output])
+    state: string;
+}
+
+@model()
 export class RmqModel extends Base {
 
     constructor() {
         super();
         this.method = HttpMethod.GET;
-    }
-
-    requestUrl(): string {
-        let r = this.host;
-        if (this.vhost)
-            r += '/vhosts/' + this.vhost;
-        r += '/' + this.api;
-        return r;
     }
 
     requestParams(): RequestParams {
@@ -90,7 +113,7 @@ export class RmqModel extends Base {
                 columns.push(key);
             }
         }
-        if (columns)
+        if (columns.length)
             r.fields['columns'] = columns.join(',');
         return r;
     }
@@ -109,14 +132,45 @@ export class RmqModel extends Base {
         super.parseData(data, parser, suc, error);
     }
 
+    requestUrl(): string {
+        return null;
+    }
+
+    // 当前模型使用的api
     api: string;
 
     @string(1, [input, optional])
     vhost: string;
 }
 
+@model([], RmqModel)
+export class RmqVHostModel extends RmqModel {
+
+    requestUrl(): string {
+        let r = this.host;
+        if (this.vhost)
+            r += '/vhosts/' + this.vhost;
+        r += '/' + this.api;
+        return r;
+    }
+}
+
+@model([], RmqModel)
+export class RmqQueueModel extends RmqModel {
+
+    requestUrl(): string {
+        let r = this.host;
+        r += '/queues';
+        if (this.vhost)
+            r += '/' + this.vhost;
+        if (this.api)
+            r += '/' + this.api;
+        return r;
+    }
+}
+
 @model()
-export class RmqVhosts extends RmqModel {
+export class RmqVhosts extends RmqVHostModel {
 
     api = 'vhosts';
 
@@ -124,8 +178,8 @@ export class RmqVhosts extends RmqModel {
     result: RmqVHost[];
 }
 
-@model([], RmqModel)
-export class RmqConnections extends RmqModel {
+@model([], RmqVHostModel)
+export class RmqConnections extends RmqVHostModel {
 
     api = 'connections';
 
@@ -133,8 +187,8 @@ export class RmqConnections extends RmqModel {
     result: RmqConnection[];
 }
 
-@model([], RmqModel)
-export class RmqChannels extends RmqModel {
+@model([], RmqVHostModel)
+export class RmqChannels extends RmqVHostModel {
 
     api = 'channels';
 
@@ -142,8 +196,13 @@ export class RmqChannels extends RmqModel {
     result: RmqChannel[];
 }
 
-export class RmqQueues {
+@model([], RmqQueueModel)
+export class RmqQueues extends RmqQueueModel {
 
+    api = '';
+
+    @array(1, RmqQueue, [output])
+    result: RmqQueue[];
 }
 
 export class RmqConsumers {
