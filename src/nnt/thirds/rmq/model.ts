@@ -13,7 +13,6 @@ import {
     type
 } from "../../core/proto";
 import {AbstractParser} from "../../server/parser/parser";
-import {STATUS} from "../../core/models";
 import {AnyClass} from "../../core/kernel";
 
 @model()
@@ -313,7 +312,7 @@ export class RmqExchanges extends RmqExchangeModel {
 }
 
 
-@model([], RmqQueueModel)
+@model([auth], RmqQueueModel)
 export class RmqDeleteQueue extends RmqQueueModel {
 
     api = '';
@@ -322,4 +321,17 @@ export class RmqDeleteQueue extends RmqQueueModel {
 
     @string(1, [input])
     name: string;
+}
+
+@model([])
+export class RmqDeleteNoConsumerQueues {
+
+    @string(1, [input])
+    vhost: string;
+
+    @string(2, [input])
+    pattern: string;
+
+    @integer(3, [output])
+    deleted: number = 0;
 }

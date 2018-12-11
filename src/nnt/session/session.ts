@@ -1,4 +1,5 @@
 import {Base, ModelError} from "./model";
+import {logger} from "../core/logger";
 
 export type SuccessCallback<T> = (m: T) => void;
 export type ErrorCallBack = (err: ModelError, resp?: any) => void;
@@ -27,6 +28,7 @@ export abstract class Session {
             this.shared.fetch(m, m => {
                 resolve(m);
             }, err => {
+                logger.log(err.message);
                 resolve(null);
             });
         });

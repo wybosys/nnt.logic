@@ -2,7 +2,7 @@ import {action, IRouter} from "../../core/router";
 import {
     RmqChannels,
     RmqConnections,
-    RmqConsumers,
+    RmqConsumers, RmqDeleteNoConsumerQueues,
     RmqDeleteQueue,
     RmqExchanges,
     RmqModel,
@@ -12,8 +12,9 @@ import {
 import {Transaction} from "../../server/transaction";
 import {static_cast} from "../../core/core";
 import {Admin} from "./admin";
-import {IndexedObject} from "../../core/kernel";
+import {ArrayT, IndexedObject} from "../../core/kernel";
 import {Rest as RestSession} from "../../session/rest";
+import {STATUS} from "../../core/models";
 
 interface AdminConfig {
     host: string;
@@ -74,6 +75,37 @@ export class RAdmin implements IRouter {
         trans.submit();
     }
 
+    @action(RmqDeleteNoConsumerQueues, [], "删除没有消费者的队列")
+    async delnoconsumerqueues(trans: Transaction) {
+        trans.timeout(-1);
+        let m: RmqDeleteNoConsumerQueues = trans.model;
+        try {
+            let pat = new RegExp(m.pattern);
+
+            // 获得所有的队列
+            let queues = this._pack(trans, new RmqQueues());
+            await RestSession.Fetch(queues);
+
+            // 遍历符合规则的queues，并删除
+            let del = this._pack(trans, new RmqDeleteQueue());
+            del.vhost = m.vhost;
+            
+            for (let i = 0, l = queues.result.length; i < l; ++i) {
+                let q = queues.result[i];
+                if (q.consumers == 0 && q.name.match(pat)) {
+                    del.name = q.name;
+                    await RestSession.Get(del);
+                    ++m.deleted;
+                }
+            }
+
+        } catch (err) {
+            trans.status = STATUS.EXCEPTION;
+            trans.message = err.message;
+        }
+        trans.submit();
+    }
+
     // 独立配置
     config(cfg: IndexedObject): boolean {
         let c = static_cast<AdminConfig>(cfg);
@@ -93,9 +125,9 @@ export class RAdmin implements IRouter {
     password: string;
 
     // 填充模型基础数据
-    protected _pack<T extends RmqModel>(trans: Transaction): T {
+    protected _pack<T extends RmqModel>(trans: Transaction, mdl?: T): T {
         trans.timeout(-1);
-        let m: T = trans.model;
+        let m: T = mdl ? mdl : trans.model;
         if (trans.server instanceof Admin) {
             let srv = static_cast<Admin>(trans.server);
             m.host = 'http://' + srv.host + ':' + srv.port + '/api';
