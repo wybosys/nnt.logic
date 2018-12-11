@@ -1,5 +1,14 @@
 import {action, IRouter} from "../../core/router";
-import {RmqChannels, RmqConnections, RmqConsumers, RmqExchanges, RmqModel, RmqQueues, RmqVhosts} from "./model";
+import {
+    RmqChannels,
+    RmqConnections,
+    RmqConsumers,
+    RmqDeleteQueue,
+    RmqExchanges,
+    RmqModel,
+    RmqQueues,
+    RmqVhosts
+} from "./model";
 import {Transaction} from "../../server/transaction";
 import {static_cast} from "../../core/core";
 import {Admin} from "./admin";
@@ -54,6 +63,13 @@ export class RAdmin implements IRouter {
     @action(RmqExchanges)
     async exchanges(trans: Transaction) {
         let m = this._pack<RmqExchanges>(trans);
+        await RestSession.Fetch(m);
+        trans.submit();
+    }
+
+    @action(RmqDeleteQueue)
+    async delqueue(trans: Transaction) {
+        let m = this._pack<RmqDeleteQueue>(trans);
         await RestSession.Fetch(m);
         trans.submit();
     }

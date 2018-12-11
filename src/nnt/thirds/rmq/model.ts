@@ -1,8 +1,8 @@
-import {Base, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
+import {Base, HttpContentType, HttpMethod, ModelError, RequestParams, ResponseData} from "../../session/model";
 import {
     array,
     auth,
-    boolean,
+    boolean, Encode,
     GetAllFields,
     input,
     integer,
@@ -139,42 +139,50 @@ export class RmqModel extends Base {
     constructor() {
         super();
         this.method = HttpMethod.GET;
+        this.logic = false;
     }
 
     requestParams(): RequestParams {
         let r = new RequestParams();
+
         // 获取所有用来输出的
         let fps = GetAllFields(this);
         let fp = fps['result'];
-        fps = GetAllFields((<AnyClass>fp.valtype).prototype);
-        let columns = [];
-        for (let key in fps) {
-            let fp = fps[key];
-            if (fp.output) {
-                columns.push(key);
+        if (fp) {
+            fps = GetAllFields((<AnyClass>fp.valtype).prototype);
+            let columns = [];
+            for (let key in fps) {
+                let fp = fps[key];
+                if (fp.output) {
+                    columns.push(key);
+                }
             }
+            if (columns.length)
+                r.fields['columns'] = columns.join(',');
         }
-        if (columns.length)
-            r.fields['columns'] = columns.join(',');
+
         return r;
     }
 
     parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
-        if (data.code == 200) {
-            data.body = {
-                data: {
-                    result: data.body
-                },
-                code: 0
-            };
-        } else {
-            data.code = STATUS.THIRD_FAILED;
-        }
+        data.body = {
+            data: {
+                result: data.body
+            },
+            code: 0
+        };
         super.parseData(data, parser, suc, error);
     }
 
     requestUrl(): string {
-        return null;
+        let t = Encode(this);
+        let p = [];
+        for (let k in t) {
+            if (k == 'vhost')
+                continue;
+            p.push(encodeURIComponent(t[k]));
+        }
+        return p.join('/');
     }
 
     // 当前模型使用的api
@@ -192,6 +200,9 @@ export class RmqVHostModel extends RmqModel {
         if (this.vhost)
             r += '/vhosts/' + this.vhost;
         r += '/' + this.api;
+        let suf = super.requestUrl();
+        if (suf.length)
+            r += '/' + suf;
         return r;
     }
 }
@@ -206,6 +217,9 @@ export class RmqQueueModel extends RmqModel {
             r += '/' + this.vhost;
         if (this.api)
             r += '/' + this.api;
+        let suf = super.requestUrl();
+        if (suf.length)
+            r += '/' + suf;
         return r;
     }
 }
@@ -220,6 +234,9 @@ export class RmqConsumerModel extends RmqModel {
             r += '/' + this.vhost;
         if (this.api)
             r += '/' + this.api;
+        let suf = super.requestUrl();
+        if (suf.length)
+            r += '/' + suf;
         return r;
     }
 }
@@ -234,6 +251,9 @@ export class RmqExchangeModel extends RmqModel {
             r += '/' + this.vhost;
         if (this.api)
             r += '/' + this.api;
+        let suf = super.requestUrl();
+        if (suf.length)
+            r += '/' + suf;
         return r;
     }
 }
@@ -290,4 +310,16 @@ export class RmqExchanges extends RmqExchangeModel {
 
     @array(1, RmqExchange, [output])
     result: RmqExchange[];
+}
+
+
+@model([], RmqQueueModel)
+export class RmqDeleteQueue extends RmqQueueModel {
+
+    api = '';
+    method = HttpMethod.DELETE;
+    responseType = HttpContentType.MANUAL;
+
+    @string(1, [input])
+    name: string;
 }

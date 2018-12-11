@@ -19,13 +19,15 @@ import {Null, STATUS} from "../core/models";
 export enum HttpMethod {
     GET,
     POST,
+    PUT,
+    DELETE
 }
 
 export enum HttpContentType {
     MANUAL, // 手动处理
     URLENCODED,
     JSON,
-    XML,
+    XML
 }
 
 export class RequestParams {
@@ -81,6 +83,9 @@ export abstract class Base {
 
     // 返回数据的格式
     responseType: HttpContentType = HttpContentType.JSON;
+
+    // 使用logic架构规范
+    logic: boolean = true;
 
     // 协议层授权
     user: string;

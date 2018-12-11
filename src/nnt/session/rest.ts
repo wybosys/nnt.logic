@@ -1,15 +1,15 @@
 import {ErrorCallBack, Session, SuccessCallback} from "./session";
-import {Base, HttpContentType, HttpMethod, ResponseData, ModelError} from "./model";
+import {Base, HttpContentType, HttpMethod, ModelError, ResponseData} from "./model";
 import {logger} from "../core/logger";
 import {IndexedObject, ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
 import {AbstractParser, FindParser} from "../server/parser/parser";
+import {STATUS} from "../core/models";
+import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "../server/devops/permissions";
+import {Config} from "../manager/config";
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
 import fs = require("fs");
 import request = require("request");
-import {STATUS} from "../core/models";
-import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "../server/devops/permissions";
-import {Config} from "../manager/config";
 
 export class Rest extends Session {
 
@@ -19,15 +19,6 @@ export class Rest extends Session {
     // 获取一个模型
     fetch<T extends Base>(m: T, cbsuc: SuccessCallback<T>, cberr: ErrorCallBack) {
         let url = m.requestUrl();
-        if (url.indexOf("?") == -1)
-            url += "?/";
-
-        // 添加devops的参数
-        if (Permissions) {
-            url += '&' + KEY_PERMISSIONID + '=' + Permissions.id;
-        } else if (Config.LOCAL) {
-            url += '&' + KEY_SKIPPERMISSION + "=1";
-        }
 
         // 所有请求参数
         let params = m.requestParams();
@@ -43,7 +34,21 @@ export class Rest extends Session {
             m.method = HttpMethod.POST; // 含有文件的必须走post
 
         // 根据post和get分别处理
-        if (m.method == HttpMethod.GET) {
+        if (m.method != HttpMethod.POST) {
+            if (m.logic) {
+                // 保护url的结尾符
+                if (url.indexOf("?") == -1)
+                    url += "?/";
+
+                // 添加devops的参数
+                if (Permissions) {
+                    url += '&' + KEY_PERMISSIONID + '=' + Permissions.id;
+                } else if (Config.LOCAL) {
+                    url += '&' + KEY_SKIPPERMISSION + "=1";
+                }
+            }
+
+            // 附加模型参数
             let p = [];
             for (let k in params.fields) {
                 let f = params.fields[k];
@@ -51,24 +56,55 @@ export class Rest extends Session {
                     f = toJson(f);
                 p.push(k + "=" + encodeURIComponent(f));
             }
-            if (p.length)
+            if (p.length) {
+                // 保护url的结尾符
+                if (url.indexOf("?") == -1)
+                    url += "?/";
+
                 url += "&" + p.join("&");
+            }
 
             // 发起请求
             logger.log("S2S:" + url);
             let data: request.CoreOptions & request.UrlOptions = {
                 url: url
             };
-            let req = request.get(data, (err, resp, body) => {
+            let cb: request.RequestCallback = (err, resp, body) => {
                 if (err) {
                     cberr && cberr(err);
                 } else {
                     ProcessResponse(resp, parser, m, cbsuc, cberr);
                 }
-            });
+            };
+            let req: request.Request;
+            switch (m.method) {
+                case HttpMethod.GET:
+                    req = request.get(data, cb);
+                    break;
+                case HttpMethod.PUT:
+                    req = request.put(data, cb);
+                    break;
+                case HttpMethod.DELETE:
+                    req = request.delete(data, cb);
+                    break;
+            }
             if (m.user)
                 req.auth(m.user, m.passwd);
         } else {
+            if (m.logic) {
+                // 保护url的结尾符
+                if (url.indexOf("?") == -1)
+                    url += "?/";
+
+                // 添加devops的参数
+                if (Permissions) {
+                    url += '&' + KEY_PERMISSIONID + '=' + Permissions.id;
+                } else if (Config.LOCAL) {
+                    url += '&' + KEY_SKIPPERMISSION + "=1";
+                }
+            }
+
+            // POST
             let data: request.CoreOptions & request.UrlOptions = {
                 url: url,
                 headers: {}
@@ -146,7 +182,7 @@ export class Rest extends Session {
     }
 }
 
-let SUCCESS = [200];
+let SUCCESS = [200, 204];
 
 function ProcessResponse<T extends Base>(resp: request.Response, parser: AbstractParser, m: T, suc: SuccessCallback<T>, err: ErrorCallBack) {
     if (SUCCESS.indexOf(resp.statusCode) == -1) {
