@@ -100,25 +100,13 @@ export class RAdmin implements IRouter {
                 // 获得所有的队列
                 let queues = this._pack(trans, new RmqQueues());
                 queues.vhost = m.vhost;
-                await RestSession.Fetch(queues);
+                queues.filter = m.pattern;
+                queues.regex_filter = true;
 
-                // 遍历符合规则的queues，并删除
-                let del = this._pack(trans, new RmqDeleteQueue());
-                del.vhost = m.vhost;
-
-                for (let i = 0, l = queues.result.length; i < l; ++i) {
-                    let q = queues.result[i];
-                    if (q.consumers == 0 && q.name.match(pat)) {
-                        del.name = q.name;
-                        if (await RestSession.Get(del))
-                            ++m.deleted;
-                    }
-                }
-            } else if (m.prefix) {
-                if (m.from == null) {
-                    // 获得所有的队列
-                    let queues = this._pack(trans, new RmqQueues());
-                    queues.vhost = m.vhost;
+                // 分页处理数据
+                queues.page = 1;
+                queues.page_count = 999;
+                while (queues.page <= queues.page_count) {
                     await RestSession.Fetch(queues);
 
                     // 遍历符合规则的queues，并删除
@@ -127,11 +115,44 @@ export class RAdmin implements IRouter {
 
                     for (let i = 0, l = queues.result.length; i < l; ++i) {
                         let q = queues.result[i];
-                        if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
+                        if (q.consumers == 0 && q.name.match(pat)) {
                             del.name = q.name;
                             if (await RestSession.Get(del))
                                 ++m.deleted;
                         }
+                    }
+
+                    // 下一页
+                    queues.page += 1;
+                }
+            } else if (m.prefix) {
+                if (m.from == null) {
+                    // 获得所有的队列
+                    let queues = this._pack(trans, new RmqQueues());
+                    queues.vhost = m.vhost;
+                    queues.filter = m.prefix;
+
+                    // 分页处理数据
+                    queues.page = 1;
+                    queues.page_count = 999;
+                    while (queues.page <= queues.page_count) {
+                        await RestSession.Fetch(queues);
+
+                        // 遍历符合规则的queues，并删除
+                        let del = this._pack(trans, new RmqDeleteQueue());
+                        del.vhost = m.vhost;
+
+                        for (let i = 0, l = queues.result.length; i < l; ++i) {
+                            let q = queues.result[i];
+                            if (q.consumers == 0 && q.name.indexOf(m.prefix) == 0) {
+                                del.name = q.name;
+                                if (await RestSession.Get(del))
+                                    ++m.deleted;
+                            }
+                        }
+
+                        // 下一页
+                        queues.page += 1;
                     }
                 } else {
                     let del = this._pack(trans, new RmqDeleteQueue());
