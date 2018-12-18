@@ -1,7 +1,6 @@
 import {CancelRepeat, Repeat, RepeatHandler} from "../../nnt/core/time";
 import {logger} from "../../nnt/core/logger";
 import {Message} from "../model/sample";
-import {Acquire} from "../../nnt/server/mq";
 import {Multiplayers, Transaction} from "../../nnt/server/multiplayers";
 
 export class User {

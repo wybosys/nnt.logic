@@ -1,6 +1,14 @@
 import {User} from "./user";
+import {SObject} from "../../nnt/core/object";
+import {logger} from "../../nnt/core/logger";
 
-export class Manager {
+export class Manager extends SObject {
+
+    constructor() {
+        super();
+        this.signals.register('hello');
+        this.signals.connect('hello', this._cbHello, this);
+    }
 
     private static _shared: Manager;
 
@@ -13,5 +21,9 @@ export class Manager {
     private _user = new User();
     get user(): User {
         return this._user;
+    }
+
+    private _cbHello() {
+        logger.info("manager::hello");
     }
 }

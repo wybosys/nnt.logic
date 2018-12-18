@@ -12,10 +12,14 @@ import {SampleEcho} from "../model/framework-nntlogic-apis";
 import {Rest} from "../../nnt/session/rest";
 import {Sdks, SdkUserLogin, SdkUserVerify} from "../../nnt/thirds/sdks/sdks";
 import {Find} from "../../nnt/manager/servers";
-import {GetFieldInfos} from "../../nnt/store/proto";
+import {Manager} from "../manager/manager";
 
 export class RSample implements IRouter {
     action = "sample";
+
+    constructor() {
+        Manager.shared().signals.emit('hello');
+    }
 
     @action(Echoo)
     echo(trans: Trans) {
