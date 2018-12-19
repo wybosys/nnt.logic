@@ -86,9 +86,8 @@ export class Connector extends BaseConnector {
     }
 
     // mmo使用的基础mq通道
-    protected _mqA: IMQClient;
-    protected _mqB: IMQClient;
-    protected _mqC: IMQClient;
+    protected _mqOnline: IMQClient;
+    protected _mqDevice: IMQClient;
 
     // 客户端快速连接/断开会因为mq连接的异步性，导致客户端断开后才建立起mq通道，所以提供保护的连接
     protected async acquire(chann: string, opts: IndexedObject): Promise<IMQClient> {
@@ -116,27 +115,13 @@ export class Connector extends BaseConnector {
         logger.log("开始创建用户通道 " + this.userIdentifier);
         await Parellel()
             .async(async () => {
-                // 用户的持久性消息通道（通常用来投递关键消息)
-                let mq = await this.acquire("user." + this.userIdentifier, {
-                    durable: true,
-                    longliving: true
-                });
-                if (mq) {
-                    this._mqA = mq;
-                    mq.subscribe(data => {
-                        this.processData(data);
-                    });
-                    mq.receiver("users", true);
-                }
-            })
-            .async(async () => {
                 // 用户独立在线通道(下线时自动断开，用来投递即时消息)
                 let mq = await this.acquire("user.online." + this.userIdentifier, {
                     durable: false,
                     longliving: false
                 });
                 if (mq) {
-                    this._mqB = mq;
+                    this._mqOnline = mq;
                     // 清楚没有删掉的queue接受的数据
                     await mq.clear();
                     // 定于通知自己的消息
@@ -165,7 +150,7 @@ export class Connector extends BaseConnector {
             }).then(mq => {
                 if (!mq)
                     return;
-                this._mqC = mq;
+                this._mqDevice = mq;
                 mq.subscribe(data => {
                     this.processData(data);
                 });
@@ -261,25 +246,20 @@ export class Connector extends BaseConnector {
 
     // 连接断开，回收资源
     async unavaliable() {
-        if (this._mqA) {
-            this._mqA.unsubscribe();
-            this._mqA = null;
-        }
-
-        if (this._mqB) {
-            this._mqB.unsubscribe();
+        if (this._mqOnline) {
+            this._mqOnline.unsubscribe();
             if (!this.isSumdClosing)
-                this._mqB.close();
-            this._mqB = null;
+                this._mqOnline.close();
+            this._mqOnline = null;
         }
 
-        if (this._mqC) {
+        if (this._mqDevice) {
             // 取消普通得监听
-            this._mqC.unsubscribe();
+            this._mqDevice.unsubscribe();
 
             // 关闭连接
-            this._mqC.close();
-            this._mqC = null;
+            this._mqDevice.close();
+            this._mqDevice = null;
         }
 
         // 每一次连接成功都会重新建立监听，所以断开时需要清空

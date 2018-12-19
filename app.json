@@ -65,11 +65,6 @@
           "type": "fanout",
           "durable": false,
           "longliving": true
-        },
-        "users": {
-          "type": "fanout",
-          "durable": true,
-          "longliving": true
         }
       },
       "enable": "debug"
@@ -85,11 +80,6 @@
         "users.online": {
           "type": "fanout",
           "durable": false,
-          "longliving": true
-        },
-        "users": {
-          "type": "fanout",
-          "durable": true,
           "longliving": true
         }
       },
