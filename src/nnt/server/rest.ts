@@ -85,14 +85,12 @@ function TransactionSubmit(opt?: TransactionSubmitOption) {
                 pl.rsp.writeHead(500, ct);
                 pl.rsp.end();
                 logger.error(err);
-            }
-            else {
+            } else {
                 pl.rsp.writeHead(200, ct);
                 pl.rsp.end(zip);
             }
         });
-    }
-    else {
+    } else {
         pl.rsp.writeHead(200, ct);
         pl.rsp.end(buf);
     }
@@ -134,16 +132,14 @@ function TransactionOutput(type: string, obj: any) {
         } else {
             obj.readStream.pipe(pl.rsp);
         }
-    }
-    else if (obj instanceof Stream) {
+    } else if (obj instanceof Stream) {
         pl.rsp.writeHead(200, ct);
         if (self.gzip && !self.compressed) {
             obj.pipe(zlib.createGzip()).pipe(pl.rsp);
         } else {
             obj.pipe(pl.rsp);
         }
-    }
-    else {
+    } else {
         pl.rsp.writeHead(200, ct);
         if (self.gzip) {
             zlib.gzip(new Buffer(obj, 'utf8'), (err, zip) => {
@@ -186,11 +182,9 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
         if (this.https || this.http2) {
             if (Config.HTTPS_PFX) {
                 // pass
-            }
-            else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
+            } else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
                 // pass
-            }
-            else {
+            } else {
                 logger.warn("没有配置https的证书");
                 return false;
             }
@@ -205,13 +199,11 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                     if (!router) {
                         logger.warn("没有找到该实例类型 {{=it.clz}}", {clz: e});
                         return false;
-                    }
-                    else {
+                    } else {
                         this._routers.register(router);
                     }
                 }
-            }
-            else {
+            } else {
                 ObjectT.Foreach(c.router, (cfg, ent) => {
                     let router = App.shared().instanceEntry(ent);
                     if (!router || (router.config && !router.config(cfg))) {
@@ -247,8 +239,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             let cfg: IndexedObject = {};
             if (Config.HTTPS_PFX) {
                 cfg["pfx"] = fs.readFileSync(expand(Config.HTTPS_PFX));
-            }
-            else {
+            } else {
                 cfg["key"] = fs.readFileSync(expand(Config.HTTPS_KEY));
                 cfg["cert"] = fs.readFileSync(expand(Config.HTTPS_CERT));
             }
@@ -257,8 +248,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             this._hdl = https.createServer(cfg, (req, rsp) => {
                 this.doWorker(req, rsp);
             });
-        }
-        else if (this.http2) {
+        } else if (this.http2) {
             let cfg: IndexedObject = {
                 pfx: fs.readFileSync(expand(Config.HTTPS_PFX)),
                 spdy: {
@@ -276,8 +266,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             this._hdl = spdy.createServer((req, rsp) => {
                 this.doWorker(req, rsp);
             });
-        }
-        else {
+        } else {
             this._hdl = http.createServer((req, rsp) => {
                 this.doWorker(req, rsp);
             });
@@ -322,8 +311,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 let v = p[i++];
                 params[k] = v;
             }
-        }
-        else {
+        } else {
             let p = StringT.Split(url.pathname, '/');
             if (p.length >= 2) {
                 let r = p[p.length - 2];
@@ -347,8 +335,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                         params[key] = files[key];
                     this.invoke(params, req, rsp);
                 });
-            }
-            else {
+            } else {
                 req.setEncoding("utf8");
 
                 // 等所有参数恢复完成后，再调用业务逻辑
@@ -365,8 +352,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                     });
                 });
             }
-        }
-        else {
+        } else {
             this.invoke(params, req, rsp);
         }
     }
@@ -402,9 +388,10 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             if (req) {
                 let url = urlparse(req.url, true);
                 if ("_agent" in params)
-                    t.info.agent = params["_agent"];
+                    t.info.ua = <string>params["_agent"];
                 else
-                    t.info.agent = req.headers['user-agent'] as string;
+                    t.info.ua = <string>req.headers['user-agent'];
+                t.info.agent = t.info.ua.toLowerCase();
                 t.info.host = req.headers['host'];
                 t.info.origin = req.headers['origin'] as string;
                 t.info.referer = req.headers['referer'] as string;
@@ -429,8 +416,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             this.onBeforeInvoke(t);
             this.doInvoke(t, params, req, rsp, ac);
             this.onAfterInvoke(t);
-        }
-        catch (err) {
+        } catch (err) {
             logger.exception(err);
             t.status = STATUS.EXCEPTION;
             t.submit();
@@ -449,19 +435,16 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
             t.payload = {req: req, rsp: rsp};
             t.implSubmit = TransactionSubmit;
             t.implOutput = TransactionOutput;
-        }
-        else {
+        } else {
             t.implSubmit = ConsoleSubmit;
             t.implOutput = ConsoleOutput;
         }
 
         if (params["_listen"] == "1") {
             this._routers.listen(t);
-        }
-        else if (params["_listen"] == "2") {
+        } else if (params["_listen"] == "2") {
             this._routers.unlisten(t);
-        }
-        else {
+        } else {
             this._routers.process(t);
         }
     }

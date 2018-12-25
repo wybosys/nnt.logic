@@ -13,10 +13,17 @@ import {AbstractRender} from "./render/render";
 
 export const RESPONSE_SID = "X-NntLogic-SessionId";
 
+export enum DeviceType {
+    UNKNOWN = 0,
+    IOS = 1,
+    ANDROID = 2,
+}
+
 export class TransactionInfo {
 
-    // 客户端
-    agent: string;
+    // 客户端代码
+    agent: string; // 全小写
+    ua: string; // 原始ua
 
     // 访问的主机
     host: string;
@@ -28,6 +35,23 @@ export class TransactionInfo {
     // 来源
     referer: string;
     path: string;
+
+    // 设备机型
+    private _deviceType: DeviceType;
+    get deviceType(): DeviceType {
+        if (this._deviceType != null)
+            return this._deviceType;
+        if (this.agent.indexOf('iphone') != -1) {
+            this._deviceType = DeviceType.IOS;
+        } else if (this.agent.indexOf('ipad') != -1) {
+            this._deviceType = DeviceType.IOS;
+        } else if (this.agent.indexOf('android') != -1) {
+            this._deviceType = DeviceType.ANDROID;
+        } else {
+            this._deviceType = DeviceType.UNKNOWN;
+        }
+        return this._deviceType;
+    }
 }
 
 export interface TransactionSubmitOption {
@@ -134,8 +158,7 @@ export abstract class Transaction {
         this.model = new clz();
         try {
             this.parser.fill(this.model, this.params, true, false);
-        }
-        catch (err) {
+        } catch (err) {
             this.model = null;
             logger.fatal(err.toString());
             return STATUS.MODEL_ERROR;
