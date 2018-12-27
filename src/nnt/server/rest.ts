@@ -391,10 +391,12 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                     t.info.ua = <string>params["_agent"];
                 else
                     t.info.ua = <string>req.headers['user-agent'];
+                if (!t.info.ua)
+                    t.info.ua = 'unknown';
                 t.info.agent = t.info.ua.toLowerCase();
                 t.info.host = req.headers['host'];
-                t.info.origin = req.headers['origin'] as string;
-                t.info.referer = req.headers['referer'] as string;
+                t.info.origin = <string>req.headers['origin'];
+                t.info.referer = <string>req.headers['referer'];
                 t.info.path = url.pathname;
                 if ('accept-encoding' in req.headers)
                     t.gzip = req.headers['accept-encoding'].indexOf('gzip') != -1;
