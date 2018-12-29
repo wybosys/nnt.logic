@@ -11,7 +11,6 @@ import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
 import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
 import {ArrayT, toJsonObject} from "../core/kernel";
-import tmp = require("tmp");
 
 export class App {
 
