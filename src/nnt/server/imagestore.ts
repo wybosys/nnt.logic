@@ -416,6 +416,10 @@ export class RImageStore implements IRouter {
 
     @action(QrCodeGenerate, [], "生成二维码")
     async qrcode(trans: Transaction) {
+        // 关闭压缩
+        trans.gzip = false;
+        trans.compressed = true;
+
         let m: QrCodeGenerate = trans.model;
         let stm = await QrCode.Generate(m.content);
         trans.output(Mime.Type("png"), stm);
