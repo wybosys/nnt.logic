@@ -49,6 +49,9 @@ export class ResponseData {
 
     // 返回的所有数据
     body: any = null;
+
+    // 原始数据
+    raw: string;
 }
 
 export class ModelError extends Error {
@@ -145,7 +148,7 @@ export abstract class Base {
             let msg = "";
             if (this.error)
                 msg += this.error + " ";
-            msg += "错误码:" + this.code;
+            msg += "错误码:" + this.code + " " + data.raw;
             let err = new ModelError(this.code, msg);
             error(err);
         } else {

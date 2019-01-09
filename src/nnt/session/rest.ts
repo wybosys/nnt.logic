@@ -193,6 +193,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
     let rd = new ResponseData();
     rd.code = resp.statusCode;
     rd.type = resp.headers["content-type"];
+    rd.raw = resp.body;
 
     if (m.responseType == HttpContentType.JSON) {
         rd.body = toJsonObject(resp.body);
