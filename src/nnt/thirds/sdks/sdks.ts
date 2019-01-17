@@ -388,6 +388,14 @@ export class Sdks extends AbstractServer {
         return Decode(new SdkUserInfo(), ret.user, false, true);
     }
 
+    //删除普通用户
+    async removeUser(uid: string): Promise<void> {
+        Call(this.users, {
+            action: 'user.del',
+            userid: uid
+        });
+    }
+
     // 获取支付信息
     async rechargeInfo(m: SdkRecharge): Promise<SdkRecharge> {
         let ret = await Fetch(this.open, {
