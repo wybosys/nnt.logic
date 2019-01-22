@@ -229,10 +229,10 @@ export function IsEmpty(o: any): boolean {
         return (<any>o).length == 0;
     }
     if (o instanceof Map) {
-        return o.size != 0;
+        return o.size == 0;
     }
     if (o instanceof Set) {
-        return o.size != 0;
+        return o.size == 0;
     }
     return Object.keys(o).length == 0;
 }
