@@ -251,6 +251,13 @@ export class SdkRechargeItem {
     price: number;
 }
 
+@model()
+export class SdkWordFiliter {
+
+    @string(1, [output], "屏蔽后的字")
+    content: string;
+}
+
 export class Sdks extends AbstractServer {
 
     config(cfg: Node): boolean {
@@ -276,6 +283,7 @@ export class Sdks extends AbstractServer {
         this.bi = this.host + "/platform/bi";
         this.shops = this.host + "/platform/shops";
         this.games = this.host + "/platform/games";
+        this.wordfilter = this.host + "/platform/wordfilter";
 
         this.gameid = c.gameid;
         this.gamekey = c.gamekey;
@@ -291,6 +299,7 @@ export class Sdks extends AbstractServer {
     bi: string;
     shops: string;
     games: string;
+    wordfilter: string;
 
     gameid: number;
     gamekey: string;
@@ -388,6 +397,14 @@ export class Sdks extends AbstractServer {
         return Decode(new SdkUserInfo(), ret.user, false, true);
     }
 
+    //删除普通用户
+    async removeUser(uid: string): Promise<void> {
+        Call(this.users, {
+            action: 'user.del',
+            userid: uid
+        });
+    }
+
     // 获取支付信息
     async rechargeInfo(m: SdkRecharge): Promise<SdkRecharge> {
         let ret = await Fetch(this.open, {
@@ -400,6 +417,15 @@ export class Sdks extends AbstractServer {
         m.orderid = ret.orderid;
         m.raw = ret.raw;
         return m;
+    }
+
+    //屏蔽字
+    async wordFiliter(word: string): Promise<SdkWordFiliter> {
+        let ret = await Fetch(this.wordfilter, {
+            action: 'app.filter',
+            word: word
+        });
+        return Decode(new SdkWordFiliter(), ret, false, true);
     }
 
     // 汇报数据
