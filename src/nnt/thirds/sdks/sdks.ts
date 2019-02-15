@@ -366,7 +366,7 @@ export class Sdks extends AbstractServer {
                 action: 'app.info',
                 _sid: m.sid
             });
-            return Decode(new SdkMerchantInfo(), ret.merchant, false, true);
+            return Decode(new SdkMerchantInfo(), ret.info, false, true);
         } catch (err) {
             throw err;
         }
