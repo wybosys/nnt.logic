@@ -41,8 +41,8 @@ export class SdkAdminInfo {
 
 @model()
 export class SdkMerchantInfo {
-    @integer(1, [output], "merchantid")
-    merchantid: number;
+    @integer(1, [output], "id")
+    id: number;
 
     @string(2, [output], "name")
     name: string;
