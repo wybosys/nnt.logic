@@ -2,8 +2,8 @@ import {AbstractServer} from "../../server/server";
 import {Node} from "../../config/config";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
-import {Decode, input, integer, json, model, optional, output, string, string_t, type} from "../../core/proto";
-import {Fetch, Call} from "../../server/remote";
+import {Decode, input, integer, json, model, optional, output, string, type} from "../../core/proto";
+import {Call, Fetch} from "../../server/remote";
 import {ArrayT, IndexedObject} from "../../core/kernel";
 
 interface SdksConfig {
@@ -79,14 +79,11 @@ export class SdkMerchantLogin {
     @string(2, [input], "password")
     password: string;
 
-    @integer(3, [input], "groupid")
-    groupid: number;
+    @integer(3, [input], "merchantid")
+    merchantid: number;
 
     @string(4, [output], "sid")
     sid: string;
-
-    @type(5, SdkMerchantInfo, [output], "merchant")
-    merchant: SdkMerchantInfo;
 }
 
 @model()
@@ -352,11 +349,10 @@ export class Sdks extends AbstractServer {
                 action: 'app.login',
                 account: m.account,
                 password: m.password,
-                groupid: m.groupid
+                merchantid: m.merchantid
 
             });
             m.sid = ret.sid;
-            m.merchant = Decode(new SdkMerchantInfo(), ret.merchant, false, true);
             return m;
         } catch (err) {
             throw err;
