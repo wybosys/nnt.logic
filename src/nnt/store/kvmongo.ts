@@ -199,15 +199,14 @@ export class KvMongo extends AbstractNosql {
         let find: IndexedObject;
         let params: IndexedObject;
 
-        const typ = typeof cmd;
-        if (typ == "string") {
-            // 传入了IID
-            find = {_id: StrToObjectId(<any>cmd)};
-        } else if (typ == "object") {
-            find = cmd;
-        } else {
+        if (cmd instanceof Array) {
             find = (<any>cmd)[0];
             params = (<any>cmd)[0];
+        } else if (typeof cmd == "string") {
+            // 传入了IID
+            find = {_id: StrToObjectId(<any>cmd)};
+        } else {
+            find = cmd;
         }
 
         let opts: mongo.FindOneOptions = {};
