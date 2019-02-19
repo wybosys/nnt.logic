@@ -26,13 +26,11 @@ export async function Start(cfg: Node[]): Promise<void> {
             if (t.config(e)) {
                 await t.open();
                 dbs.set(t.id, t);
-            }
-            else {
+            } else {
                 console.log(t.id + "配置失败");
             }
         });
-    }
-    else {
+    } else {
         await Stop();
     }
 }
@@ -60,8 +58,7 @@ export async function Iterate<T>(clz: TransactionDef<T>, cmd: cmd_t, process: It
         db.iterate(t.table, <Object>cmd, (res: any, next: (suc: boolean) => void, idx) => {
             if (next == null) {
                 process(null, null, idx);
-            }
-            else {
+            } else {
                 let m = t.produce(res);
                 SetInnerId(m, db.innerId(res));
                 UpdateData(m);
@@ -81,8 +78,7 @@ export async function Aggregate<T>(clz: TransactionDef<T>, cmd: cmd_t, process?:
     t.nosqlproc = db => {
         if (process) {
             db.aggregate(t.table, <NosqlCmdType>cmd, null, process);
-        }
-        else {
+        } else {
             db.aggregate(t.table, <NosqlCmdType>cmd, res => {
                 t.resolve(res);
             }, null);
@@ -99,16 +95,14 @@ export async function AggregateQuery<T>(clz: TransactionDef<T>, cmd: cmd_t, proc
             db.aggregate(t.table, <NosqlCmdType>cmd, null, (res, next, idx) => {
                 if (!res) {
                     process(null, next, idx);
-                }
-                else {
+                } else {
                     let m = t.produce(res);
                     SetInnerId(m, db.innerId(res));
                     UpdateData(m);
                     process(m, next, idx);
                 }
             });
-        }
-        else {
+        } else {
             db.aggregate(t.table, <NosqlCmdType>cmd, res => {
                 if (res instanceof Array) {
                     let arr = ArrayT.Convert(res, e => {
@@ -118,14 +112,12 @@ export async function AggregateQuery<T>(clz: TransactionDef<T>, cmd: cmd_t, proc
                         return m;
                     });
                     t.resolve(arr);
-                }
-                else if (res) {
+                } else if (res) {
                     let m = t.produce(res);
                     SetInnerId(m, db.innerId(res));
                     UpdateData(m);
                     t.resolve([m]);
-                }
-                else {
+                } else {
                     t.resolve([]);
                 }
             }, null);
@@ -229,7 +221,7 @@ export async function Count<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<numb
 }
 
 // 获得一组数据
-export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: number): Promise<T[]> {
+export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T[]> {
     let t = new Transaction<T, T[]>(clz);
     t.rdbproc = db => {
         let q: RdbCmdType;
@@ -252,7 +244,7 @@ export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: numbe
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, limit, t, res => {
+        db.query(t.table, <Object>cmd, t, res => {
             if (res == null)
                 t.resolve([]);
             else {
@@ -294,7 +286,7 @@ export async function QueryOne<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, 1, t, res => {
+        db.query(t.table, <Object>cmd, t, res => {
             if (res == null || !res.length)
                 t.resolve(null);
             else if (res.length > 1)
@@ -375,8 +367,7 @@ export async function Update<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T[]
         db.update(t.table, <NosqlCmdType>cmd, res => {
             if (res == null) {
                 t.resolve([]);
-            }
-            else {
+            } else {
                 let arr = ArrayT.Convert(res, e => {
                     let m = t.produce(e);
                     SetInnerId(m, db.innerId(e));
@@ -396,8 +387,7 @@ export async function UpdateOne<T>(clz: TransactionDef<T>, iid: any, cmd: cmd_t)
         db.updateone(t.table, iid, <NosqlCmdType>cmd, res => {
             if (res == null) {
                 t.resolve(null);
-            }
-            else {
+            } else {
                 let m = t.produce(res);
                 SetInnerId(m, db.innerId(res));
                 UpdateData(m);
@@ -478,8 +468,7 @@ export async function AutoInc<T>(clz: TransactionDef<T>, key: string, delta = 1,
             db.autoinc(t.table + "." + key + "." + time, delta, res => {
                 t.resolve(res);
             });
-        }
-        else {
+        } else {
             db.autoinc(t.table + "." + key, delta, res => {
                 t.resolve(res);
             });
@@ -490,8 +479,7 @@ export async function AutoInc<T>(clz: TransactionDef<T>, key: string, delta = 1,
             db.autoinc(t.table + "." + key + "." + time, delta, res => {
                 t.resolve(res);
             });
-        }
-        else {
+        } else {
             db.autoinc(t.table + "." + key, delta, res => {
                 t.resolve(res);
             });

@@ -6,8 +6,8 @@ import {ArrayT, IndexedObject, ObjectT, toJson} from "../core/kernel";
 import {Variant} from "../core/object";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
-import mongo = require("mongodb");
 import {ITransaction} from "../manager/dbms/transaction";
+import mongo = require("mongodb");
 
 let DEFAULT_PORT = 27017;
 
@@ -96,8 +96,7 @@ export class KvMongo extends AbstractNosql {
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
-        }
-        catch (err) {
+        } catch (err) {
             logerr(err, url);
         }
     }
@@ -120,8 +119,7 @@ export class KvMongo extends AbstractNosql {
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
             logger.info("连接 {{=it.id}}@mongo", {id: this.id});
-        }
-        catch (err) {
+        } catch (err) {
             logerr(err, url);
         }
     }
@@ -140,8 +138,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["get", key]);
                 cb(null);
-            }
-            else {
+            } else {
                 cb(Variant.Unserialize(res));
             }
         });
@@ -153,8 +150,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["set", key, val]);
                 cb(false);
-            }
-            else {
+            } else {
                 cb(true);
             }
         });
@@ -166,8 +162,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["getset", key, val]);
                 cb(null);
-            }
-            else {
+            } else {
                 cb(Variant.Unserialize(res.value ? res.value.val : new Variant(null)));
             }
         });
@@ -179,8 +174,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["del", key]);
                 cb(null);
-            }
-            else {
+            } else {
                 cb({remove: 1});
             }
         });
@@ -201,10 +195,19 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    query(page: string, cmd: NosqlCmdType, limit: number, t: ITransaction, cb: (res: RecordObject[]) => void) {
-        if (typeof cmd == "string") {
+    query(page: string, cmd: NosqlCmdType, t: ITransaction, cb: (res: RecordObject[]) => void) {
+        let find: IndexedObject;
+        let params: IndexedObject;
+
+        const typ = typeof cmd;
+        if (typ == "string") {
             // 传入了IID
-            cmd = {_id: StrToObjectId(cmd)};
+            find = {_id: StrToObjectId(<any>cmd)};
+        } else if (typ == "object") {
+            find = cmd;
+        } else {
+            find = (<any>cmd)[0];
+            params = (<any>cmd)[0];
         }
 
         let opts: mongo.FindOneOptions = {};
@@ -219,31 +222,32 @@ export class KvMongo extends AbstractNosql {
             opts.projection = proj;
         }
 
+        // 从params中读取query的参数
+        let limit = '$limit' in params ? params['$limit'] : 1;
+
         let col = this._db.collection(page);
         if (limit == 1) {
             col.findOne(cmd, opts, (err, res) => {
                 if (err) {
                     logerr(err, ["query", cmd]);
                     cb(null);
-                }
-                else if (res) {
+                } else if (res) {
                     cb([res]);
-                }
-                else {
+                } else {
                     cb(null);
                 }
             });
-        }
-        else {
+        } else {
             let cursor = col.find(cmd, opts);
             if (limit > 1)
                 cursor.limit(limit);
+            if ('$sort' in params)
+                cursor.sort(params['$sort']);
             cursor.toArray((err, rcds) => {
                 if (err) {
                     logerr(err, ["query", cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cb(rcds);
                 }
             });
@@ -268,29 +272,25 @@ export class KvMongo extends AbstractNosql {
                 t[k] = cmd[k];
                 pipes.push(t);
             }
-        }
-        else
+        } else
             pipes = [cmd];
         if (cb) {
             col.aggregate(pipes, (err, cursor) => {
                 if (err) {
                     logerr(err, ["aggregate", page, cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cursor.toArray((err, res) => {
                         if (err) {
                             logerr(err, ["aggregate", page, cmd]);
                             cb(null);
-                        }
-                        else {
+                        } else {
                             cb(res);
                         }
                     });
                 }
             });
-        }
-        else {
+        } else {
             let cursor = col.aggregate(pipes, {cursor: {batchSize: 100}});
             IterateCursor(new AggregationCursor(cursor), process, () => {
             });
@@ -311,8 +311,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["insert", page, cmd]);
                 cb(null);
-            }
-            else {
+            } else {
                 cb(res.ops[0]);
             }
         });
@@ -324,8 +323,7 @@ export class KvMongo extends AbstractNosql {
             match = cmd[0];
             modify = cmd[1];
             opt = cmd[2];
-        }
-        else {
+        } else {
             let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
             logerr(err, ["modify", cmd]);
             cb(null);
@@ -344,22 +342,19 @@ export class KvMongo extends AbstractNosql {
                 if (err) {
                     logerr(err, ["modify", cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cb({
                         insert: res.upsertedCount,
                         update: res.modifiedCount
                     });
                 }
             });
-        }
-        else {
+        } else {
             col.updateMany(match, modify, opt, (err, res) => {
                 if (err) {
                     logerr(err, ["modify", cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cb({
                         insert: res.upsertedCount,
                         update: res.modifiedCount
@@ -372,7 +367,7 @@ export class KvMongo extends AbstractNosql {
     modifyone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: DbExecuteStat) => void) {
         let match: any, modify: any, opt: any;
         if (iid) {
-            if (typeof(iid) == "string")
+            if (typeof (iid) == "string")
                 iid = StrToObjectId(iid);
             if (iid instanceof Array)
                 match = {_id: {$in: iid}};
@@ -381,18 +376,15 @@ export class KvMongo extends AbstractNosql {
             if (cmd instanceof Array) {
                 modify = cmd[0];
                 opt = cmd[1];
-            }
-            else {
+            } else {
                 modify = cmd;
             }
-        }
-        else {
+        } else {
             if (cmd instanceof Array) {
                 match = cmd[0];
                 modify = cmd[1];
                 opt = cmd[2];
-            }
-            else {
+            } else {
                 let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
                 logerr(err, ["modifyone", iid, cmd]);
                 cb(null);
@@ -412,22 +404,19 @@ export class KvMongo extends AbstractNosql {
                 if (err) {
                     logerr(err, ["modifyone", iid, cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cb({
                         insert: res.upsertedCount,
                         update: res.modifiedCount
                     });
                 }
             });
-        }
-        else {
+        } else {
             col.updateOne(match, modify, opt, (err, res) => {
                 if (err) {
                     logerr(err, ["modifyone", iid, cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     cb({
                         insert: res.upsertedCount,
                         update: res.modifiedCount
@@ -444,8 +433,7 @@ export class KvMongo extends AbstractNosql {
             match = cmd[0];
             modify = cmd[1];
             opt = cmd[2];
-        }
-        else {
+        } else {
             let err = new Error("cmd的查询必须为一个数组");
             logerr(err, ["update", page, cmd]);
             cb(null);
@@ -519,13 +507,11 @@ export class KvMongo extends AbstractNosql {
                     if (err) {
                         logerr(err, ["update", page, cmd]);
                         cb(null);
-                    }
-                    else {
+                    } else {
                         // 提取数据
                         if (origin) {
                             cb(fnds);
-                        }
-                        else {
+                        } else {
                             let ids = ArrayT.Convert(fnds, e => {
                                 return e["_id"];
                             });
@@ -544,7 +530,7 @@ export class KvMongo extends AbstractNosql {
     updateone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: RecordObject) => void) {
         let match: any, modify: any, opt: any;
         if (iid) {
-            if (typeof(iid) == "string")
+            if (typeof (iid) == "string")
                 iid = StrToObjectId(iid);
             if (iid instanceof Array)
                 match = {_id: {$in: iid}};
@@ -553,18 +539,15 @@ export class KvMongo extends AbstractNosql {
             if (cmd instanceof Array) {
                 modify = cmd[0];
                 opt = cmd[1];
-            }
-            else {
+            } else {
                 modify = cmd;
             }
-        }
-        else {
+        } else {
             if (cmd instanceof Array) {
                 match = cmd[0];
                 modify = cmd[1];
                 opt = cmd[2];
-            }
-            else {
+            } else {
                 let err = new Error("当没有输入iid时，cmd的查询必须为一个数组");
                 logerr(err, ["updateone", page, iid, cmd]);
                 cb(err);
@@ -586,8 +569,7 @@ export class KvMongo extends AbstractNosql {
                 if (err) {
                     logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
                             name: "updateone",
@@ -598,14 +580,12 @@ export class KvMongo extends AbstractNosql {
                     cb(res.value);
                 }
             });
-        }
-        else {
+        } else {
             col.findOneAndUpdate(match, modify, {returnOriginal: false}, (err, res) => {
                 if (err) {
                     logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
-                }
-                else {
+                } else {
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
                             name: "updateone",
@@ -623,8 +603,7 @@ export class KvMongo extends AbstractNosql {
         let match: any;
         if (cmd instanceof Array) {
             match = cmd[0];
-        }
-        else {
+        } else {
             match = cmd;
         }
 
@@ -639,8 +618,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["remove", page, cmd]);
                 cb(null);
-            }
-            else {
+            } else {
                 cb({
                     remove: res.deletedCount
                 });
@@ -651,15 +629,13 @@ export class KvMongo extends AbstractNosql {
     removeone(page: string, iid: InnerIdType, cmd: NosqlCmdType, cb: (res: boolean) => void) {
         let match: any;
         if (iid) {
-            if (typeof(iid) == "string")
+            if (typeof (iid) == "string")
                 iid = StrToObjectId(iid);
             match = {_id: iid};
-        }
-        else {
+        } else {
             if (cmd instanceof Array) {
                 match = cmd[0];
-            }
-            else {
+            } else {
                 match = cmd;
             }
         }
@@ -675,8 +651,7 @@ export class KvMongo extends AbstractNosql {
             if (err) {
                 logerr(err, ["removeone", page, iid, cmd]);
                 cb(false);
-            }
-            else {
+            } else {
                 cb(true);
             }
         });
@@ -688,11 +663,9 @@ export class KvMongo extends AbstractNosql {
         let keynm: string;
         if (ps.length == 2) {
             keynm = ps[0] + '.' + ps[1];
-        }
-        else if (ps.length == 3) {
+        } else if (ps.length == 3) {
             keynm = ps[1] + '.' + ps[2];
-        }
-        else {
+        } else {
             cb(null);
             return;
         }
@@ -720,11 +693,9 @@ export class KvMongo extends AbstractNosql {
         let keynm: string;
         if (ps.length == 2) {
             keynm = ps[0] + '.' + ps[1];
-        }
-        else if (ps.length == 3) {
+        } else if (ps.length == 3) {
             keynm = ps[1] + '.' + ps[2];
-        }
-        else {
+        } else {
             cb(null);
             return;
         }
@@ -835,8 +806,7 @@ class AggregationCursor {
                     this._next = res;
                     resolve(this._next != null);
                 });
-            }
-            else {
+            } else {
                 resolve(this._next != null);
             }
         });
