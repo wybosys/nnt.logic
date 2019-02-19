@@ -71,6 +71,9 @@ export class STATUS {
     static AUTH_EXPIRED = -976; // 授权过期
     static SIGNATURE_ERROR = -975; // 签名错误
     static FORMAT_ERROR = -974;  // 返回的数据格式错误
+    static CONFIG_ERROR = -973; // 配置错误
+    static PRIVILEGE_ERROR = -972; // 权限错误
+    static LIMIT = -971; // 受到限制
 
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
