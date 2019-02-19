@@ -223,7 +223,9 @@ export class KvMongo extends AbstractNosql {
         }
 
         // 从params中读取query的参数
-        let limit = '$limit' in params ? params['$limit'] : 1;
+        let limit = 1;
+        if (params && '$limit' in params)
+            limit = params['$limit'];
 
         let col = this._db.collection(page);
         if (limit == 1) {
@@ -241,7 +243,7 @@ export class KvMongo extends AbstractNosql {
             let cursor = col.find(cmd, opts);
             if (limit > 1)
                 cursor.limit(limit);
-            if ('$sort' in params)
+            if (params && '$sort' in params)
                 cursor.sort(params['$sort']);
             cursor.toArray((err, rcds) => {
                 if (err) {
