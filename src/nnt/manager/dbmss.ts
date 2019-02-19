@@ -221,7 +221,7 @@ export async function Count<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<numb
 }
 
 // 获得一组数据
-export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T[]> {
+export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t, limit?: number): Promise<T[]> {
     let t = new Transaction<T, T[]>(clz);
     t.rdbproc = db => {
         let q: RdbCmdType;
@@ -244,7 +244,7 @@ export async function Query<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T[]>
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, t, res => {
+        db.query(t.table, <Object>cmd, limit, t, res => {
             if (res == null)
                 t.resolve([]);
             else {
@@ -286,7 +286,7 @@ export async function QueryOne<T>(clz: TransactionDef<T>, cmd: cmd_t): Promise<T
         });
     };
     t.nosqlproc = db => {
-        db.query(t.table, <Object>cmd, t, res => {
+        db.query(t.table, <Object>cmd, 1, t, res => {
             if (res == null || !res.length)
                 t.resolve(null);
             else if (res.length > 1)

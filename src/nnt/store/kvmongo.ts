@@ -195,18 +195,22 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    query(page: string, cmd: NosqlCmdType, t: ITransaction, cb: (res: RecordObject[]) => void) {
-        let find: IndexedObject;
+    query(page: string, cmd: NosqlCmdType, limit: number, t: ITransaction, cb: (res: RecordObject[]) => void) {
+        let query: IndexedObject;
         let params: IndexedObject;
 
         if (cmd instanceof Array) {
-            find = (<any>cmd)[0];
-            params = (<any>cmd)[0];
+            query = (<any>cmd)[0];
+            params = (<any>cmd)[1];
+            if (params) {
+                if ('$limit' in params)
+                    limit = params['$limit'];
+            }
         } else if (typeof cmd == "string") {
             // 传入了IID
-            find = {_id: StrToObjectId(<any>cmd)};
+            query = {_id: StrToObjectId(<any>cmd)};
         } else {
-            find = cmd;
+            query = cmd;
         }
 
         let opts: mongo.FindOneOptions = {};
@@ -221,14 +225,9 @@ export class KvMongo extends AbstractNosql {
             opts.projection = proj;
         }
 
-        // 从params中读取query的参数
-        let limit = 1;
-        if (params && '$limit' in params)
-            limit = params['$limit'];
-
         let col = this._db.collection(page);
         if (limit == 1) {
-            col.findOne(cmd, opts, (err, res) => {
+            col.findOne(query, opts, (err, res) => {
                 if (err) {
                     logerr(err, ["query", cmd]);
                     cb(null);
@@ -239,7 +238,7 @@ export class KvMongo extends AbstractNosql {
                 }
             });
         } else {
-            let cursor = col.find(cmd, opts);
+            let cursor = col.find(query, opts);
             if (limit > 1)
                 cursor.limit(limit);
             if (params && '$sort' in params)
