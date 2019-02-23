@@ -1,5 +1,5 @@
 // 预定义0输入输出的对象
-import {array, auth, enumerate, enumm, input, integer, json, model, optional, output, string} from "./proto";
+import {array, auth, enumerate, enumm, input, integer, json, model, optional, output, string, type} from "./proto";
 import {colstring} from "../store/proto";
 
 // 空模型
@@ -10,6 +10,14 @@ export class Null {
 // 需要登陆的空模型
 @model([auth])
 export class AuthedNull {
+}
+
+// 需要登陆的空模型
+@model([auth])
+export class AuthedObject {
+
+    @type(1, Object, [output])
+    object: any;
 }
 
 // Rest服务下ClientSDK的心跳更新
