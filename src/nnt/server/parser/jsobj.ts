@@ -10,9 +10,11 @@ import {
     toBoolean,
     toFloat,
     toInt,
-    toJsonObject, UploadedFileHandle
+    toJsonObject,
+    UploadedFileHandle
 } from "../../core/kernel";
 import {logger} from "../../core/logger";
+import {Filter} from "../../store/filter";
 
 export class Jsobj extends AbstractParser {
 
@@ -53,7 +55,7 @@ export class Jsobj extends AbstractParser {
             if (fp.array) {
                 let arr = new Array();
                 if (val) {
-                    if (typeof(fp.valtype) == "string") {
+                    if (typeof (fp.valtype) == "string") {
                         if (!(val instanceof Array)) {
                             // 对于array，约定用，来分割
                             val = val.split(",");
@@ -62,24 +64,20 @@ export class Jsobj extends AbstractParser {
                             val.forEach((e: any) => {
                                 arr.push(e ? e.toString() : null);
                             });
-                        }
-                        else if (fp.valtype == integer_t) {
+                        } else if (fp.valtype == integer_t) {
                             val.forEach((e: any) => {
                                 arr.push(toInt(e));
                             });
-                        }
-                        else if (fp.valtype == double_t) {
+                        } else if (fp.valtype == double_t) {
                             val.forEach((e: any) => {
                                 arr.push(toFloat(e));
                             });
-                        }
-                        else if (fp.valtype == boolean_t) {
+                        } else if (fp.valtype == boolean_t) {
                             val.forEach((e: any) => {
                                 arr.push(!!e);
                             });
                         }
-                    }
-                    else {
+                    } else {
                         if (typeof val == "string")
                             val = toJsonObject(val);
                         if (val && val instanceof Array) {
@@ -89,42 +87,36 @@ export class Jsobj extends AbstractParser {
                                 this.fill(t, e, input, output);
                                 arr.push(t);
                             });
-                        }
-                        else {
+                        } else {
                             logger.log("Array遇到了错误的数据 " + val);
                         }
                     }
                 }
                 return arr;
-            }
-            else if (fp.map) {
+            } else if (fp.map) {
                 let map = new Map();
-                if (typeof(fp.valtype) == "string") {
+                if (typeof (fp.valtype) == "string") {
                     if (fp.valtype == string_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             map.set(ek, ev ? ev.toString() : null);
                         }
-                    }
-                    else if (fp.valtype == integer_t) {
+                    } else if (fp.valtype == integer_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             map.set(ek, toInt(ev));
                         }
-                    }
-                    else if (fp.valtype == double_t) {
+                    } else if (fp.valtype == double_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             map.set(ek, toFloat(ev));
                         }
-                    }
-                    else if (fp.valtype == boolean_t)
+                    } else if (fp.valtype == boolean_t)
                         for (let ek in val) {
                             let ev = val[ek];
                             map.set(ek, !!ev);
                         }
-                }
-                else {
+                } else {
                     let clz: any = fp.valtype;
                     for (let ek in val) {
                         let ev = val[ek];
@@ -134,17 +126,15 @@ export class Jsobj extends AbstractParser {
                     }
                 }
                 return map;
-            }
-            else if (fp.multimap) {
+            } else if (fp.multimap) {
                 let mmap = new Multimap();
-                if (typeof(fp.valtype) == "string") {
+                if (typeof (fp.valtype) == "string") {
                     if (fp.valtype == string_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             mmap.set(ek, ArrayT.Convert(ev, e => asString(e)));
                         }
-                    }
-                    else if (fp.valtype == integer_t) {
+                    } else if (fp.valtype == integer_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             for (let ek in val) {
@@ -152,8 +142,7 @@ export class Jsobj extends AbstractParser {
                                 mmap.set(ek, ArrayT.Convert(ev, e => toInt(e)));
                             }
                         }
-                    }
-                    else if (fp.valtype == double_t) {
+                    } else if (fp.valtype == double_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             for (let ek in val) {
@@ -161,8 +150,7 @@ export class Jsobj extends AbstractParser {
                                 mmap.set(ek, ArrayT.Convert(ev, e => toFloat(e)));
                             }
                         }
-                    }
-                    else if (fp.valtype == boolean_t) {
+                    } else if (fp.valtype == boolean_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             for (let ek in val) {
@@ -171,8 +159,7 @@ export class Jsobj extends AbstractParser {
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     let clz: any = fp.valtype;
                     for (let ek in val) {
                         let ev = val[ek];
@@ -187,11 +174,9 @@ export class Jsobj extends AbstractParser {
                     }
                 }
                 return mmap;
-            }
-            else if (fp.enum) {
+            } else if (fp.enum) {
                 return toInt(val);
-            }
-            else {
+            } else {
                 if (typeof fp.valtype != "string")
                     val = toJsonObject(val);
                 if (fp.valtype == Object)
@@ -201,8 +186,7 @@ export class Jsobj extends AbstractParser {
                 this.fill(t, val, input, output);
                 return t;
             }
-        }
-        else {
+        } else {
             if (fp.string) {
                 return asString(val);
             } else if (fp.integer) {
@@ -219,6 +203,8 @@ export class Jsobj extends AbstractParser {
                 if (typeof val == "string")
                     return val;
                 return new UploadedFileHandle(val);
+            } else if (fp.filter) {
+                return Filter.Parse(val);
             } else {
                 return val;
             }

@@ -778,7 +778,7 @@ function DoTranslate(filter: Filter, obj: any) {
         }
 
         if (filter.operator !== null && filter.value !== null) {
-            obj[filter.operator] = filter.value;
+            obj['$' + filter.operator] = filter.value;
         }
     }
 
@@ -788,24 +788,8 @@ function DoTranslate(filter: Filter, obj: any) {
         obj[filter.key] = ref;
 
         if (filter.ands.length) {
-            if (!('$and' in ref))
-                ref['$and'] = [];
             filter.ands.forEach(e => {
-                let t: IndexedObject = {};
-                ref['$and'].push(t);
-
-                DoTranslate(e, t);
-            });
-        }
-
-        if (filter.ors.length) {
-            if (!('$or' in ref))
-                ref['$or'] = [];
-            filter.ors.forEach(e => {
-                let t: IndexedObject = {};
-                ref['$or'].push(t);
-
-                DoTranslate(e, t);
+                DoTranslate(e, ref);
             });
         }
     }
