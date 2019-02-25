@@ -1,6 +1,5 @@
 // 预定义0输入输出的对象
-import {array, auth, enumerate, enumm, input, integer, json, model, optional, output, string, type} from "./proto";
-import {colstring} from "../store/proto";
+import {auth, enumm, input, integer, json, model, optional, output, type} from "./proto";
 
 // 空模型
 @model()
@@ -31,9 +30,9 @@ export class RestUpdate {
     models: Object;
 }
 
-// 处理分页的模型
+// 具有顺序性的分页基类模型
 @model()
-export class Paged {
+export class SeqPaged {
 
     @integer(1, [input, output, optional], "排序依赖的最大数值")
     last: number = -1;
@@ -41,11 +40,28 @@ export class Paged {
     @integer(2, [input, optional], "一次拉取多少个")
     limit: number = 10;
 
-    @array(3, Object, [output], "接收到的对象")
-    items: any[];
+    @integer(3, [output], "数据总数")
+    total: number = 0;
 
-    @array(4, Object, [output], "所有对象")
-    all: any[];
+    @integer(4, [output], "分页总数")
+    totalpages: number = 0;
+}
+
+// 基于页码的分页数据模型
+@model()
+export class NumPaged {
+
+    @integer(1, [input, output, optional], "请求的页码")
+    page: number = 0;
+
+    @integer(2, [input, optional], "单页多少条数据")
+    limit: number = 10;
+
+    @integer(3, [output], "数据总数")
+    total: number = 0;
+
+    @integer(4, [output], "分页总数")
+    totalpages: number = 0;
 }
 
 // 定义内部的错误码
@@ -82,6 +98,7 @@ export class STATUS {
     static CONFIG_ERROR = -973; // 配置错误
     static PRIVILEGE_ERROR = -972; // 权限错误
     static LIMIT = -971; // 受到限制
+    static PAGED_OVERFLOW = -970; // 超出分页数据的处理能力
 
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
