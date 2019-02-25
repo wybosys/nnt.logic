@@ -12,7 +12,7 @@ import {logger} from "../core/logger";
  */
 
 const KEYWORDS = ["and", "or"];
-const OPERATORS = ["gt", "gte", "eq", "not", "neq", "lt", "lte"];
+const OPERATORS = ["gt", "gte", "eq", "not", "lt", "lte"];
 
 export class Filter {
 
