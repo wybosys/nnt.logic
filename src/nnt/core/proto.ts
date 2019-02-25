@@ -3,15 +3,19 @@ import {
     AnyClass,
     ArrayT,
     asString,
-    IndexedObject, Multimap,
-    ObjectT, toBoolean,
+    IndexedObject,
+    Multimap,
+    ObjectT,
+    toBoolean,
     toFloat,
-    toInt, toJsonObject,
+    toInt,
+    toJsonObject,
     ToObject,
     UploadedFileHandle
 } from "./kernel";
 import {Config} from "../manager/config";
 import {logger} from "./logger";
+import {Filter} from "../store/filter";
 
 export interface IUpdatable {
     updateData(): void;
@@ -104,6 +108,7 @@ export interface FieldOption {
     enum?: boolean;
     file?: boolean;
     json?: boolean;
+    filter?: boolean;
 
     // 关联类型
     keytype?: clazz_type;
@@ -188,8 +193,7 @@ function DefineFp(target: any, key: string, fp: FieldOption) {
     if (target.hasOwnProperty(FP_KEY)) {
         fps = target[FP_KEY];
         ownfps = target[OWNFP_KEY];
-    }
-    else {
+    } else {
         // 需要从父类copy一下fps
         if (FP_KEY in target) {
             fps = CloneFps(target[FP_KEY]);
@@ -198,8 +202,7 @@ function DefineFp(target: any, key: string, fp: FieldOption) {
                 let fp: FieldOption = fps[k];
                 fp.id *= Config.MODEL_FIELDS_MAX;
             }
-        }
-        else {
+        } else {
             fps = {};
         }
         ownfps = {};
@@ -339,6 +342,15 @@ export function file(id: number, opts: string[], comment?: string, valid?: Field
     };
 }
 
+// 数据库的筛选器
+export function filter(id: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    let fp = field(id, opts, comment, valid);
+    fp.filter = true;
+    return (target: any, key: string) => {
+        DefineFp(target, key, fp);
+    };
+}
+
 // 将数据从参数集写入到模型中的字段
 export function Decode<T extends IndexedObject>(mdl: T, params: any, input = true, output = false): T {
     let fps = mdl[FP_KEY];
@@ -362,7 +374,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
         if (fp.array) {
             let arr: any[] = [];
             if (val) {
-                if (typeof(fp.valtype) == "string") {
+                if (typeof (fp.valtype) == "string") {
                     if (!(val instanceof Array)) {
                         // 对于array，约定用，来分割
                         val = val.split(",");
@@ -371,23 +383,19 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                         val.forEach((e: any) => {
                             arr.push(e ? e.toString() : null);
                         });
-                    }
-                    else if (fp.valtype == integer_t) {
+                    } else if (fp.valtype == integer_t) {
                         val.forEach((e: any) => {
                             arr.push(toInt(e));
                         });
-                    }
-                    else if (fp.valtype == double_t) {
+                    } else if (fp.valtype == double_t) {
                         val.forEach((e: any) => {
                             arr.push(toFloat(e));
                         });
-                    }
-                    else if (fp.valtype == boolean_t)
+                    } else if (fp.valtype == boolean_t)
                         val.forEach((e: any) => {
                             arr.push(!!e);
                         });
-                }
-                else {
+                } else {
                     if (typeof val == "string")
                         val = toJsonObject(val);
                     if (val && val instanceof Array) {
@@ -397,42 +405,36 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                             Decode(t, e, input, output);
                             arr.push(t);
                         });
-                    }
-                    else {
+                    } else {
                         logger.log("Array遇到了错误的数据 " + val);
                     }
                 }
             }
             return arr;
-        }
-        else if (fp.map) {
+        } else if (fp.map) {
             let map = new Map();
-            if (typeof(fp.valtype) == "string") {
+            if (typeof (fp.valtype) == "string") {
                 if (fp.valtype == string_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         map.set(ek, ev ? ev.toString() : null);
                     }
-                }
-                else if (fp.valtype == integer_t) {
+                } else if (fp.valtype == integer_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         map.set(ek, toInt(ev));
                     }
-                }
-                else if (fp.valtype == double_t) {
+                } else if (fp.valtype == double_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         map.set(ek, toFloat(ev));
                     }
-                }
-                else if (fp.valtype == boolean_t)
+                } else if (fp.valtype == boolean_t)
                     for (let ek in val) {
                         let ev = val[ek];
                         map.set(ek, !!ev);
                     }
-            }
-            else {
+            } else {
                 let clz: any = fp.valtype;
                 for (let ek in val) {
                     let ev = val[ek];
@@ -442,17 +444,15 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                 }
             }
             return map;
-        }
-        else if (fp.multimap) {
+        } else if (fp.multimap) {
             let mmap = new Multimap();
-            if (typeof(fp.valtype) == "string") {
+            if (typeof (fp.valtype) == "string") {
                 if (fp.valtype == string_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         mmap.set(ek, ArrayT.Convert(ev, e => asString(e)));
                     }
-                }
-                else if (fp.valtype == integer_t) {
+                } else if (fp.valtype == integer_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         for (let ek in val) {
@@ -460,8 +460,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                             mmap.set(ek, ArrayT.Convert(ev, e => toInt(e)));
                         }
                     }
-                }
-                else if (fp.valtype == double_t) {
+                } else if (fp.valtype == double_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         for (let ek in val) {
@@ -469,8 +468,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                             mmap.set(ek, ArrayT.Convert(ev, e => toFloat(e)));
                         }
                     }
-                }
-                else if (fp.valtype == boolean_t) {
+                } else if (fp.valtype == boolean_t) {
                     for (let ek in val) {
                         let ev = val[ek];
                         for (let ek in val) {
@@ -479,8 +477,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 let clz: any = fp.valtype;
                 for (let ek in val) {
                     let ev = val[ek];
@@ -495,11 +492,9 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                 }
             }
             return mmap;
-        }
-        else if (fp.enum) {
+        } else if (fp.enum) {
             return toInt(val);
-        }
-        else {
+        } else {
             if (typeof fp.valtype != "string")
                 val = toJsonObject(val);
             if (fp.valtype == Object)
@@ -509,8 +504,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
             Decode(t, val, input, output);
             return t;
         }
-    }
-    else {
+    } else {
         if (fp.string)
             return asString(val);
         else if (fp.integer)
@@ -523,6 +517,8 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
             return toInt(val);
         else if (fp.json)
             return toJsonObject(val);
+        else if (fp.filter)
+            return Filter.Parse(val);
         else
             return val;
     }
@@ -562,34 +558,29 @@ export function Output(mdl: any): IndexedObject {
         if (fp.valtype) {
             if (fp.array) {
                 // 通用类型，则直接可以输出
-                if (typeof(fp.valtype) == "string") {
+                if (typeof (fp.valtype) == "string") {
                     let arr: any[] = [];
                     if (!val) {
                         // 处理val==null的情况
-                    }
-                    else if (fp.valtype == string_t) {
+                    } else if (fp.valtype == string_t) {
                         val.forEach((e: any) => {
                             arr.push(e ? e.toString() : null);
                         });
-                    }
-                    else if (fp.valtype == integer_t) {
+                    } else if (fp.valtype == integer_t) {
                         val.forEach((e: any) => {
                             arr.push(toInt(e));
                         });
-                    }
-                    else if (fp.valtype == double_t) {
+                    } else if (fp.valtype == double_t) {
                         val.forEach((e: any) => {
                             arr.push(toFloat(e));
                         });
-                    }
-                    else if (fp.valtype == boolean_t) {
+                    } else if (fp.valtype == boolean_t) {
                         val.forEach((e: any) => {
                             arr.push(!!e);
                         });
                     }
                     r[fk] = arr;
-                }
-                else {
+                } else {
                     // 特殊类型，需要迭代进去
                     let arr: any[] = [];
                     val && val.forEach((e: any) => {
@@ -597,52 +588,43 @@ export function Output(mdl: any): IndexedObject {
                     });
                     r[fk] = arr;
                 }
-            }
-            else if (fp.map) {
+            } else if (fp.map) {
                 let m: IndexedObject = {};
                 if (!val) {
                     // pass
-                }
-                else if (typeof(fp.valtype) == "string") {
+                } else if (typeof (fp.valtype) == "string") {
                     val.forEach((v: any, k: string) => {
                         m[k] = v;
                     });
-                }
-                else {
+                } else {
                     val.forEach((v: any, k: string) => {
                         m[k] = Output(v);
                     });
                 }
                 r[fk] = m;
-            }
-            else if (fp.multimap) {
+            } else if (fp.multimap) {
                 let m: IndexedObject = {};
                 if (!val) {
                     // pass
-                }
-                else if (typeof(fp.valtype) == "string") {
+                } else if (typeof (fp.valtype) == "string") {
                     val.forEach((v: any[], k: string) => {
                         m[k] = v;
                     });
-                }
-                else {
+                } else {
                     val.forEach((v: any[], k: string) => {
                         m[k] = ArrayT.Convert(v, e => Output(e));
                     });
                 }
                 r[fk] = m;
-            }
-            else if (fp.enum) {
+            } else if (fp.enum) {
                 r[fk] = toInt(val);
-            }
-            else {
+            } else {
                 let v = Output(val);
                 if (v == null)
                     v = ToObject(val);
                 r[fk] = v;
             }
-        }
-        else {
+        } else {
             if (fp.string)
                 r[fk] = asString(val);
             else if (fp.integer)
@@ -653,6 +635,8 @@ export function Output(mdl: any): IndexedObject {
                 r[fk] = !!val;
             else if (fp.enum)
                 r[fk] = toInt(val);
+            else if (fp.filter)
+                r[fk] = val.toString();
             else {
                 let v = Output(val);
                 if (v == null)
@@ -671,19 +655,15 @@ export function FpToTypeDef(fp: FieldOption): string {
     let typ = "";
     if (fp.string) {
         typ = "string";
-    }
-    else if (fp.integer) {
+    } else if (fp.integer) {
         typ = "number";
-    }
-    else if (fp.double) {
+    } else if (fp.double) {
         typ = "number";
-    }
-    else if (fp.boolean) {
+    } else if (fp.boolean) {
         typ = "boolean";
-    }
-    else if (fp.array) {
+    } else if (fp.array) {
         typ = "Array<";
-        if (typeof(fp.valtype) == "string") {
+        if (typeof (fp.valtype) == "string") {
             let vt = "any";
             switch (fp.valtype) {
                 case string_t:
@@ -698,31 +678,26 @@ export function FpToTypeDef(fp: FieldOption): string {
                     break;
             }
             typ += vt;
-        }
-        else {
+        } else {
             typ += fp.valtype["name"];
         }
         typ += ">";
-    }
-    else if (fp.map) {
+    } else if (fp.map) {
         typ = "Map<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">";
-    }
-    else if (fp.multimap) {
+    } else if (fp.multimap) {
         typ = "Multimap<" + ValtypeDefToDef(fp.keytype) + ", " + ValtypeDefToDef(fp.valtype) + ">";
-    }
-    else if (fp.enum) {
+    } else if (fp.enum) {
         typ = (<AnyClass>fp.valtype)["name"];
-    }
-    else if (fp.file) {
+    } else if (fp.file) {
         if (fp.input)
             typ = "any";
         else
             typ = "string";
-    }
-    else if (fp.json) {
+    } else if (fp.filter) {
+        typ = "string";
+    } else if (fp.json) {
         typ = "Object";
-    }
-    else {
+    } else {
         typ = (<AnyClass>fp.valtype)["name"];
     }
     return typ;
@@ -742,13 +717,13 @@ function FpToOptionsDef(fp: FieldOption, ns = ""): string {
 function FpToValtypeDef(fp: FieldOption, ns = ""): string {
     let t = [];
     if (fp.keytype) {
-        if (typeof(fp.keytype) == "string")
+        if (typeof (fp.keytype) == "string")
             t.push(ns + fp.keytype + "_t");
         else
             t.push(fp.keytype["name"]);
     }
     if (fp.valtype) {
-        if (typeof(fp.valtype) == "string")
+        if (typeof (fp.valtype) == "string")
             t.push(ns + fp.valtype + "_t");
         else
             t.push(fp.valtype["name"]);
@@ -785,23 +760,19 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
         deco = "@" + ns + "boolean(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.array) {
         deco = "@" + ns + "array(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.map) {
+    } else if (fp.map) {
         deco = "@" + ns + "map(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.multimap) {
+    } else if (fp.multimap) {
         deco = "@" + ns + "multimap(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.enum) {
+    } else if (fp.enum) {
         deco = "@" + ns + "enumerate(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.file) {
+    } else if (fp.file) {
         deco = "@" + ns + "file(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.json) {
+    } else if (fp.filter) {
+        deco = "@" + ns + "filter(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
+    } else if (fp.json) {
         deco = "@" + ns + "json(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
-    }
-    else {
+    } else {
         deco = "@" + ns + "type(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     }
     return deco;
@@ -823,23 +794,19 @@ export function FpToDecoDefPHP(fp: FieldOption): string {
         deco += "\n\t* @var boolean";
     } else if (fp.array) {
         deco = "@Api(" + fp.id + ", [array, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.map) {
+    } else if (fp.map) {
         deco = "@Api(" + fp.id + ", [map, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.multimap) {
+    } else if (fp.multimap) {
         deco = "@Api(" + fp.id + ", [multimap, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.enum) {
+    } else if (fp.enum) {
         deco = "@Api(" + fp.id + ", [enum, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.file) {
+    } else if (fp.file) {
         deco = "@Api(" + fp.id + ", [file], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else if (fp.json) {
+    } else if (fp.filter) {
+        deco = "@Api(" + fp.id + ", [filter], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+    } else if (fp.json) {
         deco = "@Api(" + fp.id + ", [json], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
-    }
-    else {
+    } else {
         deco = "@Api(" + fp.id + ", [type, " + FpToValtypeDef(fp) + "], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
     }
     return deco;

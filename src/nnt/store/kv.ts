@@ -2,6 +2,7 @@ import {AbstractDbms, DbExecuteStat, IterateCursorProcess} from "./store";
 import {IndexedObject} from "../core/kernel";
 import {Variant} from "../core/object";
 import {ITransaction} from "../manager/dbms/transaction";
+import {Filter} from "./filter";
 
 export abstract class AbstractKv extends AbstractDbms {
 
@@ -25,6 +26,9 @@ export type InnerIdType = any;
 export type RecordObject = IndexedObject;
 
 export abstract class AbstractNosql extends AbstractKv {
+
+    // 将filter转换成数据库查询的命令
+    abstract translate(filter: Filter): NosqlCmdType;
 
     // 获得记录的内部id
     abstract innerId(rcd: IndexedObject): InnerIdType;

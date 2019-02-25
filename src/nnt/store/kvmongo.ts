@@ -7,6 +7,7 @@ import {Variant} from "../core/object";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
 import {ITransaction} from "../manager/dbms/transaction";
+import {Filter} from "./filter";
 import mongo = require("mongodb");
 
 let DEFAULT_PORT = 27017;
@@ -208,7 +209,9 @@ export class KvMongo extends AbstractNosql {
             }
         } else if (typeof cmd == "string") {
             // 传入了IID
-            query = {_id: StrToObjectId(<any>cmd)};
+            query = {
+                _id: StrToObjectId(<any>cmd)
+            };
         } else {
             query = cmd;
         }
@@ -744,6 +747,74 @@ export class KvMongo extends AbstractNosql {
             }
         });
     }
+
+    translate(filter: Filter): NosqlCmdType {
+        return Translate(filter);
+    }
+}
+
+function DoTranslate(filter: Filter, obj: any) {
+    if (filter.key === null) {
+        if (filter.ands.length) {
+            if (!('$and' in obj))
+                obj['$and'] = [];
+            filter.ands.forEach(e => {
+                let ref: IndexedObject = {};
+                obj['$and'].push(ref);
+
+                DoTranslate(e, ref);
+            });
+        }
+
+        if (filter.ors.length) {
+            if (!('$or' in obj))
+                obj['$or'] = [];
+            filter.ors.forEach(e => {
+                let ref: IndexedObject = {};
+                obj['$or'].push(ref);
+
+                DoTranslate(e, ref);
+            });
+        }
+
+        if (filter.operator !== null && filter.value !== null) {
+            obj[filter.operator] = filter.value;
+        }
+    }
+
+    if (filter.key) {
+        // 生成新的子节点
+        let ref: IndexedObject = {};
+        obj[filter.key] = ref;
+
+        if (filter.ands.length) {
+            if (!('$and' in ref))
+                ref['$and'] = [];
+            filter.ands.forEach(e => {
+                let t: IndexedObject = {};
+                ref['$and'].push(t);
+
+                DoTranslate(e, t);
+            });
+        }
+
+        if (filter.ors.length) {
+            if (!('$or' in ref))
+                ref['$or'] = [];
+            filter.ors.forEach(e => {
+                let t: IndexedObject = {};
+                ref['$or'].push(t);
+
+                DoTranslate(e, t);
+            });
+        }
+    }
+}
+
+export function Translate(filter: Filter): NosqlCmdType {
+    let r: IndexedObject = {};
+    DoTranslate(filter, r);
+    return r;
 }
 
 function StrToObjectId(s: string): mongo.ObjectID {
