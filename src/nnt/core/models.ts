@@ -42,9 +42,6 @@ export class SeqPaged {
 
     @integer(3, [output], "数据总数")
     total: number = 0;
-
-    @integer(4, [output], "分页总数")
-    totalpages: number = 0;
 }
 
 // 基于页码的分页数据模型
@@ -59,10 +56,9 @@ export class NumPaged {
 
     @integer(3, [output], "数据总数")
     total: number = 0;
-
-    @integer(4, [output], "分页总数")
-    totalpages: number = 0;
 }
+
+export const PAGED_LIMIT = 5000;
 
 // 定义内部的错误码
 // <0的代表系统级错误，>0代表成功，但是需要额外处理，=0代表完全成功

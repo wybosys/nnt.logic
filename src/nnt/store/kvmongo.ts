@@ -195,7 +195,7 @@ export class KvMongo extends AbstractNosql {
         });
     }
 
-    query(page: string, cmd: NosqlCmdType, limit: number, t: ITransaction, cb: (res: RecordObject[]) => void) {
+    query(page: string, cmd: NosqlCmdType, limit: number, skip: number, t: ITransaction, cb: (res: RecordObject[]) => void) {
         let query: IndexedObject;
         let params: IndexedObject;
 
@@ -227,6 +227,10 @@ export class KvMongo extends AbstractNosql {
 
         let col = this._db.collection(page);
         if (limit == 1) {
+            if (skip > 0)
+                opts.skip = skip;
+            if (params && '$sort' in params)
+                opts.sort = params['$sort'];
             col.findOne(query, opts, (err, res) => {
                 if (err) {
                     logerr(err, ["query", cmd]);
@@ -241,6 +245,8 @@ export class KvMongo extends AbstractNosql {
             let cursor = col.find(query, opts);
             if (limit > 1)
                 cursor.limit(limit);
+            if (skip > 0)
+                cursor.skip(skip);
             if (params && '$sort' in params)
                 cursor.sort(params['$sort']);
             cursor.toArray((err, rcds) => {

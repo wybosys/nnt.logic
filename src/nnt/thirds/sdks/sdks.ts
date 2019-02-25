@@ -350,6 +350,7 @@ export class Sdks extends AbstractServer {
                 account: m.account,
                 password: m.password,
                 merchantid: m.merchantid
+
             });
             m.sid = ret.sid;
             return m;
