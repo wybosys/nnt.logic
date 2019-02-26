@@ -42,6 +42,10 @@ export class SeqPaged {
 
     @integer(3, [output], "数据总数")
     total: number = 0;
+
+    get skips(): number {
+        return this.last + this.limit;
+    }
 }
 
 // 基于页码的分页数据模型
@@ -56,6 +60,10 @@ export class NumPaged {
 
     @integer(3, [output], "数据总数")
     total: number = 0;
+
+    get skips(): number {
+        return this.page * this.limit;
+    }
 }
 
 export const PAGED_LIMIT = 5000;
