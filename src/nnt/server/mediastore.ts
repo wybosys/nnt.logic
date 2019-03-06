@@ -8,6 +8,9 @@ import fs = require("fs");
 interface MediaStoreNode extends Node {
     // 存储位置
     store: string;
+
+    // 不安全模式(可以定义保存路径)
+    unsafe: boolean;
 }
 
 export class MediaStore extends Rest {
@@ -20,6 +23,7 @@ export class MediaStore extends Rest {
 
     @pathd()
     store: string;
+    unsafe: boolean;
 
     config(cfg: Node): boolean {
         if (!super.config(cfg))
@@ -28,6 +32,7 @@ export class MediaStore extends Rest {
         if (!c.store)
             return false;
         this.store = c.store;
+        this.unsafe = c.unsafe;
         return true;
     }
 

@@ -1,15 +1,15 @@
 <!-- @formatter:off -->
 <html>
 <head>
-    <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/zepto.min.js"></script>
-    <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/vue.min.js"></script>
-    <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
-    <link type="text/css" rel="stylesheet" href="http://develop.91egame.com/devops/cdn/provider/file/bootstrap-vue.min.css"></link>
-    <script type="text/javascript" src="http://develop.91egame.com/devops/cdn/provider/file/polyfill.min.js"></script>
+    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/zepto.min.js"></script>
+    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/vue.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="//www.91yigame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
+    <link type="text/css" rel="stylesheet" href="//www.91yigame.com/devops/cdn/provider/file/bootstrap-vue.min.css"></link>
+    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/polyfill.min.js"></script>
     <script type="text/javascript"
-            src="http://develop.91egame.com/devops/cdn/provider/file/bootstrap-vue.min.js"></script>
+            src="//www.91yigame.com/devops/cdn/provider/file/bootstrap-vue.min.js"></script>
     <script type="text/javascript"
-            src="http://develop.91egame.com/devops/cdn/provider/file/vue-json-tree-view.min.js"></script>
+            src="//www.91yigame.com/devops/cdn/provider/file/vue-json-tree-view.min.js"></script>
 </head>
 
 <!-- @formatter:off -->
@@ -68,17 +68,17 @@
   new Vue({
     delimiters: ['${', '}'],
     el: '#app',
-    data: {            
+    data: {
       actions: {{actions}},
       action: null,
       current: "",
       form: {},
-      inputs: [],      
+      inputs: [],
       outputs: null,
       log: null
     },
     methods: {
-      actSelectAction(info) {        
+      actSelectAction(info) {
         this.action = info;
         this.current = info.name;
         this.log = null;
@@ -127,7 +127,7 @@
           }
           param.def = def;
           param.desc = desc.join(' ');
-        });        
+        });
         // 提取输入参数
         this.inputs = info.params.filter(e=>{
           return e.input;
@@ -141,8 +141,8 @@
       actDropdown() {
 
       },
-      actSubmit() {        
-        this.log = null;        
+      actSubmit() {
+        this.log = null;
         let params = {}; // 普通参数
         let files = {}; // 文件参数
         for (let idx in this.inputs) {
