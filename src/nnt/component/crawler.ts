@@ -1,4 +1,4 @@
-import {ArrayT, asString, SafeEval, toJson, toJsonObject} from "../core/kernel";
+import {ArrayT, asString, toJson, toJsonObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import tmp = require('tmp');
 import fs = require('fs');
@@ -42,6 +42,12 @@ export class Crawler {
         this.userAgent('Mozilla/5.0 (compatible; Baiduspider-render/2.0; +http://www.baidu.com/search/spider.html)');
     }
 
+    // 资源百名单
+    whitelists: RegExp[];
+
+    // 黑名单
+    blacklists: RegExp[];
+
     private _buffer: string[] = [];
 
     protected cmd(cmd: string, ...cmps: any[]): this {
@@ -80,6 +86,25 @@ export class Crawler {
                 'hdl.log = function (obj) { Output(this, "info", obj); };',
                 'hdl.yhy = function (obj) { Output(this, "emit", obj); };'
             ]);
+
+            if (this.whitelists) {
+                let exp: string[] = [];
+                this.whitelists.forEach(e => {
+                    exp.push('new RegExp(' + e.toString() + ').test(data.url)');
+                });
+                ArrayT.PushObjects(cmds, [
+                    `hdl.options.onResourceRequested = function(C, data, request) { if (!(${exp.join('||')})) request.abort(); }`
+                ]);
+            } else if (this.blacklists) {
+                let exp: string[] = [];
+                this.blacklists.forEach(e => {
+                    exp.push('new RegExp(' + e.toString() + ').test(data.url)');
+                });
+                ArrayT.PushObjects(cmds, [
+                    `hdl.options.onResourceRequested = function(C, data, request) { if (${exp.join('||')}) request.abort(); }`
+                ]);
+            }
+
             ArrayT.PushObjects(cmds, this._buffer);
             ArrayT.PushObjects(cmds, [
                 'hdl.run();'
@@ -87,7 +112,7 @@ export class Crawler {
 
             // 命令保存到文件
             let text = cmds.join('\n');
-            // logger.log(text);
+            //logger.log(text);
             let tf = tmp.fileSync();
             // 生成phantomjs使用的爬虫文件
             fs.writeSync(tf.fd, text);
