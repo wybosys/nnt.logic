@@ -16,9 +16,10 @@ import {ConvertFile, FindSupportConvertor} from "./convert/convert";
 import {FileInfo} from "./fileinfo";
 import {QrCode} from "../component/qrcode";
 import Hashids = require("hashids");
-import fs = require("fs");
+import fs = require("fs-extra");
 import ph = require("path");
 import req = require("request");
+import childproc = require("child_process");
 
 // 使用类型来模拟枚举
 @model([enumm])
@@ -50,6 +51,9 @@ export class DownloadFile {
 
     @string(3, [output], "文件在服务器上的路径")
     path: string;
+
+    @string(4, [input, optional], "unsafe模式下，文件的保存目录")
+    directory: string;
 }
 
 @model()
@@ -102,14 +106,12 @@ export class RImageStore implements IRouter {
                 m.path = m.file;
                 trans.submit();
                 return;
-            }
-            else {
+            } else {
                 trans.status = STATUS.TYPE_MISMATCH;
                 trans.submit();
                 return;
             }
-        }
-        else if (typeof m.file != "object") {
+        } else if (typeof m.file != "object") {
             trans.status = STATUS.TYPE_MISMATCH;
             trans.submit();
             return;
@@ -132,17 +134,14 @@ export class RImageStore implements IRouter {
             // 如果是开发版本，则允许继续上传
             if (IsDebug()) {
                 this.doUpload(trans);
-            }
-            else {
+            } else {
                 trans.status = STATUS.UPLOAD_FAILED;
                 trans.submit();
             }
-        }
-        else if (pat.indexOf(typ) == -1) {
+        } else if (pat.indexOf(typ) == -1) {
             trans.status = STATUS.TYPE_MISMATCH;
             trans.submit();
-        }
-        else {
+        } else {
             this.doUpload(trans);
         }
     }
@@ -168,22 +167,61 @@ export class RImageStore implements IRouter {
                 logger.exception(err);
                 trans.status = STATUS.FILESYSTEM_FAILED;
                 trans.submit();
-            }
-            else {
+            } else {
                 m.path = dir + "/" + nm;
                 trans.submit();
             }
         });
     }
 
-    protected doDownload(srv: ImageStore, src: string, pat: string[]): Promise<string> {
+    protected doUnsafeDownload(srv: ImageStore, src: string, directory: string): Promise<string> {
         return new Promise(resolve => {
-            // 按照日期格式保存到目录中
-            let today = new Date();
-            let dir = this.hash.encode(today.getFullYear(), today.getMonth(), today.getDay());
-            let dirpath = srv.store + "/" + dir + "/";
+            // 保证存在
+            let dirpath = srv.store + "/" + directory + "/";
             if (!fs.existsSync(dirpath))
-                fs.mkdirSync(dirpath);
+                fs.mkdirsSync(dirpath);
+
+            // 目标文件的路径
+            let nm = UUID();
+            let path = dirpath + nm;
+
+            // 使用wget下载
+            let wget = `wget "${src}" -O "${path}"`;
+            childproc.exec(wget, (err, stdout, stderr) => {
+                if (err) {
+                    logger.error(err);
+                    resolve(null);
+                } else {
+                    Mime.TypeOfFile(path).then(typ => {
+                        if (!typ) {
+                            logger.warn("没有找到下载的对象类型");
+                            resolve(null);
+                        } else {
+                            let ext = "." + Mime.Extension(typ);
+                            Fs.move(path, path + ext, err => {
+                                if (err)
+                                    logger.error(err);
+                            });
+                            resolve(directory + "/" + nm + ext);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    protected doDownload(srv: ImageStore, src: string, pat: string[], directory: string): Promise<string> {
+        return new Promise(resolve => {
+            if (!srv.unsafe) {
+                // 按照日期格式保存到目录中
+                let today = new Date();
+                directory = this.hash.encode(today.getFullYear(), today.getMonth(), today.getDay());
+            }
+
+            // 保证存在
+            let dirpath = srv.store + "/" + directory + "/";
+            if (!fs.existsSync(dirpath))
+                fs.mkdirsSync(dirpath);
 
             // 目标文件的路径
             let nm = UUID();
@@ -209,23 +247,20 @@ export class RImageStore implements IRouter {
                                     if (err)
                                         logger.error(err);
                                 });
-                                resolve(dir + "/" + nm + ext);
-                            }
-                            else {
+                                resolve(directory + "/" + nm + ext);
+                            } else {
                                 logger.warn("没有找到下载的对象类型");
                                 resolve(null);
                             }
-                        }
-                        else if (pat.indexOf(typ) == -1) {
+                        } else if (pat.indexOf(typ) == -1) {
                             logger.warn("下载的文件类型不匹配 " + typ);
                             resolve(null);
-                        }
-                        else {
+                        } else {
                             Fs.move(path, path + ext, err => {
                                 if (err)
                                     logger.error(err);
                             });
-                            resolve(dir + "/" + nm + ext);
+                            resolve(directory + "/" + nm + ext);
                         }
                     });
                 }));
@@ -239,6 +274,17 @@ export class RImageStore implements IRouter {
 
         let srv = static_cast<ImageStore>(trans.server);
         let m: DownloadFile = trans.model;
+        if (srv.unsafe) {
+            this.doUnsafeDownload(srv, m.source, m.directory).then(output => {
+                if (!output)
+                    trans.status = STATUS.FAILED;
+                else
+                    m.path = output;
+                trans.submit();
+            });
+            return;
+        }
+
         if (m.type == null)
             m.type = ImageSupport.IMAGE;
         let pat = this.supports[m.type];
@@ -270,7 +316,7 @@ export class RImageStore implements IRouter {
                 logger.log("开始下载 " + m.source);
 
                 // 可以开始下载
-                this.doDownload(srv, m.source, pat).then(output => {
+                this.doDownload(srv, m.source, pat, m.directory).then(output => {
                     if (!output)
                         trans.status = STATUS.FAILED;
                     else
@@ -278,12 +324,11 @@ export class RImageStore implements IRouter {
                     trans.submit();
                 });
             });
-        }
-        else {
+        } else {
             logger.log("开始下载 " + m.source);
 
             // 可以开始下载
-            this.doDownload(srv, m.source, pat).then(output => {
+            this.doDownload(srv, m.source, pat, m.directory).then(output => {
                 if (!output)
                     trans.status = STATUS.FAILED;
                 else
@@ -406,8 +451,7 @@ export class RImageStore implements IRouter {
                         filter: filter,
                         error: err
                     });
-                }
-                else {
+                } else {
                     cb(info);
                 }
             });
@@ -429,6 +473,9 @@ export class RImageStore implements IRouter {
 interface ImageStoreNode extends Node {
     // 存储图片的位置
     store: string;
+
+    // 不安全模式(可以定义保存路径)
+    unsafe: boolean;
 }
 
 export class ImageStore extends Rest {
@@ -440,6 +487,7 @@ export class ImageStore extends Rest {
 
     @pathd()
     store: string;
+    unsafe: boolean;
 
     config(cfg: Node): boolean {
         if (!super.config(cfg))
@@ -448,6 +496,7 @@ export class ImageStore extends Rest {
         if (!c.store)
             return false;
         this.store = c.store;
+        this.unsafe = c.unsafe;
         return true;
     }
 
