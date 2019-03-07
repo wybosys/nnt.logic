@@ -2424,3 +2424,73 @@ class _AsyncArray<T> {
 
     private _arr: T[];
 }
+
+export function Sleep(seconds: number): Promise<void> {
+    return new Promise<void>(resolve => {
+        setTimeout(resolve, seconds * 1000);
+    });
+}
+
+export class Counter {
+
+    constructor(from: number, to: number = 0, delta: number = 1) {
+        this.current = this.from = from;
+        this.to = to;
+        this.delta = delta;
+    }
+
+    step(): this {
+        this.current += this.delta;
+        if (this.current == this.to) {
+            this._resolve();
+        }
+        return this;
+    }
+
+    reset(): this {
+        this.current = this.from;
+        return this;
+    }
+
+    async done() {
+        return new Promise(resolve => {
+            this._resolve = resolve;
+        });
+    }
+
+    current: number;
+    from: number;
+    to: number;
+    delta: number;
+    private _resolve: Function;
+}
+
+export class PromiseQueue {
+
+    push(p: () => Promise<void>): this {
+        this._q.push(p);
+        return this;
+    }
+
+    async run(batch: number = 1) {
+        let ct = new Counter(batch, 0, -1);
+        for (let i = 0, l = this._q.length; i < l; i += batch) {
+            if (l - i < batch)
+                ct.from = l - i;
+            ct.reset();
+
+            for (let j = 0; j < ct.from; ++j) {
+                let q = this._q[i + j];
+                q().then(d => {
+                    ct.step();
+                }).catch(() => {
+                    ct.step();
+                });
+            }
+
+            await ct.done();
+        }
+    }
+
+    private _q = new Array<() => Promise<void>>();
+}
