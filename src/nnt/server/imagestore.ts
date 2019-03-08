@@ -186,7 +186,7 @@ export class RImageStore implements IRouter {
             let path = dirpath + nm;
 
             // 使用wget下载
-            let wget = `wget "${src}" -O "${path}" --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"`;
+            let wget = `wget "${src}" -O "${path}" --timeout=5 --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"`;
             childproc.exec(wget, (err, stdout, stderr) => {
                 if (err) {
                     logger.error(err);
