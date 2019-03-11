@@ -48,6 +48,9 @@ export class Crawler {
     // 黑名单
     blacklists: RegExp[];
 
+    // 禁止加载图片等资源
+    disabledResources = true;
+
     private _buffer: string[] = [];
 
     protected cmd(cmd: string, ...cmps: any[]): this {
@@ -72,7 +75,7 @@ export class Crawler {
         return this.cmd('capture', options ? toJson(options) : null);
     }
 
-    run(cbmit?: (obj: any) => void): Promise<any> {
+    run(cbemit?: (obj: any) => void): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             // 生成最终执行的脚本
             let cmds: string[] = [];
@@ -81,27 +84,37 @@ export class Crawler {
                 'function hookError(hdl, msg, btrace) { Output(hdl, "error", msg); };',
                 'function hookAlert(hdl, msg) { Output(hdl, "log", msg); };',
                 'var hdl = require("casper").create({onError:hookError, onAlert:hookAlert});',
+                'var __P = hdl.__proto__;',
                 // 抛出返回值
                 'hdl.result = function(obj) { Output(this, "result", obj); }',
                 'hdl.log = function (obj) { Output(this, "info", obj); };',
-                'hdl.yhy = function (obj) { Output(this, "emit", obj); };'
+                'hdl.pass = function (obj) { Output(this, "emit", obj); };',
+                // 使用grab代替evaluate来增加错误检查
+                `__P.grab = function (func) { var funcstr = func.toString(); var safestr = "function safe() {try {" + funcstr.substr(13, funcstr.length - 14) + "} catch(err) { alert(err); }}"; eval(safestr); return this.evaluate(safe); };`
             ]);
 
+            // 计算资源加载控制
+            let resexp = [];
             if (this.whitelists) {
                 let exp: string[] = [];
                 this.whitelists.forEach(e => {
                     exp.push('new RegExp(' + e.toString() + ').test(data.url)');
                 });
-                ArrayT.PushObjects(cmds, [
-                    `hdl.options.onResourceRequested = function(C, data, request) { if (!(${exp.join('||')})) request.abort(); }`
-                ]);
-            } else if (this.blacklists) {
+                resexp.push(`if (!(${exp.join('||')})) { request.abort(); return; }`);
+            }
+            if (this.blacklists) {
                 let exp: string[] = [];
                 this.blacklists.forEach(e => {
                     exp.push('new RegExp(' + e.toString() + ').test(data.url)');
                 });
+                resexp.push(`if (${exp.join('||')}) { request.abort(); return; }`)
+            }
+            if (this.disabledResources) {
+                resexp.push(`if (/.jpg|.jpeg|.png|.gif|.css|.bmp/.test(data.url)) { request.abort(); return; }`);
+            }
+            if (resexp.length) {
                 ArrayT.PushObjects(cmds, [
-                    `hdl.options.onResourceRequested = function(C, data, request) { if (${exp.join('||')}) request.abort(); }`
+                    `hdl.options.onResourceRequested = function(C, data, request) { ${resexp.join(' ')} }`
                 ]);
             }
 
@@ -150,13 +163,18 @@ export class Crawler {
                         }
                             break;
                         case 'emit': {
-                            cbmit && cbmit(msg.payload);
+                            cbemit && cbemit(msg.payload);
                         }
                             break;
                         case 'info': {
-                            if (msg.payload.indexOf('[alert]') != -1)
+                            if (msg.payload.indexOf('[alert]') != -1 ||
+                                msg.payload.indexOf('[exception]') != -1)
                                 return;
                             logger.info(msg.payload);
+                        }
+                            break;
+                        case 'exception': {
+                            reject(new Error(msg.payload));
                         }
                             break;
                     }
@@ -183,6 +201,9 @@ export class Crawler {
 
     evaluate(func: Function, ...args: any[]): this {
         return this.cmd('evaluate', pack_function(func), pack_arguments(args));
+    }
+    grab(func: Function, ...args: any[]): this {
+        return this.cmd('grab', pack_function(func), pack_arguments(args));
     }
 
     then(then: Function, ...args: any[]): this {
