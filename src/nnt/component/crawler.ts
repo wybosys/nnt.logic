@@ -111,7 +111,7 @@ export class Crawler {
             }
             if (resexp.length) {
                 ArrayT.PushObjects(cmds, [
-                    `hdl.options.onResourceRequested = function(C, data, request) { ${resexp.join('\n')} }`
+                    `hdl.options.onResourceRequested = function(C, data, request) { ${resexp.join()} }`
                 ]);
             }
 
