@@ -48,6 +48,9 @@ export class Crawler {
     // 黑名单
     blacklists: RegExp[];
 
+    // 禁止加载图片等资源
+    disabledResources = true;
+
     private _buffer: string[] = [];
 
     protected cmd(cmd: string, ...cmps: any[]): this {
@@ -87,21 +90,28 @@ export class Crawler {
                 'hdl.yhy = function (obj) { Output(this, "emit", obj); };'
             ]);
 
+            // 计算资源加载控制
+            let resexp = [];
             if (this.whitelists) {
                 let exp: string[] = [];
                 this.whitelists.forEach(e => {
                     exp.push('new RegExp(' + e.toString() + ').test(data.url)');
                 });
-                ArrayT.PushObjects(cmds, [
-                    `hdl.options.onResourceRequested = function(C, data, request) { if (!(${exp.join('||')})) request.abort(); }`
-                ]);
-            } else if (this.blacklists) {
+                resexp.push(`if (!(${exp.join('||')})) { request.abort(); return; }`);
+            }
+            if (this.blacklists) {
                 let exp: string[] = [];
                 this.blacklists.forEach(e => {
                     exp.push('new RegExp(' + e.toString() + ').test(data.url)');
                 });
+                resexp.push(`if (${exp.join('||')}) { request.abort(); return; }`)
+            }
+            if (this.disabledResources) {
+                resexp.push(`if (/.jpg|.jpeg|.png|.gif|.css|.bmp/.test(data.url)) { request.abort(); return; }`);
+            }
+            if (resexp.length) {
                 ArrayT.PushObjects(cmds, [
-                    `hdl.options.onResourceRequested = function(C, data, request) { if (${exp.join('||')}) request.abort(); }`
+                    `hdl.options.onResourceRequested = function(C, data, request) { ${resexp.join('\n')} }`
                 ]);
             }
 
