@@ -110,7 +110,7 @@ export class Crawler {
                 resexp.push(`if (${exp.join('||')}) { request.abort(); return; }`)
             }
             if (this.disabledResources) {
-                resexp.push(`if (/.jpg|.jpeg|.png|.gif|.css|.bmp/.test(data.url)) { request.abort(); return; }`);
+                resexp.push(`if (/\\.jpg|\\.jpeg|\\.png|\\.gif|\\.css|\\.bmp/.test(data.url)) { request.abort(); return; }`);
             }
             if (resexp.length) {
                 ArrayT.PushObjects(cmds, [
