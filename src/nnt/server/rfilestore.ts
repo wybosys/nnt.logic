@@ -1,13 +1,8 @@
 import {action, IRouter} from "../core/router";
-import Hashids = require("hashids");
 import {enumerate, enumm, input, model, optional, output, string} from "../core/proto";
 import {Mime} from "../core/file";
 import {Fs, IndexedObject, toInt} from "../core/kernel";
 import {IMediaStore} from "./imediastore";
-import fs = require("fs-extra");
-import ph = require("path");
-import req = require("request");
-import childproc = require("child_process");
 import {static_cast, UUID} from "../core/core";
 import {logger} from "../core/logger";
 import {Config, IsDebug} from "../manager/config";
@@ -15,6 +10,10 @@ import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {FileInfo} from "./fileinfo";
 import {RespFile} from "./file";
+import Hashids = require("hashids");
+import fs = require("fs-extra");
+import req = require("request");
+import childproc = require("child_process");
 
 // 使用类型来模拟枚举
 @model([enumm])
@@ -80,7 +79,7 @@ export class RFileStore implements IRouter {
             let path = dirpath + nm;
 
             // 使用wget下载
-            let wget = `wget "${src}" -O "${path}" --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"`;
+            let wget = `wget "${src}" -O "${path}" --timeout=5 --user-agent="Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1"`;
             childproc.exec(wget, (err, stdout, stderr) => {
                 if (err) {
                     logger.error(err);
@@ -96,7 +95,9 @@ export class RFileStore implements IRouter {
                                 if (err)
                                     logger.error(err);
                             });
-                            resolve(directory + "/" + nm + ext);
+                            let result = directory + "/" + nm + ext;
+                            logger.log(`文件下载成功 ${result}`);
+                            resolve(result);
                         }
                     });
                 }

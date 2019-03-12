@@ -19,17 +19,17 @@ import {ParseContentToParams} from "./rest/params";
 import {DateTime} from "../core/time";
 import {Stream} from "../core/object";
 import {DevopsService} from "./devops/service";
-import http = require("http");
-import https = require("https");
-import spdy = require("spdy");
-import fs = require("fs");
-import formidable = require("formidable");
 import {Json as JsonRender} from "./render/json";
 import {Raw as RawRender} from "./render/raw";
 import {FindParser, RegisterParser} from "./parser/parser";
 import {Jsobj as JsobjParser} from "./parser/jsobj";
 import {Bin as BinParser} from "./parser/bin";
 import {Bin as BinRender} from "./render/bin";
+import http = require("http");
+import https = require("https");
+import spdy = require("spdy");
+import fs = require("fs");
+import formidable = require("formidable");
 import zlib = require("zlib");
 
 export interface RestResponseData {
@@ -56,6 +56,9 @@ interface RestNode extends Node {
 
     // 通过配置加载的路由器
     router?: string[] | IndexedObject; // router的列表或者 router:config 的对象
+
+    // 超时s
+    timeout?: number;
 }
 
 interface TransactionPayload {
@@ -189,6 +192,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 return false;
             }
         }
+        this.timeout = c.timeout;
 
         // 读取配置文件中配置的router
         if (c.router) {
@@ -224,6 +228,7 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
     port: number;
     https: boolean;
     http2: boolean;
+    timeout: number;
     imgsrv: string;
     mediasrv: string;
     router: string[] | IndexedObject;
@@ -271,6 +276,8 @@ export class Rest extends AbstractServer implements IRouterable, IConsoleServer,
                 this.doWorker(req, rsp);
             });
         }
+        if (this.timeout)
+            this._hdl.timeout = this.timeout * 1000;
         this._hdl.listen(this.port, this.listen ? this.listen : "0.0.0.0");
         logger.info("启动 {{=it.id}}@rest", {id: this.id});
         this.onStart();

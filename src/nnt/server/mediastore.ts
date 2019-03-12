@@ -1,10 +1,10 @@
 import {Rest} from "./rest";
 import {pathd} from "../core/url";
 import {Node} from "../config/config";
-import fs = require("fs");
 import {RImageStore} from "./rimagestore";
 import {RAudioStore} from "./raudiostore";
 import {RFileStore} from "./rfilestore";
+import fs = require("fs");
 
 interface MediaStoreNode extends Node {
     // 存储位置
@@ -47,6 +47,7 @@ export class MediaStore extends Rest {
         this.image = c.image == null || c.image;
         this.audio = !!c.audio;
         this.file = !!c.file;
+        this.timeout = 3600;
         return true;
     }
 

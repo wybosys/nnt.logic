@@ -194,6 +194,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
     rd.code = resp.statusCode;
     rd.type = resp.headers["content-type"];
     rd.raw = resp.body;
+    //logger.log(`收到 ${resp.body}`);
 
     if (m.responseType == HttpContentType.JSON) {
         rd.body = toJsonObject(resp.body);

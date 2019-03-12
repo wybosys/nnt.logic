@@ -60,7 +60,8 @@ export function Call(srvidOrUrl: string, args?: IndexedObject, subpath?: string)
     return new Promise<IndexedObject>(resolve => {
         Fetch(srvidOrUrl, args, subpath).then(m => {
             resolve(m);
-        }).catch(() => {
+        }).catch(err => {
+            logger.error(err);
             resolve(null);
         });
     });
@@ -73,8 +74,7 @@ export function Fetch(srvidOrUrl: string, args?: IndexedObject, subpath?: string
         if (srvidOrUrl.indexOf('http') != -1) {
             // 普通的url
             host = srvidOrUrl;
-        }
-        else {
+        } else {
             // 配置的服务
             let srv = <Remote>Find(srvidOrUrl);
             if (!srv) {
