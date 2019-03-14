@@ -2,12 +2,13 @@ import {AbstractNosql, InnerIdType, NosqlCmdType, RecordObject} from "./kv";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {DbExecuteStat, IterateCursorProcess} from "./store";
-import {ArrayT, IndexedObject, ObjectT, toJson} from "../core/kernel";
+import {ArrayT, indexed, IndexedObject, ObjectT, toJson} from "../core/kernel";
 import {Variant} from "../core/object";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
-import {ITransaction} from "../manager/dbms/transaction";
+import {ITransaction, TransactionDef} from "../manager/dbms/transaction";
 import {Filter} from "./filter";
+import {UpdateOne} from "../manager/dbmss";
 import mongo = require("mongodb");
 
 let DEFAULT_PORT = 27017;
@@ -883,4 +884,26 @@ class AggregationCursor {
             });
         });
     }
+}
+
+export async function Lock<T>(clz: TransactionDef<T>, key: IndexedObject, idr: string): Promise<boolean> {
+    let q: IndexedObject = {};
+    for (let k in key) {
+        q[k] = key[k];
+    }
+    q['__' + idr] = {
+        $ne: true
+    };
+    let h = await UpdateOne(clz, null, [q, {$set: indexed('__' + idr, true)}]);
+    return h != null;
+}
+
+export async function Unlock<T>(clz: TransactionDef<T>, key: IndexedObject, idr: string): Promise<boolean> {
+    let q: IndexedObject = {};
+    for (let k in key) {
+        q[k] = key[k];
+    }
+    q['__' + idr] = true;
+    let h = await UpdateOne(clz, null, [q, {$set: indexed('__' + idr, false)}]);
+    return h != null;
 }
