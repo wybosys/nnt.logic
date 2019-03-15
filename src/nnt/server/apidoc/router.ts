@@ -141,10 +141,13 @@ export class Router implements IRouter {
                     params.enums.push(em);
                     // 枚举得每一项定义都是静态的，所以可以直接遍历
                     for (let key in clz) {
-                        em.defs.push({
-                            name: key,
-                            value: clz[key]
-                        })
+                        let val = clz[key];
+                        if (typeof val != 'function') {
+                            em.defs.push({
+                                name: key,
+                                value: clz[key]
+                            })
+                        }
                     }
                 }
                 else if (mp.constant) {
