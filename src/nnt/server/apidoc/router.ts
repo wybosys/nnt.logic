@@ -145,7 +145,7 @@ export class Router implements IRouter {
                         if (typeof val != 'function') {
                             em.defs.push({
                                 name: key,
-                                value: clz[key]
+                                value: val
                             })
                         }
                     }
