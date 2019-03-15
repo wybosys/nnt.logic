@@ -3,6 +3,7 @@ import fs = require("fs");
 import {Capture} from "./v8";
 import {logger} from "./logger";
 import {REGEX_JS} from "../component/pattern";
+import crypto = require("crypto");
 
 export function static_cast<T>(l: any): T {
     return <T>l;
@@ -17,8 +18,7 @@ export function Require(nm: string, each?: (e: any) => void) {
     let t: any;
     try {
         t = require(nm);
-    }
-    catch (err) {
+    } catch (err) {
         logger.error(err);
     }
     if (each && t) {
@@ -52,6 +52,10 @@ export function GetObjectClassName(mdl: any): string {
 
 export function UUID(): string {
     return uuidv4().replace(/-/g, "");
+}
+
+export function MD5(str: string, format: 'hex' | 'base64' = 'hex'): string {
+    return crypto.createHash('md5').update(str).digest(format);
 }
 
 let __static_vars = new Map<string, any>();
