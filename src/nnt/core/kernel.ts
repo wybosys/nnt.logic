@@ -169,8 +169,9 @@ export function make_tuple4<A, B, C, D>(a: A, b: B, c: C, d: D): tuple4<A, B, C,
     return {0: a, 1: b, 2: c, 3: d};
 }
 
-export function use<T>(v: T, proc: (v: T) => void) {
+export function use<T>(v: T, proc: (v: T) => void): T {
     proc(v);
+    return v;
 }
 
 function _istuple(obj: any, len = 2): boolean {
@@ -1852,6 +1853,14 @@ export class StringT {
 }
 
 export class MapT {
+
+    static ToObject<K, V>(m: Map<K, V>): IndexedObject {
+        let r: IndexedObject = {};
+        m.forEach((v, k: any) => {
+            r[k] = v;
+        });
+        return r;
+    }
 
     // 对某个key
     static Inc<K, V>(m: Map<K, V>, key: K, v: V): V {

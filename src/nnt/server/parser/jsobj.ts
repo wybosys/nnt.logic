@@ -94,27 +94,35 @@ export class Jsobj extends AbstractParser {
                 }
                 return arr;
             } else if (fp.map) {
+                let keyconv = (v: any) => {
+                    return v
+                };
+                if (fp.keytype == integer_t)
+                    keyconv = toInt;
+                else if (fp.keytype == double_t)
+                    keyconv = toFloat;
+                val = toJsonObject(val);
                 let map = new Map();
                 if (typeof (fp.valtype) == "string") {
                     if (fp.valtype == string_t) {
                         for (let ek in val) {
                             let ev = val[ek];
-                            map.set(ek, ev ? ev.toString() : null);
+                            map.set(keyconv(ek), ev ? ev.toString() : null);
                         }
                     } else if (fp.valtype == integer_t) {
                         for (let ek in val) {
                             let ev = val[ek];
-                            map.set(ek, toInt(ev));
+                            map.set(keyconv(ek), toInt(ev));
                         }
                     } else if (fp.valtype == double_t) {
                         for (let ek in val) {
                             let ev = val[ek];
-                            map.set(ek, toFloat(ev));
+                            map.set(keyconv(ek), toFloat(ev));
                         }
                     } else if (fp.valtype == boolean_t)
                         for (let ek in val) {
                             let ev = val[ek];
-                            map.set(ek, !!ev);
+                            map.set(keyconv(ek), !!ev);
                         }
                 } else {
                     let clz: any = fp.valtype;
@@ -122,24 +130,32 @@ export class Jsobj extends AbstractParser {
                         let ev = val[ek];
                         let t = new clz();
                         this.fill(t, ev, input, output);
-                        map.set(ek, t);
+                        map.set(keyconv(ek), t);
                     }
                 }
                 return map;
             } else if (fp.multimap) {
+                let keyconv = (v: any) => {
+                    return v
+                };
+                if (fp.keytype == integer_t)
+                    keyconv = toInt;
+                else if (fp.keytype == double_t)
+                    keyconv = toFloat;
+                val = toJsonObject(val);
                 let mmap = new Multimap();
                 if (typeof (fp.valtype) == "string") {
                     if (fp.valtype == string_t) {
                         for (let ek in val) {
                             let ev = val[ek];
-                            mmap.set(ek, ArrayT.Convert(ev, e => asString(e)));
+                            mmap.set(keyconv(ek), ArrayT.Convert(ev, e => asString(e)));
                         }
                     } else if (fp.valtype == integer_t) {
                         for (let ek in val) {
                             let ev = val[ek];
                             for (let ek in val) {
                                 let ev = val[ek];
-                                mmap.set(ek, ArrayT.Convert(ev, e => toInt(e)));
+                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toInt(e)));
                             }
                         }
                     } else if (fp.valtype == double_t) {
@@ -147,7 +163,7 @@ export class Jsobj extends AbstractParser {
                             let ev = val[ek];
                             for (let ek in val) {
                                 let ev = val[ek];
-                                mmap.set(ek, ArrayT.Convert(ev, e => toFloat(e)));
+                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toFloat(e)));
                             }
                         }
                     } else if (fp.valtype == boolean_t) {
@@ -155,7 +171,7 @@ export class Jsobj extends AbstractParser {
                             let ev = val[ek];
                             for (let ek in val) {
                                 let ev = val[ek];
-                                mmap.set(ek, ArrayT.Convert(ev, e => toBoolean(e)));
+                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toBoolean(e)));
                             }
                         }
                     }
@@ -165,7 +181,7 @@ export class Jsobj extends AbstractParser {
                         let ev = val[ek];
                         for (let ek in val) {
                             let ev = val[ek];
-                            mmap.set(ek, ArrayT.Convert(ev, e => {
+                            mmap.set(keyconv(ek), ArrayT.Convert(ev, e => {
                                 let t = new clz();
                                 this.fill(t, e, input, output);
                                 return t;
