@@ -156,6 +156,9 @@ export class SdkRecharge {
 
     @string(5, [output], "orderid")
     orderid: string;
+
+    @string(6, [input, optional], "支付方式id")
+    rechargeid: string;
 }
 
 @model()
@@ -393,7 +396,7 @@ export class Sdks extends AbstractServer {
         return Decode(new SdkUserInfo(), ret.user, false, true);
     }
 
-    //删除普通用户
+    // 删除普通用户
     async removeUser(uid: string): Promise<void> {
         Call(this.users, {
             action: 'user.del',
@@ -408,14 +411,15 @@ export class Sdks extends AbstractServer {
             money: m.money,
             channel: m.channel,
             gameid: this.gameid,
-            uid: m.uid
+            uid: m.uid,
+            rechargeid: m.rechargeid
         });
         m.orderid = ret.orderid;
         m.raw = ret.raw;
         return m;
     }
 
-    //屏蔽字
+    // 屏蔽字
     async wordFiliter(word: string): Promise<SdkWordFiliter> {
         let ret = await Fetch(this.wordfilter, {
             action: 'app.filter',
