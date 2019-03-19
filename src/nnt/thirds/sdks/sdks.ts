@@ -159,6 +159,12 @@ export class SdkRecharge {
 
     @string(6, [input, optional], "支付方式id")
     rechargeid: string;
+
+    @string(7, [input, optional], "商品id")
+    produid: string;
+
+    @string(8, [input, optional], "商品信息")
+    produinfo: string;
 }
 
 @model()
@@ -412,7 +418,9 @@ export class Sdks extends AbstractServer {
             channel: m.channel,
             gameid: this.gameid,
             uid: m.uid,
-            rechargeid: m.rechargeid
+            rechargeid: m.rechargeid,
+            produid: m.produid,
+            produinfo: m.produinfo
         });
         m.orderid = ret.orderid;
         m.raw = ret.raw;
