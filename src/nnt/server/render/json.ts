@@ -3,6 +3,7 @@ import {Output} from "../../core/proto";
 import {asString, IndexedObject} from "../../core/kernel";
 import {Mime} from "../../core/file";
 import {AbstractRender} from "./render";
+import {STATUS} from "../../core/models";
 
 export class Json extends AbstractRender {
 
@@ -18,14 +19,17 @@ export class Json extends AbstractRender {
             r = Output(trans.model);
             if (trans.model && r === null)
                 r = {};
-        }
-        else {
+        } else {
             r = {
                 code: trans.status,
-                data: (opt && opt.raw) ? trans.model : Output(trans.model)
             };
-            if (trans.model && r.data === null)
-                r.data = {};
+            if (trans.status != STATUS.OK) {
+                r.message = trans.message;
+            } else {
+                r.data = (opt && opt.raw) ? trans.model : Output(trans.model);
+                if (r.data === null && trans.model)
+                    r.data = {};
+            }
         }
         let cmid = trans.params["_cmid"];
         if (cmid != null)

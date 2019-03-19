@@ -5,6 +5,7 @@ import {STATUS} from "../core/models";
 import {MapT} from "../core/kernel";
 import {Config} from "../manager/config";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
+import {ModelError} from "../session/model";
 
 export interface IRouterable {
     routers: Routers;
@@ -74,8 +75,7 @@ export class Routers {
         // 检查是否需要验证
         if (ac && ac.ignore) {
             // 不做权限判断
-        }
-        else if (!trans.expose) {
+        } else if (!trans.expose) {
             // 访问权限判断
             if (trans.needAuth()) {
                 if (!trans.auth()) {
@@ -83,8 +83,7 @@ export class Routers {
                     trans.submit();
                     return;
                 }
-            }
-            else {
+            } else {
                 // 检查devops
                 if (!await this.devopscheck(trans)) {
                     trans.status = STATUS.PERMISSIO_FAILED;
@@ -103,7 +102,18 @@ export class Routers {
 
         // 不论同步或者异步模式，默认认为是成功的，业务逻辑如果出错则再次设置status为对应的错误码
         trans.status = STATUS.OK;
-        func.call(r, trans);
+        try {
+            await func.call(r, trans);
+        } catch (err) {
+            if (err instanceof ModelError) {
+                trans.status = err.code;
+                trans.message = err.message;
+            } else {
+                trans.status = STATUS.EXCEPTION;
+                trans.message = err.message;
+            }
+            trans.submit();
+        }
     }
 
     async listen(trans: Transaction) {
