@@ -100,6 +100,9 @@ export class SdkUserInfo {
 
     @string(4, [output])
     avatar: string;
+
+    @string(5, [output])
+    phone: string;
 }
 
 @model()
