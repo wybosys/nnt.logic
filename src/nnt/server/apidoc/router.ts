@@ -3,12 +3,13 @@ import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
 import {IsClass, Require, static_cast} from "../../core/core";
-import {AnyClass, ArrayT, clazz_type, IndexedObject, JsonObject, ObjectT, StringT, toJson} from "../../core/kernel";
+import {AnyClass, ArrayT, clazz_type, IndexedObject, JsonObject, ObjectT, toJson} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
 import {
     boolean,
-    FpToDecoDef, FpToDecoDefPHP,
+    FpToDecoDef,
+    FpToDecoDefPHP,
     FpToTypeDef,
     GetAllFields,
     GetAllOwnFields,
@@ -21,15 +22,16 @@ import {
 import {logger} from "../../core/logger";
 import {UpcaseFirst} from "../../core/string";
 import {RespFile} from "../file";
+import {GetDomain} from "../../core/devops";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
-import {GetDomain} from "../../core/devops";
 
 interface ParameterInfo {
     name: string;
     string: boolean;
     integer: boolean;
     double: boolean;
+    number: boolean;
     boolean: boolean;
     file: boolean;
     enum: boolean;
@@ -149,16 +151,14 @@ export class Router implements IRouter {
                             })
                         }
                     }
-                }
-                else if (mp.constant) {
+                } else if (mp.constant) {
                     for (let key in clz) {
                         params.consts.push({
                             name: name.toUpperCase() + "_" + key.toUpperCase(),
                             value: Output(clz[key])
                         });
                     }
-                }
-                else {
+                } else {
                     // 判断是否有父类
                     let clazz = {
                         name: name,
@@ -317,6 +317,7 @@ export class Router implements IRouter {
             t.string = fp.string;
             t.integer = fp.integer;
             t.double = fp.double;
+            t.number = fp.number;
             t.boolean = fp.boolean;
             t.file = fp.file;
             t.enum = fp.enum;

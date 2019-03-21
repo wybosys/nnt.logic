@@ -796,6 +796,8 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
         deco = "@" + ns + "integer(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.double)
         deco = "@" + ns + "double(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
+    else if (fp.number)
+        deco = "@" + ns + "number(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.double)
         deco = "@" + ns + "number(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.boolean)
