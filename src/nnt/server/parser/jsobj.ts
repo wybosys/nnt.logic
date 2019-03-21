@@ -1,5 +1,5 @@
 import {AbstractParser} from "./parser";
-import {boolean_t, double_t, FieldOption, FP_KEY, integer_t, string_t} from "../../core/proto";
+import {boolean_t, double_t, FieldOption, FP_KEY, integer_t, number_t, string_t} from "../../core/proto";
 import {STATUS} from "../../core/models";
 import {
     ArrayT,
@@ -8,9 +8,10 @@ import {
     IsEmpty,
     Multimap,
     toBoolean,
-    toFloat,
+    toDouble,
     toInt,
     toJsonObject,
+    toNumber,
     UploadedFileHandle
 } from "../../core/kernel";
 import {logger} from "../../core/logger";
@@ -70,7 +71,11 @@ export class Jsobj extends AbstractParser {
                             });
                         } else if (fp.valtype == double_t) {
                             val.forEach((e: any) => {
-                                arr.push(toFloat(e));
+                                arr.push(toDouble(e));
+                            });
+                        } else if (fp.valtype == number_t) {
+                            val.forEach((e: any) => {
+                                arr.push(toNumber(e));
                             });
                         } else if (fp.valtype == boolean_t) {
                             val.forEach((e: any) => {
@@ -100,7 +105,9 @@ export class Jsobj extends AbstractParser {
                 if (fp.keytype == integer_t)
                     keyconv = toInt;
                 else if (fp.keytype == double_t)
-                    keyconv = toFloat;
+                    keyconv = toDouble;
+                else if (fp.keytype == number_t)
+                    keyconv = toNumber;
                 val = toJsonObject(val);
                 let map = new Map();
                 if (typeof (fp.valtype) == "string") {
@@ -117,7 +124,12 @@ export class Jsobj extends AbstractParser {
                     } else if (fp.valtype == double_t) {
                         for (let ek in val) {
                             let ev = val[ek];
-                            map.set(keyconv(ek), toFloat(ev));
+                            map.set(keyconv(ek), toDouble(ev));
+                        }
+                    } else if (fp.valtype == number_t) {
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            map.set(keyconv(ek), toNumber(ev));
                         }
                     } else if (fp.valtype == boolean_t)
                         for (let ek in val) {
@@ -141,7 +153,9 @@ export class Jsobj extends AbstractParser {
                 if (fp.keytype == integer_t)
                     keyconv = toInt;
                 else if (fp.keytype == double_t)
-                    keyconv = toFloat;
+                    keyconv = toDouble;
+                else if (fp.keytype == number_t)
+                    keyconv = toNumber;
                 val = toJsonObject(val);
                 let mmap = new Multimap();
                 if (typeof (fp.valtype) == "string") {
@@ -163,7 +177,15 @@ export class Jsobj extends AbstractParser {
                             let ev = val[ek];
                             for (let ek in val) {
                                 let ev = val[ek];
-                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toFloat(e)));
+                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toDouble(e)));
+                            }
+                        }
+                    } else if (fp.valtype == number_t) {
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            for (let ek in val) {
+                                let ev = val[ek];
+                                mmap.set(keyconv(ek), ArrayT.Convert(ev, e => toNumber(e)));
                             }
                         }
                     } else if (fp.valtype == boolean_t) {
@@ -208,7 +230,9 @@ export class Jsobj extends AbstractParser {
             } else if (fp.integer) {
                 return toInt(val);
             } else if (fp.double) {
-                return toFloat(val);
+                return toDouble(val);
+            } else if (fp.number) {
+                return toNumber(val);
             } else if (fp.boolean) {
                 return toBoolean(val);
             } else if (fp.enum) {

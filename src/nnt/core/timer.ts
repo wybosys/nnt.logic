@@ -133,8 +133,7 @@ export class RtTimer
                 } else {
                     this.signals.emit(kSignalAction);
                 }
-            }
-            else {
+            } else {
                 this.signals.emit(kSignalAction);
             }
 
@@ -191,8 +190,7 @@ export class SysTimer
             } else {
                 this.signals.emit(kSignalAction);
             }
-        }
-        else {
+        } else {
             this.signals.emit(kSignalAction);
         }
     }
@@ -274,6 +272,12 @@ export class Timer
     get deltaFired(): number {
         let tmr = this.timer();
         return tmr && tmr.deltaFired;
+    }
+
+    static async Sleep(seconds: number) {
+        return new Promise<void>(resolve => {
+            setTimeout(resolve, seconds * 1000);
+        });
     }
 }
 
@@ -521,12 +525,10 @@ export class CoTimer
 
                     // 恢复激发计数
                     item._firedCount = 0;
-                }
-                else {
+                } else {
                     item.signals.emit(kSignalAction, s.sender.xdata);
                 }
-            }
-            else {
+            } else {
                 item.signals.emit(kSignalAction, s.sender.xdata);
             }
         }, this);

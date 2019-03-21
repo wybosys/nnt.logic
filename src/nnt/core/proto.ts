@@ -7,9 +7,10 @@ import {
     Multimap,
     ObjectT,
     toBoolean,
-    toFloat,
+    toDouble,
     toInt,
     toJsonObject,
+    toNumber,
     ToObject,
     UploadedFileHandle
 } from "./kernel";
@@ -54,6 +55,7 @@ export const output = "output";
 export const string_t = "string";
 export const integer_t = "integer";
 export const double_t = "double";
+export const number_t = "number";
 export const boolean_t = "boolean";
 
 // 文件类型
@@ -104,6 +106,7 @@ export interface FieldOption {
     string?: boolean;
     integer?: boolean;
     double?: boolean;
+    number?: boolean;
     boolean?: boolean;
     enum?: boolean;
     file?: boolean;
@@ -274,6 +277,14 @@ export function double(id: number, opts: string[], comment?: string, valid?: Fie
     };
 }
 
+export function number(id: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    let fp = field(id, opts, comment, valid);
+    fp.number = true;
+    return (target: any, key: string) => {
+        DefineFp(target, key, fp);
+    };
+}
+
 // 定义数组
 export function array(id: number, clz: clazz_type, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
     let fp = field(id, opts, comment, valid);
@@ -389,7 +400,11 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                         });
                     } else if (fp.valtype == double_t) {
                         val.forEach((e: any) => {
-                            arr.push(toFloat(e));
+                            arr.push(toDouble(e));
+                        });
+                    } else if (fp.valtype == number_t) {
+                        val.forEach((e: any) => {
+                            arr.push(toNumber(e));
                         });
                     } else if (fp.valtype == boolean_t)
                         val.forEach((e: any) => {
@@ -427,7 +442,12 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                 } else if (fp.valtype == double_t) {
                     for (let ek in val) {
                         let ev = val[ek];
-                        map.set(ek, toFloat(ev));
+                        map.set(ek, toDouble(ev));
+                    }
+                } else if (fp.valtype == number_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        map.set(ek, toNumber(ev));
                     }
                 } else if (fp.valtype == boolean_t)
                     for (let ek in val) {
@@ -465,7 +485,15 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
                         let ev = val[ek];
                         for (let ek in val) {
                             let ev = val[ek];
-                            mmap.set(ek, ArrayT.Convert(ev, e => toFloat(e)));
+                            mmap.set(ek, ArrayT.Convert(ev, e => toDouble(e)));
+                        }
+                    }
+                } else if (fp.valtype == number_t) {
+                    for (let ek in val) {
+                        let ev = val[ek];
+                        for (let ek in val) {
+                            let ev = val[ek];
+                            mmap.set(ek, ArrayT.Convert(ev, e => toNumber(e)));
                         }
                     }
                 } else if (fp.valtype == boolean_t) {
@@ -510,7 +538,9 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
         else if (fp.integer)
             return toInt(val);
         else if (fp.double)
-            return toFloat(val);
+            return toDouble(val);
+        else if (fp.number)
+            return toNumber(val);
         else if (fp.boolean)
             return toBoolean(val);
         else if (fp.enum)
@@ -572,7 +602,11 @@ export function Output(mdl: any): IndexedObject {
                         });
                     } else if (fp.valtype == double_t) {
                         val.forEach((e: any) => {
-                            arr.push(toFloat(e));
+                            arr.push(toDouble(e));
+                        });
+                    } else if (fp.valtype == number_t) {
+                        val.forEach((e: any) => {
+                            arr.push(toNumber(e));
                         });
                     } else if (fp.valtype == boolean_t) {
                         val.forEach((e: any) => {
@@ -630,7 +664,9 @@ export function Output(mdl: any): IndexedObject {
             else if (fp.integer)
                 r[fk] = toInt(val);
             else if (fp.double)
-                r[fk] = toFloat(val);
+                r[fk] = toDouble(val);
+            else if (fp.number)
+                r[fk] = toNumber(val);
             else if (fp.boolean)
                 r[fk] = !!val;
             else if (fp.enum)
@@ -659,6 +695,8 @@ export function FpToTypeDef(fp: FieldOption): string {
         typ = "number";
     } else if (fp.double) {
         typ = "number";
+    } else if (fp.number) {
+        typ = "number";
     } else if (fp.boolean) {
         typ = "boolean";
     } else if (fp.array) {
@@ -671,6 +709,7 @@ export function FpToTypeDef(fp: FieldOption): string {
                     break;
                 case double_t:
                 case integer_t:
+                case number_t:
                     vt = "number";
                     break;
                 case boolean_t:
@@ -737,6 +776,7 @@ function ValtypeDefToDef(def: clazz_type): string {
             return "string";
         case double_t:
         case integer_t:
+        case number_t:
             return "number";
         case boolean_t:
             return "boolean";
@@ -756,6 +796,8 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
         deco = "@" + ns + "integer(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.double)
         deco = "@" + ns + "double(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
+    else if (fp.double)
+        deco = "@" + ns + "number(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.boolean)
         deco = "@" + ns + "boolean(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.array) {
@@ -789,6 +831,9 @@ export function FpToDecoDefPHP(fp: FieldOption): string {
     } else if (fp.double) {
         deco = "@Api(" + fp.id + ", [double], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
         deco += "\n\t* @var double";
+    } else if (fp.number) {
+        deco = "@Api(" + fp.id + ", [number], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
+        deco += "\n\t* @var int|double";
     } else if (fp.boolean) {
         deco = "@Api(" + fp.id + ", [boolean], " + FpToOptionsDef(fp) + FpToCommentDef(fp) + ")";
         deco += "\n\t* @var boolean";

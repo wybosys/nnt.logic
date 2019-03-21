@@ -1,5 +1,5 @@
 // 数据库定义
-import {AnyClass, IndexedObject, KvObject, ObjectT, toFloat, toInt, ToObject} from "../core/kernel";
+import {AnyClass, IndexedObject, KvObject, ObjectT, toDouble, toInt, ToObject} from "../core/kernel";
 import {double_t, integer_t} from "../core/proto";
 import {GetClassName} from "../core/core";
 
@@ -46,6 +46,7 @@ export interface FieldOption {
     string?: boolean;
     integer?: boolean;
     double?: boolean;
+    number?: boolean;
     boolean?: boolean;
     json?: boolean;
     array?: boolean;
@@ -72,6 +73,7 @@ export function FpIsTypeEqual(l: FieldOption, r: FieldOption) {
         l.integer == r.integer &&
         l.double == r.double &&
         l.boolean == r.boolean &&
+        l.number == r.number &&
         l.json == r.json &&
         l.array == r.array &&
         l.map == r.map &&
@@ -136,12 +138,10 @@ function DefineFp(target: any, key: string, fp: FieldOption) {
     if (target.hasOwnProperty(FP_KEY)) {
         fps = target[FP_KEY];
         ownfps = target[OWNFP_KEY];
-    }
-    else {
+    } else {
         if (FP_KEY in target) {
             fps = CloneFps(target[FP_KEY]);
-        }
-        else {
+        } else {
             fps = {};
         }
         ownfps = {};
@@ -178,6 +178,8 @@ export function coldef(fp: FieldOption): string {
         return "integer";
     if (fp.double)
         return "double";
+    if (fp.number)
+        return "number";
     if (fp.string)
         return "string";
     if (fp.json)
@@ -243,6 +245,14 @@ export function coldouble(opts?: string[], set?: FieldSetting): (target: any, ke
     };
 }
 
+export function colnumber(opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
+    return (target: any, key: string) => {
+        let fp = column(key, opts, set);
+        fp.number = true;
+        DefineFp(target, key, fp);
+    };
+}
+
 export function colarray(clz: clazz_type, opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
     return (target: any, key: string) => {
         let fp = column(key, opts, set);
@@ -295,16 +305,14 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
         }
         if (fp.valtype) {
             if (fp.array) {
-                if (typeof(fp.valtype) == "string") {
+                if (typeof (fp.valtype) == "string") {
                     mdl[key] = val;
-                }
-                else {
+                } else {
                     let clz: AnyClass = fp.valtype;
                     if (clz == Object) {
                         // object类似于json，不指定数据类型
                         mdl[key] = val;
-                    }
-                    else {
+                    } else {
                         let arr = new Array();
                         val.forEach((e: any) => {
                             let t = new clz();
@@ -314,8 +322,7 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                         mdl[key] = arr;
                     }
                 }
-            }
-            else if (fp.map) {
+            } else if (fp.map) {
                 let map = new Map();
                 let keyconv = (v: any) => {
                     return v
@@ -323,12 +330,11 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                 if (fp.keytype == integer_t)
                     keyconv = toInt;
                 else if (fp.keytype == double_t)
-                    keyconv = toFloat;
-                if (typeof(fp.valtype) == "string") {
+                    keyconv = toDouble;
+                if (typeof (fp.valtype) == "string") {
                     for (let ek in val)
                         map.set(keyconv(ek), val[ek]);
-                }
-                else {
+                } else {
                     let clz: AnyClass = fp.valtype;
                     for (let ek in val) {
                         let t = new clz();
@@ -337,23 +343,19 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                     }
                 }
                 mdl[key] = map;
-            }
-            else {
+            } else {
                 let clz = <AnyClass>fp.valtype;
                 if (clz == Object) {
                     mdl[key] = val;
-                }
-                else if (typeof val == "object") {
+                } else if (typeof val == "object") {
                     let t = new clz();
                     Decode(t, val);
                     mdl[key] = t;
-                }
-                else if (!fp.loose) {
+                } else if (!fp.loose) {
                     mdl[key] = null;
                 }
             }
-        }
-        else {
+        } else {
             mdl[key] = val;
         }
     }
@@ -376,39 +378,34 @@ export function Output(mdl: any, def: any = {}): IndexedObject {
             if (fp.array) {
                 if (typeof fp.valtype == "string") {
                     r[fk] = val;
-                }
-                else {
+                } else {
                     let arr = new Array();
                     val && val.forEach((e: any) => {
                         arr.push(Output(e));
                     });
                     r[fk] = arr;
                 }
-            }
-            else if (fp.map) {
+            } else if (fp.map) {
                 let m: IndexedObject = {};
                 if (val) {
                     if (typeof fp.valtype == "string") {
                         val.forEach((v: any, k: string) => {
                             m[k] = v; // 不需要转换key的类型，val为真实的Map对象
                         });
-                    }
-                    else {
+                    } else {
                         val.forEach((v: any, k: string) => {
                             m[k] = Output(v);
                         });
                     }
                 }
                 r[fk] = m;
-            }
-            else {
+            } else {
                 let v = Output(val, null);
                 if (v == null)
                     v = ToObject(val);
                 r[fk] = v;
             }
-        }
-        else {
+        } else {
             r[fk] = val;
         }
     }
