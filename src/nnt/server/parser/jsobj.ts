@@ -5,6 +5,7 @@ import {
     ArrayT,
     asString,
     IndexedObject,
+    IntFloat,
     IsEmpty,
     Multimap,
     toBoolean,
@@ -233,6 +234,8 @@ export class Jsobj extends AbstractParser {
                 return toDouble(val);
             } else if (fp.number) {
                 return toNumber(val);
+            } else if (fp.intfloat) {
+                return new IntFloat(0, fp.intfloat).setValue(toNumber(val))
             } else if (fp.boolean) {
                 return toBoolean(val);
             } else if (fp.enum) {

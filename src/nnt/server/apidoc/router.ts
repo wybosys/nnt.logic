@@ -34,6 +34,7 @@ interface ParameterInfo {
     number: boolean;
     boolean: boolean;
     file: boolean;
+    intfloat: number;
     enum: boolean;
     array: boolean;
     map: boolean;
@@ -318,6 +319,7 @@ export class Router implements IRouter {
             t.integer = fp.integer;
             t.double = fp.double;
             t.number = fp.number;
+            t.intfloat = fp.intfloat;
             t.boolean = fp.boolean;
             t.file = fp.file;
             t.enum = fp.enum;

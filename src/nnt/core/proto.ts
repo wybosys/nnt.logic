@@ -4,6 +4,7 @@ import {
     ArrayT,
     asString,
     IndexedObject,
+    IntFloat,
     Multimap,
     ObjectT,
     toBoolean,
@@ -112,13 +113,13 @@ export interface FieldOption {
     file?: boolean;
     json?: boolean;
     filter?: boolean;
+    intfloat?: number;
 
     // 关联类型
     keytype?: clazz_type;
     valtype?: clazz_type;
 
-    // 注释
-    comment?: string;
+    comment?: string; // 注释
 
     // 有效性检查函数
     valid?: FieldValidProc;
@@ -283,6 +284,25 @@ export function number(id: number, opts: string[], comment?: string, valid?: Fie
     return (target: any, key: string) => {
         DefineFp(target, key, fp);
     };
+}
+
+// 现在intfloat只能用于普通变量，不支持放到结构之中
+export function intfloat(id: number, scale: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    let fp = field(id, opts, comment, valid);
+    fp.intfloat = scale;
+    return (target: any, key: string) => {
+        DefineFp(target, key, fp);
+    };
+}
+
+// 百分数格式化至 0-10000之间
+export function percentage(id: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    return intfloat(id, 10000, opts, comment, valid);
+}
+
+// 钱格式化到 0-100 之间
+export function money(id: number, opts: string[], comment?: string, valid?: FieldValidProc): (target: any, key: string) => void {
+    return intfloat(id, 100, opts, comment, valid);
 }
 
 // 定义数组
@@ -549,6 +569,9 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
             return toJsonObject(val);
         else if (fp.filter)
             return Filter.Parse(val);
+        else if (fp.intfloat)
+        // 和store不同，接口收到是最终值，而数据库收到会是原始值
+            return IntFloat.From(0, fp.intfloat).setValue(toNumber(val));
         else
             return val;
     }
@@ -673,6 +696,8 @@ export function Output(mdl: any): IndexedObject {
                 r[fk] = toInt(val);
             else if (fp.filter)
                 r[fk] = val.toString();
+            else if (fp.intfloat)
+                r[fk] = val.valueOf();
             else {
                 let v = Output(val);
                 if (v == null)
@@ -699,6 +724,8 @@ export function FpToTypeDef(fp: FieldOption): string {
         typ = "number";
     } else if (fp.boolean) {
         typ = "boolean";
+    } else if (fp.intfloat) {
+        typ = "number";
     } else if (fp.array) {
         typ = "Array<";
         if (typeof (fp.valtype) == "string") {
@@ -767,6 +794,9 @@ function FpToValtypeDef(fp: FieldOption, ns = ""): string {
         else
             t.push(fp.valtype["name"]);
     }
+    if (fp.intfloat) {
+        t.push(fp.intfloat);
+    }
     return t.join(", ");
 }
 
@@ -800,6 +830,8 @@ export function FpToDecoDef(fp: FieldOption, ns = ""): string {
         deco = "@" + ns + "number(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.double)
         deco = "@" + ns + "number(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
+    else if (fp.intfloat)
+        deco = "@" + ns + "intfloat(" + fp.id + ", " + FpToValtypeDef(fp, ns) + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.boolean)
         deco = "@" + ns + "boolean(" + fp.id + ", " + FpToOptionsDef(fp, ns) + FpToCommentDef(fp) + ")";
     else if (fp.array) {

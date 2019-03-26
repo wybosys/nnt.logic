@@ -1,7 +1,6 @@
 // 数据库定义
-import {AnyClass, IndexedObject, KvObject, ObjectT, toDouble, toInt, ToObject} from "../core/kernel";
+import {AnyClass, IndexedObject, IntFloat, KvObject, ObjectT, toDouble, toInt, ToObject} from "../core/kernel";
 import {double_t, integer_t} from "../core/proto";
-import {GetClassName} from "../core/core";
 
 export const key = "key";
 export const subkey = "subkey";
@@ -51,6 +50,7 @@ export interface FieldOption {
     json?: boolean;
     array?: boolean;
     map?: boolean;
+    intfloat?: number;
 
     keytype?: string;
     valtype?: clazz_type;
@@ -64,6 +64,7 @@ export interface FieldOption {
     zero?: boolean; // 初始化为0
     desc?: boolean; // 递减
     loose?: boolean; // 宽松模式
+    scale?: number; // 数据缩放
 
     setting?: FieldSetting; // 字段设置
 }
@@ -74,6 +75,7 @@ export function FpIsTypeEqual(l: FieldOption, r: FieldOption) {
         l.double == r.double &&
         l.boolean == r.boolean &&
         l.number == r.number &&
+        l.intfloat == r.intfloat &&
         l.json == r.json &&
         l.array == r.array &&
         l.map == r.map &&
@@ -162,40 +164,6 @@ function DefineFp(target: any, key: string, fp: FieldOption) {
     ownfps[key] = fp;
 }
 
-function valtypedef(typ: clazz_type): string {
-    if (typ == Object)
-        return "object";
-    if (typeof typ == "string")
-        return typ;
-    return GetClassName(typ);
-}
-
-// 返回定义的描述
-export function coldef(fp: FieldOption): string {
-    if (fp.boolean)
-        return "boolean";
-    if (fp.integer)
-        return "integer";
-    if (fp.double)
-        return "double";
-    if (fp.number)
-        return "number";
-    if (fp.string)
-        return "string";
-    if (fp.json)
-        return "json";
-    if (fp.array) {
-        return valtypedef(fp.valtype) + "[]";
-    }
-    if (fp.map) {
-        return valtypedef(fp.keytype) + ":" + valtypedef(fp.valtype);
-    }
-    if (fp.valtype) {
-        return valtypedef(fp.valtype);
-    }
-    return "undecl";
-}
-
 // 返回基础的定义结构，之后的都直接使用固定的类型函数来声明
 function column(nm: string, opts: string[], set: FieldSetting): FieldOption {
     return {
@@ -251,6 +219,22 @@ export function colnumber(opts?: string[], set?: FieldSetting): (target: any, ke
         fp.number = true;
         DefineFp(target, key, fp);
     };
+}
+
+export function colintfloat(scale: number, opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
+    return (target: any, key: string) => {
+        let fp = column(key, opts, set);
+        fp.intfloat = scale;
+        DefineFp(target, key, fp);
+    };
+}
+
+export function colpercentage(opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
+    return colintfloat(10000, opts, set);
+}
+
+export function colmoney(opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
+    return colintfloat(100, opts, set);
 }
 
 export function colarray(clz: clazz_type, opts?: string[], set?: FieldSetting): (target: any, key: string) => void {
@@ -355,6 +339,8 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                     mdl[key] = null;
                 }
             }
+        } else if (fp.intfloat) {
+            mdl[key] = IntFloat.From(val, fp.intfloat);
         } else {
             mdl[key] = val;
         }
@@ -405,6 +391,8 @@ export function Output(mdl: any, def: any = {}): IndexedObject {
                     v = ToObject(val);
                 r[fk] = v;
             }
+        } else if (fp.intfloat) {
+            r[fk] = IntFloat.Origin(val);
         } else {
             r[fk] = val;
         }
