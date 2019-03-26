@@ -1316,6 +1316,41 @@ export class ObjectT {
         return true;
     }
 
+    // 展开成keypath的结构
+    static KeyPathExpand(o: any): IndexedObject {
+        let r: IndexedObject = {};
+        this._KeyPathExpandAt(o, r, []);
+        return r;
+    }
+
+    private static _KeyPathExpandAt(o: any, r: IndexedObject, p: string[]) {
+        const typ = typeof o;
+        if (typ == "number" || typ == "string" || typ == "boolean") {
+            r[p.join('.')] = o;
+            return;
+        }
+
+        if (o instanceof Array) {
+            o.forEach((e, i) => {
+                let np = p.concat();
+                np.push(i.toString());
+                this._KeyPathExpandAt(e, r, np);
+            });
+        } else if (o instanceof Map) {
+            o.forEach((e, k) => {
+                let np = p.concat();
+                np.push(k);
+                this._KeyPathExpandAt(e, r, np)
+            });
+        } else {
+            for (let k in o) {
+                let np = p.concat();
+                np.push(k);
+                this._KeyPathExpandAt(o[k], r, np);
+            }
+        }
+    }
+
     static SeqForin<T, R>(obj: { [key: string]: T }, proc: (e: T, key: string, next: (ret?: R) => void) => void, complete: (ret?: R) => void) {
         let keys = Object.keys(obj);
         let iter = keys.entries();
