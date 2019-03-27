@@ -2268,11 +2268,11 @@ export class IntFloat {
         this._value = ori / s;
     }
 
-    static Money(ori: number = 0): IntFloat {
+    static Money(ori: number = 0): any {
         return new IntFloat(ori, 100);
     }
 
-    static Percentage(ori: number = 0): IntFloat {
+    static Percentage(ori: number = 0): any {
         return new IntFloat(ori, 10000);
     }
 
@@ -2282,28 +2282,28 @@ export class IntFloat {
         throw new Error('对一个不是IntFloat的数据请求Origin');
     }
 
-    static From(ori: intfloat, scale: number): IntFloat {
+    static From(ori: intfloat, scale: number): any {
         if (ori instanceof IntFloat) {
             return new IntFloat(ori.origin, scale);
         }
         return new IntFloat(ori, scale);
     }
 
-    static FromValue(val: intfloat, scale: number): IntFloat {
+    static FromValue(val: intfloat, scale: number): any {
         if (val instanceof IntFloat) {
             return new IntFloat(val.origin, scale);
         }
         return new IntFloat(0, scale).setValue(val);
     }
 
-    static Multiply(l: intfloat, r: number): intfloat {
+    static Multiply(l: intfloat, r: number): any {
         if (l instanceof IntFloat) {
             return l.clone().multiply(r);
         }
         throw new Error('对一个不是IntFloat的数据进行multiply操作');
     }
 
-    static Add(l: intfloat, r: number): intfloat {
+    static Add(l: intfloat, r: number): any {
         if (l instanceof IntFloat) {
             return l.clone().add(r);
         }
