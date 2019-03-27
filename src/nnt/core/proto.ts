@@ -570,8 +570,7 @@ export function DecodeValue(fp: FieldOption, val: any, input = true, output = fa
         else if (fp.filter)
             return Filter.Parse(val);
         else if (fp.intfloat)
-        // 和store不同，接口收到是最终值，而数据库收到会是原始值
-            return IntFloat.From(0, fp.intfloat).setValue(toNumber(val));
+            return IntFloat.From(toInt(val), fp.intfloat);
         else
             return val;
     }
@@ -590,7 +589,11 @@ export function Encode(mdl: any): IndexedObject {
         let v = mdl[key];
         if (v == null)
             continue;
-        r[key] = v;
+        if (fp.intfloat) {
+            r[key] = IntFloat.From(v, fp.intfloat).origin;
+        } else {
+            r[key] = v;
+        }
     }
     return r;
 }
@@ -697,7 +700,7 @@ export function Output(mdl: any): IndexedObject {
             else if (fp.filter)
                 r[fk] = val.toString();
             else if (fp.intfloat)
-                r[fk] = val.valueOf();
+                r[fk] = IntFloat.From(val, fp.intfloat).origin;
             else {
                 let v = Output(val);
                 if (v == null)

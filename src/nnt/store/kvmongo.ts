@@ -580,6 +580,7 @@ export class KvMongo extends AbstractNosql {
                     logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
                 } else {
+                    /*
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
                             name: "updateone",
@@ -587,6 +588,7 @@ export class KvMongo extends AbstractNosql {
                             iid: iid,
                             cmd: toJson(cmd)
                         });
+                        */
                     cb(res.value);
                 }
             });
@@ -596,6 +598,7 @@ export class KvMongo extends AbstractNosql {
                     logerr(err, ["updateone", page, iid, cmd]);
                     cb(null);
                 } else {
+                    /*
                     if (res.value == null)
                         logger.warn("{{=it.name}} 没有更新数据, {{=it.page}} {{=it.iid}} {{=it.cmd}}", {
                             name: "updateone",
@@ -603,6 +606,7 @@ export class KvMongo extends AbstractNosql {
                             iid: iid,
                             cmd: toJson(cmd)
                         });
+                        */
                     cb(res.value);
                 }
             });

@@ -392,7 +392,7 @@ export function Output(mdl: any, def: any = {}): IndexedObject {
                 r[fk] = v;
             }
         } else if (fp.intfloat) {
-            r[fk] = IntFloat.Origin(val);
+            r[fk] = IntFloat.From(val, fp.intfloat).origin;
         } else {
             r[fk] = val;
         }
