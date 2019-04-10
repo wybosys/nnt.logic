@@ -1,6 +1,7 @@
 // 数据库定义
 import {AnyClass, IndexedObject, IntFloat, KvObject, ObjectT, toDouble, toInt, ToObject} from "../core/kernel";
 import {double_t, integer_t} from "../core/proto";
+import {MapNumber} from "../core/stl";
 
 export const key = "key";
 export const subkey = "subkey";
@@ -307,14 +308,22 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                     }
                 }
             } else if (fp.map) {
-                let map = new Map();
+                let map: Map<any, any>;
+
+                // 根据申明的类型，构造不同的map
                 let keyconv = (v: any) => {
                     return v
                 };
-                if (fp.keytype == integer_t)
+                if (fp.keytype == integer_t) {
+                    map = new MapNumber();
                     keyconv = toInt;
-                else if (fp.keytype == double_t)
+                } else if (fp.keytype == double_t) {
+                    map = new MapNumber();
                     keyconv = toDouble;
+                } else {
+                    map = new Map();
+                }
+
                 if (typeof (fp.valtype) == "string") {
                     for (let ek in val)
                         map.set(keyconv(ek), val[ek]);
