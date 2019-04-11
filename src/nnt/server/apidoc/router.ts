@@ -1,4 +1,4 @@
-import {action, FindAction, GetAllActionNames, IRouter} from "../../core/router";
+import {action, expose, FindAction, GetAllActionNames, IRouter} from "../../core/router";
 import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
@@ -15,7 +15,7 @@ import {
     GetAllOwnFields,
     GetModelInfo,
     input,
-    IsModel,
+    IsModel, model,
     optional,
     Output
 } from "../../core/proto";
@@ -62,6 +62,7 @@ export interface RouterConfig {
     }
 }
 
+@model()
 class ExportApis {
 
     @boolean(1, [input, optional], "生成 logic.node 使用的api")
@@ -86,7 +87,7 @@ export class Router implements IRouter {
 
     private _page = new Template();
 
-    @action(Null, [], "文档")
+    @action(Null, [expose], "文档")
     doc(trans: Transaction) {
         let srv = static_cast<IRouterable>(trans.server);
         if (srv.routers.length) {
@@ -99,7 +100,7 @@ export class Router implements IRouter {
         trans.submit();
     }
 
-    @action(ExportApis, [], "生成api接口文件")
+    @action(ExportApis, [expose], "生成api接口文件")
     export(trans: Transaction) {
         let m: ExportApis = trans.model;
         if (!m.node && !m.php && !m.h5g && !m.vue) {
