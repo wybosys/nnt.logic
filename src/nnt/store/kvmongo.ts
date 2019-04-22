@@ -802,7 +802,8 @@ function DoTranslate(filter: Filter, obj: any) {
 
 export function Translate(filter: Filter): NosqlCmdType {
     let r: IndexedObject = {};
-    DoTranslate(filter, r);
+    if (filter)
+        DoTranslate(filter, r);
     return r;
 }
 

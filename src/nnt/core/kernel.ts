@@ -2288,6 +2288,10 @@ export class IntFloat {
         throw new Error('对一个不是IntFloat的数据请求Origin');
     }
 
+    static Unserilize(ori: any): IntFloat {
+        return new IntFloat(ori['_ori'], ori['_s']);
+    }
+
     static From(ori: intfloat, scale: number): any {
         if (ori instanceof IntFloat) {
             return new IntFloat(ori.origin, scale);

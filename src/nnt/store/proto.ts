@@ -1,5 +1,16 @@
 // 数据库定义
-import {AnyClass, IndexedObject, IntFloat, KvObject, ObjectT, toDouble, toInt, ToObject} from "../core/kernel";
+import {
+    AnyClass,
+    asString,
+    IndexedObject,
+    IntFloat,
+    KvObject,
+    ObjectT,
+    toDouble,
+    toInt,
+    toNumber,
+    ToObject
+} from "../core/kernel";
 import {double_t, integer_t} from "../core/proto";
 import {MapNumber} from "../core/stl";
 
@@ -402,6 +413,14 @@ export function Output(mdl: any, def: any = {}): IndexedObject {
             }
         } else if (fp.intfloat) {
             r[fk] = IntFloat.From(val, fp.intfloat).origin;
+        } else if (fp.string) {
+            r[fk] = asString(val);
+        } else if (fp.number) {
+            r[fk] = toNumber(val);
+        } else if (fp.integer) {
+            r[fk] = toInt(val);
+        } else if (fp.double) {
+            r[fk] = toDouble(val);
         } else {
             r[fk] = val;
         }
