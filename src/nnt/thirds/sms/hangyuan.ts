@@ -81,7 +81,7 @@ class RestSendMessage extends Base {
             // 解析xml到类型
             xml2js.parseString(resp.body, (err, result) => {
                 if (err) {
-                    error(err);
+                    error(new ModelError(STATUS.FORMAT_ERROR, err.message));
                     return;
                 }
 

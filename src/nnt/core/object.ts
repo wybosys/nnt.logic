@@ -380,7 +380,7 @@ export class Stream {
             });
             stm.on("finish", () => {
                 this._output = true;
-                resolve(stm.getContents());
+                resolve(<any>stm.getContents());
             });
             this._from.pipe(stm);
         });

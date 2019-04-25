@@ -210,7 +210,7 @@ function ProcessResponse<T extends Base>(resp: request.Response, parser: Abstrac
     } else if (m.responseType == HttpContentType.XML) {
         xml2js.parseString(resp.body, (e, result) => {
             if (e) {
-                err && err(e);
+                err && err(new ModelError(STATUS.FORMAT_ERROR, e.message));
                 return;
             }
             rd.body = result;
