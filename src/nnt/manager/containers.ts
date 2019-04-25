@@ -1,7 +1,7 @@
 import {Node, NodeIsEnable} from "../config/config";
 import {Clear, ITemplate, RegisterTemplate} from "../container/container";
 import {App} from "./app";
-import {SyncArray} from "../core/kernel";
+import {SyncArray} from "../core/async";
 
 export async function Start(cfg: Node[]): Promise<void> {
     if (!cfg.length) {

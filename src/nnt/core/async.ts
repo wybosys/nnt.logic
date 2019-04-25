@@ -24,6 +24,56 @@ class _SyncMap<K, V> {
     }
 }
 
+export function SyncArray<T>(arr: T[]): _SyncArray<T> {
+    return new _SyncArray(arr ? arr : []);
+}
+
+class _SyncArray<T> {
+
+    constructor(arr: T[]) {
+        this._arr = arr;
+    }
+
+    async forEach(proc: (e: T, idx: number) => Promise<void>): Promise<this> {
+        for (let i = 0, l = this._arr.length; i < l; ++i) {
+            await proc(this._arr[i], i);
+        }
+        return this;
+    }
+
+    async query(proc: (e: T, idx: number) => Promise<boolean>): Promise<T> {
+        for (let i = 0, l = this._arr.length; i < l; ++i) {
+            let v = this._arr[i];
+            if (await proc(v, i))
+                return v;
+        }
+        return null;
+    }
+
+    async querycvt<R>(proc: (e: T, idx: number) => Promise<R>): Promise<R> {
+        for (let i = 0, l = this._arr.length; i < l; ++i) {
+            let v = this._arr[i];
+            let r = await proc(v, i);
+            if (r)
+                return r;
+        }
+        return null;
+    }
+
+    async convert<R>(proc: (e: T, idx: number) => Promise<R>, skipnull = false): Promise<R[]> {
+        let r = new Array();
+        for (let i = 0, l = this._arr.length; i < l; ++i) {
+            let v = await proc(this._arr[i], i);
+            if (skipnull && !v)
+                continue;
+            r.push(v);
+        }
+        return r;
+    }
+
+    private _arr: T[];
+}
+
 export function AsyncArray<T>(arr: T[]): _AsyncArray<T> {
     return new _AsyncArray(arr);
 }
@@ -54,6 +104,65 @@ class _AsyncArray<T> {
                 resolve(r);
             });
         });
+    }
+
+    private _arr: T[];
+}
+
+export class Async {
+
+    static Array<T>(arr: T[]): _PromiseArray<T> {
+        return new _PromiseArray<T>(arr);
+    }
+}
+
+class _PromiseArray<T> {
+
+    constructor(arr: T[]) {
+        this._arr = arr;
+    }
+
+    async forEach(cb: (e: T, idx: number) => Promise<void>) {
+        for (let i = 0, l = this._arr.length; i < l; ++i) {
+            await cb(this._arr[i], i);
+        }
+    }
+
+    async queryObject(filter: (e: T, idx?: number) => Promise<boolean>): Promise<T> {
+        if (this._arr) {
+            for (let i = 0, l = this._arr.length; i < l; ++i) {
+                let e = this._arr[i];
+                if (await filter(e, i))
+                    return e;
+            }
+        }
+        return null;
+    }
+
+    async queryObjects(filter: (e: T, idx?: number) => Promise<boolean>): Promise<T[]> {
+        let r = new Array<T>();
+        if (this._arr) {
+            for (let i = 0, l = this._arr.length; i < l; ++i) {
+                let e = this._arr[i];
+                if (await filter(e, i))
+                    r.push(e);
+            }
+        }
+        return r;
+    }
+
+    async convert<R>(to: (e: T, idx?: number) => Promise<R>, skipnull = false): Promise<R[]> {
+        let r = new Array<R>();
+        if (this._arr) {
+            for (let i = 0, l = this._arr.length; i < l; ++i) {
+                let e = this._arr[i];
+                let t = await to(e, i);
+                if (!t && skipnull)
+                    continue;
+                r.push(t);
+            }
+        }
+        return r;
     }
 
     private _arr: T[];

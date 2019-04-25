@@ -2,8 +2,9 @@ import {AbstractLogger, Filter, LoggerNode} from "../logger/logger"
 import {Node, NodeIsEnable} from "../config/config"
 import {logger} from "../core/logger"
 import {App} from "./app";
-import {SyncArray, template} from "../core/kernel";
+import {template} from "../core/kernel";
 import {Config} from "./config";
+import {SyncArray} from "../core/async";
 
 let loggers = new Array<AbstractLogger>();
 
@@ -13,7 +14,7 @@ enum TYPE {
     INFO,
     FATAL,
     EXCEPTION
-};
+}
 
 function output(msg: string, filter: string, typ: TYPE) {
     loggers.forEach(e => {
@@ -86,11 +87,9 @@ export async function Start(cfg: Node[]): Promise<void> {
             try {
                 t.config(e);
                 console.log("输出log至 " + e.id);
-            }
-            catch (err) {
+            } catch (err) {
                 console.error(err);
-            }
-            finally {
+            } finally {
                 loggers.push(t);
             }
         });
@@ -104,8 +103,7 @@ export async function Start(cfg: Node[]): Promise<void> {
             });
             loggers.push(t);
         }
-    }
-    else {
+    } else {
         await Stop();
     }
 }

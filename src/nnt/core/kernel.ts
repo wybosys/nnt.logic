@@ -2415,56 +2415,6 @@ export function EvalFormula(f: string, vars: IndexedObject, upcase: boolean = tr
     }
 }
 
-export function SyncArray<T>(arr: T[]): _SyncArray<T> {
-    return new _SyncArray(arr ? arr : []);
-}
-
-class _SyncArray<T> {
-
-    constructor(arr: T[]) {
-        this._arr = arr;
-    }
-
-    async forEach(proc: (e: T, idx: number) => Promise<void>): Promise<this> {
-        for (let i = 0, l = this._arr.length; i < l; ++i) {
-            await proc(this._arr[i], i);
-        }
-        return this;
-    }
-
-    async query(proc: (e: T, idx: number) => Promise<boolean>): Promise<T> {
-        for (let i = 0, l = this._arr.length; i < l; ++i) {
-            let v = this._arr[i];
-            if (await proc(v, i))
-                return v;
-        }
-        return null;
-    }
-
-    async querycvt<R>(proc: (e: T, idx: number) => Promise<R>): Promise<R> {
-        for (let i = 0, l = this._arr.length; i < l; ++i) {
-            let v = this._arr[i];
-            let r = await proc(v, i);
-            if (r)
-                return r;
-        }
-        return null;
-    }
-
-    async convert<R>(proc: (e: T, idx: number) => Promise<R>, skipnull = false): Promise<R[]> {
-        let r = new Array();
-        for (let i = 0, l = this._arr.length; i < l; ++i) {
-            let v = await proc(this._arr[i], i);
-            if (skipnull && !v)
-                continue;
-            r.push(v);
-        }
-        return r;
-    }
-
-    private _arr: T[];
-}
-
 export class IndexedMap<K, V> {
 
     set(k: K, v: V) {
