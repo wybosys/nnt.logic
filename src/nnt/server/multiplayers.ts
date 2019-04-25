@@ -2,7 +2,7 @@ import {Connector as BaseConnector, Socket, Transaction as BaseTransaction} from
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {GetObjectClassName, UUID} from "../core/core";
-import {ArrayT, AsyncArray, IndexedObject, Multimap} from "../core/kernel";
+import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
 import {Variant} from "../core/object";
 import {Encode, Output} from "../core/proto";

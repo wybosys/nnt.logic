@@ -5,14 +5,10 @@ import {logger} from "../core/logger";
 import {ReusableObjects, Variant} from "../core/object";
 import {
     ArrayT,
-    AsyncArray,
     Class,
-    clazz_type,
     IndexedObject,
     KvObject,
-    ObjectT,
-    SyncArray,
-    SyncMap
+    ObjectT
 } from "../core/kernel";
 import {static_cast} from "../core/core";
 import amqplib = require("amqplib");

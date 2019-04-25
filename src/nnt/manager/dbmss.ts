@@ -4,10 +4,11 @@ import {AbstractDbms, DbExecuteStat, IterateCursorProcess} from "../store/store"
 import {RdbCmdType} from "../store/rdb";
 import {NosqlCmdType} from "../store/kv";
 import {SetInnerId} from "../store/proto";
-import {ArrayT, IndexedObject, SyncArray, SyncMap} from "../core/kernel";
+import {ArrayT, IndexedObject, SyncArray} from "../core/kernel";
 import {UpdateData} from "../core/proto";
 import {Transaction, TransactionDef} from "./dbms/transaction";
 import {Variant} from "../core/object";
+import {SyncMap} from "../core/async";
 
 let dbs = new Map<string, AbstractDbms>();
 

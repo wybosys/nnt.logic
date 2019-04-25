@@ -7,8 +7,9 @@ import {IRouterable} from "../server/routers";
 import {static_cast} from "../core/core";
 import {EmptyTransaction, Transaction} from "../server/transaction";
 import {STATUS} from "../core/models";
-import {SyncArray, SyncMap, Class, IndexedObject} from "../core/kernel";
+import {Class, IndexedObject, SyncArray} from "../core/kernel";
 import {AcEntity} from "../acl/acl";
+import {SyncMap} from "../core/async";
 
 let servers = new Map<string, AbstractServer>();
 
