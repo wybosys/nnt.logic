@@ -1446,15 +1446,23 @@ export class ObjectT {
     }
 }
 
-export class Range<T> {
+export class Range<T = number> {
 
-    constructor(l: T, r: T) {
+    constructor(l?: T, r?: T) {
         this.left = l;
         this.right = r;
     }
 
     contains(o: T): boolean {
         return this.left <= o && o <= this.right;
+    }
+
+    get length(): number {
+        return <any>this.right - <any>this.left;
+    }
+
+    set length(len: number) {
+        this.right = <any>this.left + len;
     }
 
     left: T;

@@ -1,4 +1,4 @@
-import {ArrayT, asString, toJson, toJsonObject} from "../core/kernel";
+import {ArrayT, asString, toJson, toJsonObject, Range, Sleep, Random} from "../core/kernel";
 import {logger} from "../core/logger";
 import tmp = require('tmp');
 import fs = require('fs');
@@ -73,6 +73,18 @@ export class Crawler {
 
     capture(file: string, options?: { left: number, top: number, width: number, height: number }) {
         return this.cmd('capture', options ? toJson(options) : null);
+    }
+
+    async repeat(count: number = 1, delay = new Range(1, 10)): Promise<any> {
+        let r: any;
+        while (!r && count--) {
+            try {
+                r = await this.run();
+            } catch (e) {
+                await Sleep(Random.Rangei(delay.left, delay.right));
+            }
+        }
+        return r;
     }
 
     run(cbemit?: (obj: any) => void): Promise<any> {
@@ -202,6 +214,7 @@ export class Crawler {
     evaluate(func: Function, ...args: any[]): this {
         return this.cmd('evaluate', pack_function(func), pack_arguments(args));
     }
+
     grab(func: Function, ...args: any[]): this {
         return this.cmd('grab', pack_function(func), pack_arguments(args));
     }
