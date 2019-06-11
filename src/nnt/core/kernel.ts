@@ -5,9 +5,12 @@ import seedrandom = require("seed-random");
 import {logger} from "./logger";
 import {vsprintf} from "sprintf-js";
 
-export type Class<T> = { new(...args: any[]): T, [key: string]: any, prototype: any };
+export type Class<T> = {
+    new(...args: any[]): T, [key: string]: any, prototype: any };
 export type AnyClass = Class<any>;
-export type KvObject<V> = { [key: string]: V };
+export type KvObject<V> = {
+    [key: string]: V, [key: number]: V;
+};
 export type IndexedObject = KvObject<any>;
 export type PodType = number | string | boolean;
 export type clazz_type = AnyClass | string;

@@ -395,7 +395,7 @@ export function Decode<T extends IndexedObject>(mdl: T, params: any, input = tru
             continue;
         if (output && !fp.output)
             continue;
-        mdl[key] = DecodeValue(fp, params[key], input, output);
+        (<IndexedObject>mdl)[key] = DecodeValue(fp, params[key], input, output);
     }
     return mdl;
 }

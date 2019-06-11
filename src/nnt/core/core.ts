@@ -6,7 +6,7 @@ import {REGEX_JS} from "../component/pattern";
 import crypto = require("crypto");
 
 export function static_cast<T>(l: any): T {
-    return <T>l;
+    return l;
 }
 
 export function PushModule(l: any, r: any) {

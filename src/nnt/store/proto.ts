@@ -296,18 +296,18 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
         let val = params[key];
         if (val == null) {
             if (!fp.loose)
-                mdl[key] = null; // 从数据库读取数据时采用严格模式：字段如果在数据库中为null，则拿出来后也是null
+                (<IndexedObject>mdl)[key] = null; // 从数据库读取数据时采用严格模式：字段如果在数据库中为null，则拿出来后也是null
             continue;
         }
         if (fp.valtype) {
             if (fp.array) {
                 if (typeof (fp.valtype) == "string") {
-                    mdl[key] = val;
+                    (<IndexedObject>mdl)[key] = val;
                 } else {
                     let clz: AnyClass = fp.valtype;
                     if (clz == Object) {
                         // object类似于json，不指定数据类型
-                        mdl[key] = val;
+                        (<IndexedObject>mdl)[key] = val;
                     } else {
                         let arr = new Array();
                         val.forEach((e: any) => {
@@ -315,7 +315,7 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                             Decode(t, e);
                             arr.push(t);
                         });
-                        mdl[key] = arr;
+                        (<IndexedObject>mdl)[key] = arr;
                     }
                 }
             } else if (fp.map) {
@@ -346,23 +346,23 @@ export function Decode<T extends IndexedObject>(mdl: T, params: IndexedObject): 
                         map.set(keyconv(ek), t);
                     }
                 }
-                mdl[key] = map;
+                (<IndexedObject>mdl)[key] = map;
             } else {
                 let clz = <AnyClass>fp.valtype;
                 if (clz == Object) {
-                    mdl[key] = val;
+                    (<IndexedObject>mdl)[key] = val;
                 } else if (typeof val == "object") {
                     let t = new clz();
                     Decode(t, val);
-                    mdl[key] = t;
+                    (<IndexedObject>mdl)[key] = t;
                 } else if (!fp.loose) {
-                    mdl[key] = null;
+                    (<IndexedObject>mdl)[key] = null;
                 }
             }
         } else if (fp.intfloat) {
-            mdl[key] = IntFloat.From(val, fp.intfloat);
+            (<IndexedObject>mdl)[key] = IntFloat.From(val, fp.intfloat);
         } else {
-            mdl[key] = val;
+            (<IndexedObject>mdl)[key] = val;
         }
     }
     return mdl;
