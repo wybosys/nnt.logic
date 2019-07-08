@@ -4,6 +4,7 @@ import {Node} from "../config/config";
 import {CronTask, PerDay} from "../manager/crons";
 import {DateTime} from "../core/time";
 import {Config} from "../manager/config";
+import {SStatus} from "../core/models";
 
 interface Log4TsNode extends Node {
     // config 根据 https://nomiddlename.github.io/log4js-node/appenders.html 配置的参数集
@@ -41,23 +42,23 @@ export class Log4Ts extends AbstractLogger {
     cfg: any;
     protected _hdl: log4js.Logger;
 
-    log(msg: string) {
+    log(msg: string, status?: SStatus) {
         this._hdl.debug(msg);
     }
 
-    warn(msg: string) {
+    warn(msg: string, status?: SStatus) {
         this._hdl.warn(msg);
     }
 
-    info(msg: string) {
+    info(msg: string, status?: SStatus) {
         this._hdl.info(msg);
     }
 
-    fatal(msg: string) {
+    fatal(msg: string, status?: SStatus) {
         this._hdl.fatal(msg);
     }
 
-    exception(msg: any) {
+    exception(msg: any, status?: SStatus) {
         this._hdl.fatal(msg);
     }
 

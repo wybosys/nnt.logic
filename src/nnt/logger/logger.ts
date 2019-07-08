@@ -1,6 +1,7 @@
 import {ObjectExt} from "../core/object";
 import {Attribute, Node} from "../config/config";
 import {AppNodes} from "../config/app";
+import {SStatus} from "../core/models";
 
 export class Filter {
     static LOG = "log";
@@ -47,13 +48,13 @@ export abstract class AbstractLogger extends ObjectExt {
         return true;
     }
 
-    abstract log(msg: string): void;
+    abstract log(msg: string, status?: SStatus): void;
 
-    abstract warn(msg: string): void;
+    abstract warn(msg: string, status?: SStatus): void;
 
-    abstract info(msg: string): void;
+    abstract info(msg: string, status?: SStatus): void;
 
-    abstract fatal(msg: string): void;
+    abstract fatal(msg: string, status?: SStatus): void;
 
-    abstract exception(msg: any): void;
+    abstract exception(msg: any, status?: SStatus): void;
 }

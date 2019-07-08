@@ -1,7 +1,9 @@
 import {AbstractLogger} from "./logger";
 import {Node} from "../config/config";
+import {SStatus, STATUS} from "../core/models";
+import {toJson} from "../core/kernel";
 import redis = require("redis");
-import os=require("os");
+import os = require("os");
 
 const SPECIAL = 9;
 const CUSTOM = 8;
@@ -42,30 +44,34 @@ export class Log4devops extends AbstractLogger {
         return super.config(cfg);
     }
 
-    log(msg: string) {
-        this.output(DEBUG, msg);
+    log(msg: string, status?: SStatus) {
+        this.output(DEBUG, msg, status);
     }
 
-    warn(msg: string) {
-        this.output(WARNING, msg);
+    warn(msg: string, status?: SStatus) {
+        this.output(WARNING, msg, status);
     }
 
-    info(msg: string) {
-        this.output(INFO, msg);
+    info(msg: string, status?: SStatus) {
+        this.output(INFO, msg, status);
     }
 
-    fatal(msg: string) {
-        this.output(CRITICAL, msg);
+    fatal(msg: string, status?: SStatus) {
+        this.output(CRITICAL, msg, status);
     }
 
-    exception(msg: any) {
-        this.output(EMERGENCE, msg.toString());
+    exception(msg: any, status?: SStatus) {
+        this.output(EMERGENCE, msg.toString(), status);
     }
 
-    protected output(level: number, msg: string) {
+    protected output(level: number, msg: string, status: SStatus) {
         if (this._hdl) {
             this._hdl.select(level, () => {
-                this._hdl.lpush(this._key, msg);
+                let data = {
+                    c: status == null ? STATUS.OK : status,
+                    m: msg
+                };
+                this._hdl.lpush(this._key, toJson(data));
             });
         }
     }

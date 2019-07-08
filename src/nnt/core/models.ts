@@ -119,3 +119,5 @@ export class STATUS {
     static FAILED = -1; // 一般失败
     static OK = 0; // 成功
 }
+
+export type SStatus = number;
