@@ -2,6 +2,7 @@ import {AbstractLogger} from "./logger";
 import {Node} from "../config/config";
 import {SStatus, STATUS} from "../core/models";
 import {toJson} from "../core/kernel";
+import {DateTime} from "../core/time";
 import redis = require("redis");
 import os = require("os");
 
@@ -68,6 +69,7 @@ export class Log4devops extends AbstractLogger {
         if (this._hdl) {
             this._hdl.select(level, () => {
                 let data = {
+                    t: DateTime.Current(),
                     c: status == null ? STATUS.OK : status,
                     m: msg
                 };
