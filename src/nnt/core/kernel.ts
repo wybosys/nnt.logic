@@ -6,7 +6,8 @@ import {logger} from "./logger";
 import {vsprintf} from "sprintf-js";
 
 export type Class<T> = {
-    new(...args: any[]): T, [key: string]: any, prototype: any };
+    new(...args: any[]): T, [key: string]: any, prototype: any
+};
 export type AnyClass = Class<any>;
 export type KvObject<V> = {
     [key: string]: V, [key: number]: V;
@@ -629,6 +630,25 @@ export class ArrayT {
             if (ObjectT.Compare(t, cur) == COMPARERESULT.LESS) {
                 cur = t;
                 obj = e;
+            }
+        });
+        return obj;
+    }
+
+    static MaxIndex<T, V>(arr: T[], proc: (e: T, idx: number) => V = (e: any) => e): number {
+        let cur: V;
+        let obj: number;
+        arr.forEach((e, idx) => {
+            if (idx == 0) {
+                cur = proc(e, idx);
+                obj = idx;
+                return;
+            }
+            let t = proc(e, idx);
+            if (ObjectT.Compare(cur, t) == COMPARERESULT.LESS) {
+                cur = t;
+                obj = idx;
+
             }
         });
         return obj;

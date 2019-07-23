@@ -8,6 +8,7 @@ class _TaskToday extends CronTask {
     main() {
         let now = new DateTime();
         TODAY_RANGE = now.dayRange();
+        WEEKEND_RANGE = now.weekRange();
         TODAY_YEAR = now.hyear;
         TODAY_MONTH = now.hmonth;
         TODAY_DAY = now.hday;
@@ -20,6 +21,7 @@ _td.main();
 _td.start();
 
 export let TODAY_RANGE: DateTimeRange;
+export let WEEKEND_RANGE: DateTimeRange
 export let TODAY_DAY: number;
 export let TODAY_MONTH: number;
 export let TODAY_YEAR: number;
