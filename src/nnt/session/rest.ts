@@ -38,7 +38,7 @@ export class Rest extends Session {
             if (m.logic) {
                 // 保护url的结尾符
                 if (url.indexOf("?") == -1)
-                    url += "?/";
+                    url += "/?";
 
                 // 添加devops的参数
                 if (Permissions) {
@@ -59,7 +59,7 @@ export class Rest extends Session {
             if (p.length) {
                 // 保护url的结尾符
                 if (url.indexOf("?") == -1)
-                    url += "?/";
+                    url += "/?";
 
                 url += "&" + p.join("&");
             }
@@ -94,7 +94,7 @@ export class Rest extends Session {
             if (m.logic) {
                 // 保护url的结尾符
                 if (url.indexOf("?") == -1)
-                    url += "?/";
+                    url += "/?";
 
                 // 添加devops的参数
                 if (Permissions) {
