@@ -8,3 +8,4 @@ logs
 cache
 run
 .~*
+.DS_Store
