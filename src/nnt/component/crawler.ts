@@ -1,4 +1,4 @@
-import {ArrayT, asString, toJson, toJsonObject, Range, Sleep, Random} from "../core/kernel";
+import {ArrayT, asString, Random, Range, Sleep, toJson, toJsonObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import tmp = require('tmp');
 import fs = require('fs');
@@ -138,6 +138,7 @@ export class Crawler {
             // 命令保存到文件
             let text = cmds.join('\n');
             //logger.log(text);
+
             let tf = tmp.fileSync();
             // 生成phantomjs使用的爬虫文件
             fs.writeSync(tf.fd, text);
@@ -203,6 +204,12 @@ export class Crawler {
                 logger.warn(err);
             });
             proc.on('close', () => {
+                // 删除临时文件
+                fs.unlink(tf.name, () => {
+                    // pass
+                });
+
+                // 回调
                 if (err)
                     reject(new Error(err));
                 else

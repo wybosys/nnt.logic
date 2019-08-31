@@ -104,6 +104,8 @@ export class STATUS {
     static LIMIT = -971; // 受到限制
     static PAGED_OVERFLOW = -970; // 超出分页数据的处理能力
     static NEED_ITEMS = -969; // 需要额外物品
+    static DECODE_ERROR = -968; // 解码失败
+    static ENCODE_ERROR = -967; // 编码失败
 
     static IM_CHECK_FAILED = -899; // IM检查输入的参数失败
     static IM_NO_RELEATION = -898; // IM检查双方不存在关系
