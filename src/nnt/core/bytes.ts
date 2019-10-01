@@ -156,7 +156,7 @@ export class BytesBuilder {
         return this;
     }
 
-    addString(val: string, encoding = 'utf8'): this {
+    addString(val: string, encoding: BufferEncoding = 'utf8'): this {
         const buf = new Buffer(val, encoding);
         const lbuf = buf.byteLength;
         this.deltaAlloc(lbuf);

@@ -65,21 +65,21 @@ export class App {
             cfg.dbms = [];
         }
 
-        if (Config.DEBUG = argv.indexOf("--debug") != -1)
+        if ((Config.DEBUG = argv.indexOf("--debug") != -1))
             logger.log("debug模式启动");
-        else if (Config.DEVELOP = argv.indexOf("--develop") != -1)
+        else if ((Config.DEVELOP = argv.indexOf("--develop") != -1))
             logger.log("develop模式启动");
-        else if (Config.PUBLISH = argv.indexOf("--publish") != -1)
+        else if ((Config.PUBLISH = argv.indexOf("--publish") != -1))
             logger.log("publish模式启动");
-        if (Config.DISTRIBUTION = !IsDebug())
+        if ((Config.DISTRIBUTION = !IsDebug()))
             logger.log("distribution模式启动");
-        if (Config.LOCAL = IsLocal())
+        if ((Config.LOCAL = IsLocal()))
             logger.info("LOCAL 环境");
-        if (Config.DEVOPS = IsDevops())
+        if ((Config.DEVOPS = IsDevops()))
             logger.info("DEVOPS 环境");
-        if (Config.DEVOPS_DEVELOP = IsDevopsDevelop())
+        if ((Config.DEVOPS_DEVELOP = IsDevopsDevelop()))
             logger.info("DEVOPS DEVELOP 环境");
-        if (Config.DEVOPS_RELEASE = IsDevopsRelease())
+        if ((Config.DEVOPS_RELEASE = IsDevopsRelease()))
             logger.info("DEVOPS RELEASE 环境");
         Config.FORCE_MASTER = argv.indexOf("--master") != -1;
         Config.FORCE_SLAVER = argv.indexOf("--slaver") != -1;
@@ -264,5 +264,5 @@ process.on('uncaughtException', err => {
 })
 
 process.on('unhandledRejection', err => {
-    logger.error(err);
+    logger.error(new Error(err.toString()));
 });

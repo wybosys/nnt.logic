@@ -18,7 +18,7 @@ export class Fast {
         let r: string;
         try {
             let hdl = crypto.createCipher("aes128", this._key);
-            r = hdl.update(new Buffer(str), "utf8", "hex");
+            r = hdl.update(str, "utf8", "hex");
             r += hdl.final("hex");
         } catch (err) {
             //console.log(err);
