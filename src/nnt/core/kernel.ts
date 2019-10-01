@@ -18,7 +18,7 @@ export type clazz_type = AnyClass | string;
 
 export function ispod(v: any): boolean {
     let typ = typeof v;
-    return v == "number" || v == "string" || v == "boolean";
+    return typ == "number" || v == "string" || v == "boolean";
 }
 
 // 创建一个纯Json对象
@@ -555,7 +555,7 @@ export class ArrayT {
     }
 
     static Pack<T, R>(arr: T[], proc: (e: T, idx: number) => R, skipnull = true): R[] {
-        let r = new Array();
+        let r: R[] = [];
         arr && arr.forEach((e, idx) => {
             let t = proc(e, idx);
             if (skipnull && t == null)
@@ -748,7 +748,7 @@ export class ArrayT {
     static Randoms<T>(arr: T[], len: number, rand?: Random): T[] {
         if (arr.length <= len)
             return arr.concat();
-        let r = new Array();
+        let r: T[] = [];
         while (r.length != len) {
             let t = ArrayT.Random(arr, rand);
             if (r.indexOf(t) == -1)
@@ -952,7 +952,7 @@ export class ArrayT {
 
     /** 使用位于另一个 array 中对应下标的元素 */
     static RemoveObjectsInIndexArray<T>(arr: T[], r: number[]): T[] {
-        let rm = new Array();
+        let rm: T[] = [];
         let res = arr.filter((each: T, idx: number): boolean => {
             if (ArrayT.Contains(r, idx) == true) {
                 rm.push(each);
@@ -1092,7 +1092,7 @@ export class ArrayT {
     static MapIndexIn<T>(arr: T[], indics: number[], proc: (e: T, idx?: number) => number = (e, idx) => idx) {
         if (arr.length != indics.length)
             return;
-        let tmp = new Array();
+        let tmp: T[] = [];
         arr.forEach((e, idx) => {
             let t = proc(e, idx);
             let pos = indics.indexOf(t);
@@ -1154,8 +1154,8 @@ export class IterateT {
         return null;
     }
 
-    static ToArray<T>(iter: Iterator<T>, proc?: (v: T) => T): Array<T> {
-        let r = new Array();
+    static ToArray<T>(iter: Iterator<T>, proc?: (v: T) => T): T[] {
+        let r: T[] = [];
         let res = iter.next();
         while (!res.done) {
             r.push(proc ? proc(res.value) : res.value);
@@ -1242,7 +1242,7 @@ export class ObjectT {
             if (v == null) {
                 r[k] = v;
             } else if (v instanceof Array) {
-                let t = new Array();
+                let t: any[] = [];
                 v.forEach(e => {
                     t.push(ObjectT.DeepClone(e));
                 });

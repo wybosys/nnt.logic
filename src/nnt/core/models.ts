@@ -114,6 +114,7 @@ export class STATUS {
     static SOCK_AUTH_TIMEOUT = -859; // 因为连接后长期没有登录，所以服务端主动断开了链接
     static SOCK_SERVER_CLOSED = -858; // 服务器关闭
 
+    static SECURITY_FAILED = -6; // 检测到安全问题
     static THIRD_FAILED = -5; // 第三方出错
     static MULTIDEVICE = -4; // 多端登陆
     static HFDENY = -3; // 高频调用被拒绝（之前的访问还没有结束) high frequency deny
