@@ -13,7 +13,9 @@
     "gendata": "node ./index.js --server gendata"
   },
   "author": "wybosys@gmail.com",
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/sharp": "^0.23.1"
+  },
   "dependencies": {
     "@types/amqplib": "^0.5.2",
     "@types/async": "^2.0.48",
@@ -39,6 +41,7 @@
     "@types/redis": "^2.8.6",
     "@types/request": "^2.47.1",
     "@types/seed-random": "^2.2.0",
+    "@types/sharp": "^0.23.1",
     "@types/spdy": "^3.4.4",
     "@types/sprintf-js": "^1.1.0",
     "@types/stream-buffers": "^3.0.2",

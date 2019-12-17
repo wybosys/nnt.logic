@@ -1,10 +1,10 @@
-import sharp = require("sharpkit");
+import sharp = require("sharp");
 import {sep} from "path";
 import {logger} from "../../core/logger";
 import {ArrayT} from "../../core/kernel";
 import {FileInfo} from "../fileinfo";
 
-export type image_t = sharp.SharpInstance;
+export type image_t = sharp.Sharp;
 
 let PAT_FILTERS = /([0-9a-zA-Z]+)\(([0-9a-zA-Z,\. ]*)\)\.?/g;
 let PAT_FILTER = /([0-9a-zA-Z]+)\(([0-9a-zA-Z,\. ]*)\)\.?/;

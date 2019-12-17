@@ -1,8 +1,8 @@
 import {Filter, image_t, ImageFilter} from "./filter";
 import {FileInfo} from "../fileinfo";
+import {logger} from "../../core/logger";
 import fs = require("fs");
 import gm = require("gm");
-import {logger} from "../../core/logger";
 
 // 圆角化 roundlize()
 export class Roundlize extends ImageFilter {
@@ -36,8 +36,7 @@ export class Roundlize extends ImageFilter {
                     .write(maskfile, err => {
                         this.doMask(input, maskfile, cb);
                     });
-            }
-            else {
+            } else {
                 this.doMask(input, maskfile, cb);
             }
         });
@@ -46,7 +45,11 @@ export class Roundlize extends ImageFilter {
     protected doMask(input: image_t, maskfile: string, cb: (output: image_t) => void) {
         input.metadata((err, md) => {
             let fi = Math.min(md.width, md.height);
-            input.overlayWith(maskfile, {cutout: true}).resize(fi, fi);
+            input.composite([{
+                input: maskfile,
+                blend: "source"
+            }])
+                .resize(fi, fi);
             cb(input);
         });
     }

@@ -1,10 +1,9 @@
 import {Filter, image_t, ImageFilter} from "./filter";
 import {ArrayT, toNumber} from "../../core/kernel";
 import {FileInfo} from "../fileinfo";
-import fs = require("fs");
-import sharp = require("sharpkit");
 import {logger} from "../../core/logger";
-import log = logger.log;
+import fs = require("fs");
+import sharp = require("sharp");
 
 // gridscale(nw, nh, l, r, t, b)
 export class Gridscale extends ImageFilter {
@@ -78,8 +77,7 @@ export class Gridscale extends ImageFilter {
                 }, () => {
                     this.doProc(p, input, cb, subdir);
                 });
-            }
-            else {
+            } else {
                 this.doProc(p, input, cb, subdir);
             }
         });
@@ -116,10 +114,13 @@ export class Gridscale extends ImageFilter {
         ];
         // 使用多个buffer来重建, sharp不支持连续overlay
         ArrayT.SeqForeach(noscale, (e, idx, cb) => {
-            output.overlayWith(subdir + "/" + e[0] + ".png", {
-                left: e[1],
-                top: e[2]
-            }).png().toBuffer((err, buf) => {
+            output.composite([
+                {
+                    input: subdir + "/" + e[0] + ".png",
+                    left: e[1],
+                    top: e[2]
+                }
+            ]).png().toBuffer((err, buf) => {
                 if (err)
                     logger.error(err);
                 output = sharp(buf);
@@ -129,12 +130,15 @@ export class Gridscale extends ImageFilter {
             // 放置中间拉伸的
             ArrayT.SeqForeach(scale, (e, idx, cb) => {
                 let ts = sharp(subdir + "/" + e[0] + ".png");
-                ts.resize(e[3], e[4]).ignoreAspectRatio();
+                ts.resize(e[3], e[4], {fit: "fill"});
                 ts.png().toBuffer((err, buf) => {
-                    output.overlayWith(buf, {
-                        left: e[1],
-                        top: e[2]
-                    }).png().toBuffer((err, buf) => {
+                    output.composite([
+                        {
+                            input: buf,
+                            left: e[1],
+                            top: e[2]
+                        }
+                    ]).png().toBuffer((err, buf) => {
                         if (err)
                             logger.error(err);
                         output = sharp(buf);

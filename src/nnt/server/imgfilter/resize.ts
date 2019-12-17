@@ -29,11 +29,9 @@ export class Resize extends ImageFilter {
     }
 
     proc(p: any, input: image_t, cb: (output: image_t) => void) {
-        input.resize(p.w, p.h);
-        if (p.m == 1)
-            input.min();
-        else
-            input.max();
+        input.resize(p.w, p.h, {
+            fit: p.m == 1 ? "outside" : "inside"
+        });
         cb(input);
     }
 }
