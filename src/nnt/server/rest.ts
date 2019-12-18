@@ -145,7 +145,7 @@ function TransactionOutput(type: string, obj: any) {
     } else {
         pl.rsp.writeHead(200, ct);
         if (self.gzip) {
-            zlib.gzip(new Buffer(obj, 'utf8'), (err, zip) => {
+            zlib.gzip(obj, (err, zip) => {
                 pl.rsp.end(zip);
             });
         } else {
