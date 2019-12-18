@@ -93,7 +93,8 @@ export class KvMongo extends AbstractNosql {
         url += this.repl.server.join(",") + "?replicaSet=" + this.repl.name;
         try {
             let opts: mongo.MongoClientOptions = {
-                useNewUrlParser: true
+                useNewUrlParser: true,
+                useUnifiedTopology: true
             };
             this._cli = await mongo.MongoClient.connect(url, opts);
             this._db = this._cli.db(this.scheme);
@@ -107,7 +108,8 @@ export class KvMongo extends AbstractNosql {
         let url = "mongodb://" + this.host;
         try {
             let opts: mongo.MongoClientOptions = {
-                useNewUrlParser: true
+                useNewUrlParser: true,
+                useUnifiedTopology: true
             };
             if (this.user) {
                 opts.auth = {
