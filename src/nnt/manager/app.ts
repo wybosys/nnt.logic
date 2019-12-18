@@ -259,10 +259,14 @@ RegisterScheme("cache", body => {
     return Config.CACHE + "/" + body;
 });
 
-process.on('uncaughtException', err => {
-    logger.error(err);
-})
+if (!IsLocal()) {
+    // 运行到本地环境之外，对未知异常进行捕获
 
-process.on('unhandledRejection', err => {
-    logger.error(new Error(err.toString()));
-});
+    process.on('uncaughtException', err => {
+        logger.error(err);
+    })
+
+    process.on('unhandledRejection', err => {
+        logger.error(new Error(err.toString()));
+    });
+}
