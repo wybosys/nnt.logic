@@ -13,9 +13,6 @@
     "gendata": "node ./index.js --server gendata"
   },
   "author": "wybosys@gmail.com",
-  "devDependencies": {
-    "@types/sharp": "^0.23.1"
-  },
   "dependencies": {
     "@types/amqplib": "^0.5.2",
     "@types/async": "^2.0.48",
