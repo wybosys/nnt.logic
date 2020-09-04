@@ -219,7 +219,7 @@ export class KvMongo extends AbstractNosql {
             query = cmd;
         }
 
-        let opts: mongo.FindOneOptions = {};
+        let opts: mongo.FindOneOptions<Object> = {};
 
         // 根据模型减少查询返回的数据列数
         let cols = t.columns();

@@ -1,15 +1,15 @@
 <!-- @formatter:off -->
 <html>
 <head>
-    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/zepto.min.js"></script>
-    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/vue.min.js"></script>
-    <link type="text/css" rel="stylesheet" href="//www.91yigame.com/devops/cdn/provider/file/bootstrap.min.css"></link>
-    <link type="text/css" rel="stylesheet" href="//www.91yigame.com/devops/cdn/provider/file/bootstrap-vue.min.css"></link>
-    <script type="text/javascript" src="//www.91yigame.com/devops/cdn/provider/file/polyfill.min.js"></script>
+    <script type="text/javascript" src="//wybosys.gitee.io/zepto.min.js"></script>
+    <script type="text/javascript" src="//wybosys.gitee.io/vue.min.js"></script>
+    <link type="text/css" rel="stylesheet" href="//wybosys.gitee.io/bootstrap.min.css"></link>
+    <link type="text/css" rel="stylesheet" href="//wybosys.gitee.io/bootstrap-vue.min.css"></link>
+    <script type="text/javascript" src="//wybosys.gitee.io/polyfill.min.js"></script>
     <script type="text/javascript"
-            src="//www.91yigame.com/devops/cdn/provider/file/bootstrap-vue.min.js"></script>
+            src="//wybosys.gitee.io/bootstrap-vue.min.js"></script>
     <script type="text/javascript"
-            src="//www.91yigame.com/devops/cdn/provider/file/vue-json-tree-view.min.js"></script>
+            src="//wybosys.gitee.io/vue-json-tree-view.min.js"></script>
 </head>
 
 <!-- @formatter:off -->
