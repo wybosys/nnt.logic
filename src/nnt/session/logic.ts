@@ -17,13 +17,15 @@ import {Base, SimpleModel} from "./model";
 import {AbstractSocketConnector, AbstractSocketSession} from "./session";
 import {App} from "../manager/app";
 import {ListenMode} from "../server/rest/listener";
+import {FindParser} from "../server/parser/parser";
+import WebSocket = require("ws");
 
 export class SocketConnector extends WebSocketConnector {
 
     // 自动重连
     autoReconnect = true;
 
-    protected onClose(e: CloseEvent) {
+    protected onClose(e: WebSocket.CloseEvent) {
         super.onClose(e);
 
         if (e && e.code == 4000) {
@@ -55,7 +57,7 @@ export class SocketConnector extends WebSocketConnector {
         }
     }
 
-    protected onError(e: ErrorEvent) {
+    protected onError(e: WebSocket.ErrorEvent) {
         super.onError(e);
         logger.log(e.message);
 
@@ -71,7 +73,7 @@ export class SocketConnector extends WebSocketConnector {
         this.open();
     }
 
-    protected onMessage(data: any, e: MessageEvent) {
+    protected onMessage(data: any, e: WebSocket.MessageEvent) {
         // 需要对data进行处理，把服务端的IMPMessage结构数据提取出来
         super.onMessage({
             _cmid: data.d,
@@ -117,11 +119,16 @@ export class SocketConnector extends WebSocketConnector {
  * WebSocket的服务，和Rest不同，ws不能根据model的url来切换连接，所以不同的url需要实例不同的session
  */
 export class WebSocketSession extends AbstractSocketSession {
+
     constructor(host?: string) {
         super();
         this.host = host;
     }
 
+    // 解析器
+    private _parser = FindParser('json');
+
+    // 连接对象
     private _connector: AbstractSocketConnector;
 
     get connector(): AbstractSocketConnector {
@@ -253,7 +260,7 @@ export class WebSocketSession extends AbstractSocketSession {
         let m = new SimpleModel();
         m.action = "socket.init";
         this.fetch(m, () => {
-            logger.info('连接服务器 ' + this.host + ' 成功');
+            logger.log('连接服务器 ' + this.host + ' 成功');
             this.signals.emit(kSignalOpen);
 
             // 重新建立监听
@@ -270,7 +277,7 @@ export class WebSocketSession extends AbstractSocketSession {
     }
 
     private __cnt_disconnected() {
-        logger.info('服务器 ' + this.host + ' 断开连接');
+        logger.log('服务器 ' + this.host + ' 断开连接');
         this.signals.emit(kSignalClose);
 
         if (this._tmrPing) {
@@ -291,8 +298,7 @@ export class WebSocketSession extends AbstractSocketSession {
             // 后处理
             mdl.quiet = data.quiet;
             mdl.data = data;
-            //mdl.processResponse();
-            //mdl.__mdl_end();
+            mdl.parseData(mdl.data, this._parser, null, null);
             this._fetchings.delete(data._cmid);
         }
 
@@ -301,7 +307,7 @@ export class WebSocketSession extends AbstractSocketSession {
             let mdl = this._listenings.get(data._cmid);
             mdl.quiet = data.quiet;
             mdl.data = data;
-            //mdl.processResponse();
+            mdl.parseData(mdl.data, this._parser, null, null);
         }
     }
 }

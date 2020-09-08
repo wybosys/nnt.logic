@@ -3,7 +3,7 @@ import {logger} from "../core/logger";
 import {kSignalClose, kSignalDataChanged, kSignalFailed, kSignalOpen} from "../core/signals";
 import {FromArrayBuffer} from "../core/string";
 import {AbstractSocketConnector, AbstractSocketSession} from "./session";
-
+import WebSocket = require("ws");
 
 // connect解析返回数据时必须实现的接口
 export interface ISocketResponse {
@@ -33,7 +33,7 @@ export class WebSocketConnector extends AbstractSocketConnector {
             this.onClose(e);
         };
         hdl.onmessage = e => {
-            let data = this.parseData(e.data);
+            let data = this.parseData(<ArrayBuffer>e.data);
             this.onMessage(data, e);
         };
         hdl.onerror = e => {
@@ -67,19 +67,19 @@ export class WebSocketConnector extends AbstractSocketConnector {
         return toJsonObject(str);
     }
 
-    protected onOpen(e: Event) {
+    protected onOpen(e: WebSocket.OpenEvent) {
         this.signals.emit(kSignalOpen);
     }
 
-    protected onClose(e: CloseEvent) {
+    protected onClose(e: WebSocket.CloseEvent) {
         this.signals.emit(kSignalClose);
     }
 
-    protected onMessage(data: any, e: MessageEvent) {
+    protected onMessage(data: any, e: WebSocket.MessageEvent) {
         this.signals.emit(kSignalDataChanged, data);
     }
 
-    protected onError(e: Event) {
+    protected onError(e: WebSocket.ErrorEvent) {
         this.signals.emit(kSignalFailed);
     }
 

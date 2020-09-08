@@ -12,12 +12,20 @@ import {STATUS} from "../../nnt/core/models";
 import {Find} from "../../nnt/manager/servers";
 import {Multiplayers} from "../../nnt/server/multiplayers";
 import {logger} from "../../nnt/core/logger";
+import {SocketConnector, WebSocketSession} from "../../nnt/session/logic";
+import {kSignalOpen} from "../../nnt/core/signals";
 
 // 演示用的客户端
 class ImClient {
 
-    async connect(host: string, user: string): Promise<boolean> {
-        return false;
+    connect(host: string, user: string) {
+        // 连接服务器
+        this._ses.connector = new SocketConnector();
+        this._ses.host = host;
+        this._ses.signals.connect(kSignalOpen, () => {
+
+        }, null);
+        this._ses.open();
     }
 
     async receive(msg: ImMessage) {
@@ -29,6 +37,9 @@ class ImClient {
     }
 
     unreadeds: ImMessage[] = [];
+
+    // 链接服务端使用的ses
+    private _ses = new WebSocketSession();
 }
 
 // 演示实现Im通信
@@ -52,12 +63,8 @@ export class RIm implements IRouter {
 
         // 获得目标服务器地址
         let fnd = <Multiplayers>Find("sample");
-        let host = fnd.listen ? fnd.listen : "localhost";
-        if (!await cli.connect(host, m.user)) {
-            trans.status = STATUS.FAILED;
-            trans.submit();
-            return;
-        }
+        let host = 'ws://' + (fnd.listen ? fnd.listen : "localhost") + `:${fnd.port}/json`;
+        cli.connect(host, m.user);
 
         logger.log(`${m.user} 上线`);
         trans.submit();

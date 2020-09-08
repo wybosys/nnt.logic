@@ -26,7 +26,7 @@ import {
 import {AbstractParser} from "../server/parser/parser";
 import {STATUS} from "../core/models";
 import {SObject} from "../core/object";
-import {kSignalEnd, kSignalFailed, kSignalStart, kSignalSucceed, kSignalTimeout} from "../core/signals";
+import {kSignalEnd, kSignalFailed, kSignalStart, kSignalSucceed} from "../core/signals";
 
 export enum HttpMethod {
     GET = 0,
@@ -94,7 +94,6 @@ export abstract class Base extends SObject {
         this._signals.register(kSignalEnd);
         this._signals.register(kSignalSucceed);
         this._signals.register(kSignalFailed);
-        this._signals.register(kSignalTimeout);
     }
 
     // 唯一id
@@ -160,6 +159,9 @@ export abstract class Base extends SObject {
 
     // 处理响应的结果
     parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
+        if (this._signals)
+            this._signals.emit(kSignalStart);
+
         // 保护一下数据结构，标准的为 {code, message(error), data}
         if (data.body && data.body.data === undefined && data.body.message !== undefined) {
             data.body.data = data.body.message;
@@ -188,13 +190,22 @@ export abstract class Base extends SObject {
             msg += "错误码:" + this.code + " " + data.raw;
             let err = new ModelError(this.code, msg);
             error(err);
+
+            if (this._signals)
+                this._signals.emit(kSignalFailed);
         } else {
             try {
                 suc();
             } catch (err) {
                 error(new ModelError(STATUS.EXCEPTION, err.message));
             }
+
+            if (this._signals)
+                this._signals.emit(kSignalSucceed);
         }
+
+        if (this._signals)
+            this._signals.emit(kSignalEnd);
     }
 
     // 此次访问服务端返回的数据

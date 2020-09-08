@@ -88,8 +88,8 @@ export class Rest extends Session {
                     req = request.delete(data, cb);
                     break;
             }
-            if (m.user)
-                req.auth(m.user, m.passwd);
+            if (m.authorization)
+                req.auth(m.authorization.user, m.authorization.passwd);
         } else {
             if (m.logic) {
                 // 保护url的结尾符
@@ -176,8 +176,8 @@ export class Rest extends Session {
                     ProcessResponse(resp, parser, m, cbsuc, cberr);
                 }
             });
-            if (m.user)
-                req.auth(m.user, m.passwd);
+            if (m.authorization)
+                req.auth(m.authorization.user, m.authorization.passwd);
         }
     }
 }
