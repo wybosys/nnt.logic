@@ -28,7 +28,7 @@
           }
         },
         "nnt.thirds.rmq.RAdmin": {
-          "host": "wybosys.com",
+          "host": "localhost",
           "user": "root",
           "password": "root"
         }
@@ -56,7 +56,7 @@
     },
     {
       "id": "amqp",
-      "host": "wybosys.com",
+      "host": "localhost",
       "vhost": "sample",
       "user": "sample",
       "password": "sample",
