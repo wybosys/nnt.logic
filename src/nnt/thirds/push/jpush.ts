@@ -7,6 +7,8 @@ import {array, boolean, input, integer, json, model, optional, output, string, s
 import {IndexedObject} from "../../core/kernel";
 import {Transaction} from "../../server/transaction";
 import {STATUS} from "../../core/models";
+
+// 极光推送
 import jpush = require("jpush-sdk");
 
 @model()
@@ -120,8 +122,7 @@ class RJPush implements IRouter {
             if (err) {
                 logger.error(err);
                 trans.status = STATUS.FAILED;
-            }
-            else {
+            } else {
                 m.pushid = res.msg_id;
             }
             trans.submit();

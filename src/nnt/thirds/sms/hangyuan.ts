@@ -6,15 +6,17 @@ import {Rest} from "../../server/rest";
 import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {STATUS} from "../../core/models";
-import {Base, HttpContentType, HttpMethod, ResponseData, ModelError} from "../../session/model";
+import {Base, HttpContentType, HttpMethod, ModelError, ResponseData} from "../../session/model";
 import {Rest as RestSession} from "../../session/rest";
 import {REGEX_PHONE} from "../../component/pattern";
 import {ArrayT} from "../../core/kernel";
+import {AbstractParser} from "../../server/parser/parser";
 import soap = require("soap");
 import crypto = require("crypto");
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
-import {AbstractParser} from "../../server/parser/parser";
+
+// 航元短信
 
 @model()
 export class PlainSms {
@@ -91,16 +93,14 @@ class RestSendMessage extends Base {
                     let msg = result.subStatDes[0];
                     error(new ModelError(STATUS.FAILED, msg));
                     return;
-                }
-                else {
+                } else {
                     resp.code = 0;
                     resp.body = result;
                 }
 
                 super.parseData(resp, parser, suc, error);
             });
-        }
-        else {
+        } else {
             super.parseData(resp, parser, suc, error);
         }
     }
@@ -158,8 +158,7 @@ class RSms implements IRouter {
                 }
                 trans.submit();
             });
-        }
-        else {
+        } else {
             let m = new RestSendMessage();
             m.host = srv.url;
             m.account = srv.user;
@@ -247,8 +246,7 @@ export class Hangyuan extends Rest {
                 this._hy = cli;
                 logger.info("连接 {{=it.id}}@hangyuan", {id: this.id});
             });
-        }
-        else {
+        } else {
             logger.info("连接 {{=it.id}}@hangyuan", {id: this.id});
         }
     }

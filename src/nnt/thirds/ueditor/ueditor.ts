@@ -1,14 +1,14 @@
 import {action, IRouter} from "../../core/router";
 import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../../server/transaction";
-import {IndexedObject, ObjectT, toJson, toJsonObject} from "../../core/kernel";
-import fs = require("fs");
+import {IndexedObject, toJsonObject} from "../../core/kernel";
 import {expand} from "../../core/url";
-import ph = require("path");
 import {Call} from "../../manager/servers";
 import {Mime} from "../../core/file";
-import {Config} from "../../manager/config";
-import {Rest} from "../../server/rest";
+import fs = require("fs");
+import ph = require("path");
+
+// 带图床的ueditor服务
 
 export class Ueditor implements IRouter {
     action = "ueditor";

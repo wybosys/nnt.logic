@@ -6,6 +6,8 @@ import {Decode, input, integer, json, model, optional, output, string, type} fro
 import {Call, Fetch} from "../../server/remote";
 import {ArrayT, IndexedObject} from "../../core/kernel";
 
+// yiyou小游戏平台
+
 interface SdksConfig {
 
     // 连接debug服务
