@@ -2,9 +2,9 @@ import {enumerate, enumm, input, model, output, string} from "../../core/proto";
 import {SetT} from "../../core/kernel";
 import {SvgConvertor} from "./svgcvt";
 import {FileInfo} from "../fileinfo";
-import {StringCrypto} from "../../core/string";
 import {Config} from "../../manager/config";
 import {static_var} from "../../core/core";
+import {StringCrypto} from "../../core/crypto";
 
 @model([enumm])
 export class ConvertSupport {

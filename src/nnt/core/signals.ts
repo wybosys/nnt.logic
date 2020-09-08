@@ -91,7 +91,7 @@ export class Slot {
         this.tunnel = tunnel;
 
         if (this.delay) {
-            Delay(this.delay, ()=>{
+            Delay(this.delay, () => {
                 this.doEmit();
             });
         } else {
@@ -385,15 +385,14 @@ export class Signals {
             sig2 = params[1];
             target = params[2];
         } else if (params.length == 2) {
-            if (typeof(params[1]) == 'string') {
+            if (typeof (params[1]) == 'string') {
                 sig2 = params[1];
                 target = this.owner;
             } else {
                 sig2 = sig;
                 target = params[1];
             }
-        }
-        else {
+        } else {
             logger.warn("SignalRedirect 传入了错误的参数");
             return null;
         }
@@ -491,8 +490,7 @@ export class Signals {
                 if (!this.isConnectedOfTarget(target))
                     this.__inv_disconnect(target);
             }, this);
-        }
-        else {
+        } else {
             // 先清除对应的slot，再判断是否存在和target相连的插槽，如过不存在，则断开反向连接
             if (ss.disconnect(cb, target) &&
                 target && !this.isConnectedOfTarget(target)) {
@@ -553,3 +551,13 @@ export const kSignalStopping = "::nnt::stopping";
 export const kSignalStopped = "::nnt::stopped";
 export const kSignalAction = "::nnt::action";
 export const kSignalDone = "::nnt::done";
+export const kSignalOpening = "::nnt::opening";
+export const kSignalOpen = "::nnt::open";
+export const kSignalReopen = "::nnt::reopen";
+export const kSignalConnected = "::nnt::connected";
+export const kSignalClosing = "::nnt::Closing";
+export const kSignalClose = "::nnt::close";
+export const kSignalDataChanged = "::nnt::data::changed";
+export const kSignalTimeout = "::nnt::timeout";
+export const kSignalCancel = "::nnt::cancel";
+export const kSignalFailed = "::nnt::failed";

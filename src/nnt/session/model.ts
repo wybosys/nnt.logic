@@ -1,33 +1,43 @@
 import {IndexedObject} from "../core/kernel";
 import {
-    array, boolean, boolean_t, double, double_t,
+    array,
+    boolean,
+    boolean_t,
+    double,
+    double_t,
     Encode,
     enumerate,
-    FieldOption, file,
+    FieldOption,
+    file,
     FP_KEY,
     input,
-    integer, integer_t,
-    json, map, multimap,
+    integer,
+    integer_t,
+    json,
+    map,
+    multimap,
     optional,
     output,
-    string, string_t, type,
+    string,
+    string_t,
+    type,
     UpdateData
 } from "../core/proto";
 import {AbstractParser} from "../server/parser/parser";
-import {Null, STATUS} from "../core/models";
+import {STATUS} from "../core/models";
 
 export enum HttpMethod {
-    GET,
-    POST,
-    PUT,
-    DELETE
+    GET = 0,
+    POST = 1,
+    PUT = 2,
+    DELETE = 3
 }
 
 export enum HttpContentType {
-    MANUAL, // 手动处理
-    URLENCODED,
-    JSON,
-    XML
+    MANUAL = 0, // 手动处理
+    URLENCODED = 1,
+    JSON = 2,
+    XML = 3
 }
 
 export class RequestParams {

@@ -1,5 +1,16 @@
 import {Base, ModelError} from "./model";
 import {logger} from "../core/logger";
+import {SObject} from "../core/object";
+import {
+    kSignalClose,
+    kSignalDataChanged,
+    kSignalFailed,
+    kSignalOpen,
+    kSignalReopen,
+    kSignalTimeout,
+    Slot
+} from "../core/signals";
+
 
 export type SuccessCallback<T> = (m: T) => void;
 export type ErrorCallBack = (err: ModelError, resp?: any) => void;
@@ -33,4 +44,59 @@ export abstract class Session {
             });
         });
     }
+}
+
+export abstract class SocketConnector extends SObject {
+    /** 地址 */
+    host: string;
+
+    protected _initSignals() {
+        super._initSignals();
+        this._signals.register(kSignalOpen);
+        this._signals.register(kSignalClose);
+        this._signals.register(kSignalDataChanged);
+        this._signals.register(kSignalTimeout);
+        this._signals.register(kSignalFailed);
+        this._signals.register(kSignalReopen);
+    }
+
+    /** 是否已经打开 */
+    abstract isopened(): boolean;
+
+    /** 连接服务器 */
+    abstract open(): void;
+
+    /** 断开连接 */
+    abstract close(): void;
+
+    /** 发送对象 */
+    abstract write(obj: any): void;
+
+    /** 监听对象 */
+    abstract watch(obj: any, on: boolean): void;
+}
+
+// 用于socket通信的session
+export abstract class SocketSession {
+
+    // 连接器
+    connector: SocketConnector;
+
+    // 监听模型
+    abstract watch(mdl: Base, cb?: (s?: Slot) => void, cbctx?: any): void;
+
+    // 取消监听模型
+    abstract unwatch(mdl: Base): void;
+
+    // 获取模型数据
+    abstract fetch(mdl: Base, cb?: (s?: Slot) => void, cbctx?: any, cbfail?: (s?: Slot) => void, cbend?: () => void): void;
+
+    // 服务器地址
+    host: string;
+
+    // sessionId
+    SID: string;
+
+    // 打开连接
+    abstract open(): void;
 }

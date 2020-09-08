@@ -38,3 +38,13 @@ export class ImMessages {
     @array(1, ImMessage, [output])
     messages: ImMessage[];
 }
+
+@model([auth])
+export class ImSignalSignatureCode {
+
+    @string(1, [input], "对象用户")
+    target: string;
+
+    @string(2, [output], "签名code")
+    code: string;
+}
