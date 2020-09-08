@@ -92,10 +92,18 @@ export class Slot {
 
         if (this.delay) {
             Delay(this.delay, () => {
-                this.doEmit();
+                try {
+                    this.doEmit();
+                } catch (e) {
+                    console.error(e);
+                }
             });
         } else {
-            this.doEmit();
+            try {
+                this.doEmit();
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 

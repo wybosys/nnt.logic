@@ -14,16 +14,18 @@ import {Multiplayers} from "../../nnt/server/multiplayers";
 import {logger} from "../../nnt/core/logger";
 import {SocketConnector, WebSocketSession} from "../../nnt/session/logic";
 import {kSignalOpen} from "../../nnt/core/signals";
+import {RSample} from "./sample";
 
 // 演示用的客户端
 class ImClient {
 
-    connect(host: string, user: string) {
+    connect(host: string, user: string, sid: string) {
         // 连接服务器
         this._ses.connector = new SocketConnector();
         this._ses.host = host;
+        this._ses.SID = sid;
         this._ses.signals.connect(kSignalOpen, () => {
-
+            
         }, null);
         this._ses.open();
     }
@@ -61,10 +63,14 @@ export class RIm implements IRouter {
         let cli = new ImClient();
         this._clients.set(m.user, cli);
 
-        // 获得目标服务器地址
+        // 登录换取sid
+        trans.sid = await RSample.Login(m.user);
+        trans.responseSessionId = true;
+
+        // 链接ws服务器
         let fnd = <Multiplayers>Find("sample");
         let host = 'ws://' + (fnd.listen ? fnd.listen : "localhost") + `:${fnd.port}/json`;
-        cli.connect(host, m.user);
+        cli.connect(host, m.user, trans.sid);
 
         logger.log(`${m.user} 上线`);
         trans.submit();

@@ -19,6 +19,7 @@
         "nnt.server.apidoc.Router": {
           "export": {
             "router": [
+              "entry://app/router/sample",
               "entry://app/router/im"
             ],
             "model": [

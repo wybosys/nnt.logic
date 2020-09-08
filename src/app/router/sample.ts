@@ -47,18 +47,23 @@ export class RSample implements IRouter {
     @action(Login)
     async login(trans: Trans) {
         let m: Login = trans.model;
-        // 测试登陆，查询，如果数据库中没有，则生成新得
-        let fnd = await Get(Login, {uid: m.uid});
-        if (fnd) {
-            trans.sid = fnd.sid;
-        } else {
-            trans.sid = UUID();
-            Set(Login, {uid: m.uid}, {sid: trans.sid});
-            Set(Login, {sid: trans.sid}, {uid: m.uid});
-        }
-        m.sid = trans.sid;
+        trans.sid = m.sid = await RSample.Login(m.uid);
         trans.responseSessionId = true;
         trans.submit();
+    }
+
+    static async Login(uid: string): Promise<string> {
+        // 测试登陆，查询，如果数据库中没有，则生成新得
+        let fnd = await Get(Login, {uid: uid});
+        let sid: string;
+        if (fnd) {
+            sid = fnd.sid;
+        } else {
+            sid = UUID();
+            Set(Login, {uid: uid}, {sid: sid});
+            Set(Login, {sid: sid}, {uid: uid});
+        }
+        return sid;
     }
 
     @action(LoginSDK)
@@ -118,8 +123,7 @@ export class RSample implements IRouter {
                 file: m.file
             });
             m.file = res.path;
-        }
-        catch (err) {
+        } catch (err) {
             trans.status = err.code;
             logger.warn(err.message);
         }

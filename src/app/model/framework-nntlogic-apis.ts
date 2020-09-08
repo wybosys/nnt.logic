@@ -306,6 +306,24 @@ class ApiModel extends Model {
 
 class Routers {
 
+  static SampleEcho = ["sample.echo", Echoo, ""];
+
+  static SampleCallecho = ["sample.callecho", Echoo, ""];
+
+  static SampleLogin = ["sample.login", Login, ""];
+
+  static SampleLoginsdk = ["sample.loginsdk", LoginSDK, ""];
+
+  static SampleLoginverifysdk = ["sample.loginverifysdk", LoginVerifySDK, ""];
+
+  static SampleUser = ["sample.user", User, ""];
+
+  static SampleMessage = ["sample.message", Message, "监听消息炸弹"];
+
+  static SampleUpload = ["sample.upload", Upload, "上传图片"];
+
+  static SampleNull = ["sample.null", Null, "不需要传参的模型"];
+
   static ImLogin = ["im.login", ImUserLogin, ""];
 
   static ImLogout = ["im.logout", ImUserLogout, ""];
@@ -320,6 +338,42 @@ class Routers {
 
 }
 
+
+  export function SampleEcho():Echoo {
+    return Model.NewRequest(Routers.SampleEcho);
+  }
+
+  export function SampleCallecho():Echoo {
+    return Model.NewRequest(Routers.SampleCallecho);
+  }
+
+  export function SampleLogin():Login {
+    return Model.NewRequest(Routers.SampleLogin);
+  }
+
+  export function SampleLoginsdk():LoginSDK {
+    return Model.NewRequest(Routers.SampleLoginsdk);
+  }
+
+  export function SampleLoginverifysdk():LoginVerifySDK {
+    return Model.NewRequest(Routers.SampleLoginverifysdk);
+  }
+
+  export function SampleUser():User {
+    return Model.NewRequest(Routers.SampleUser);
+  }
+
+  export function SampleMessage():Message {
+    return Model.NewRequest(Routers.SampleMessage);
+  }
+
+  export function SampleUpload():Upload {
+    return Model.NewRequest(Routers.SampleUpload);
+  }
+
+  export function SampleNull():Null {
+    return Model.NewRequest(Routers.SampleNull);
+  }
 
   export function ImLogin():ImUserLogin {
     return Model.NewRequest(Routers.ImLogin);
