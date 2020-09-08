@@ -1,6 +1,13 @@
 import {action, IRouter} from "../../nnt/core/router";
 import {Trans} from "../model/trans";
-import {ImLogin, ImLogout, ImMessage, ImMessages, ImMessageUnreadCount, ImSignalSignatureCode} from "../model/im";
+import {
+    ImMessage,
+    ImMessages,
+    ImMessageUnreadCount,
+    ImSignalSignatureCode,
+    ImUserLogin,
+    ImUserLogout
+} from "../model/im";
 import {STATUS} from "../../nnt/core/models";
 import {Find} from "../../nnt/manager/servers";
 import {Multiplayers} from "../../nnt/server/multiplayers";
@@ -16,7 +23,7 @@ class ImClient {
     async receive(msg: ImMessage) {
 
     }
-    
+
     code(): string {
         return "";
     }
@@ -30,9 +37,9 @@ export class RIm implements IRouter {
 
     private _clients = new Map<string, ImClient>();
 
-    @action(ImLogin)
+    @action(ImUserLogin)
     async login(trans: Trans) {
-        let m: ImLogin = trans.model;
+        let m: ImUserLogin = trans.model;
         if (this._clients.has(m.user)) {
             trans.status = STATUS.TARGET_EXISTS;
             trans.submit();
@@ -56,7 +63,7 @@ export class RIm implements IRouter {
         trans.submit();
     }
 
-    @action(ImLogout)
+    @action(ImUserLogout)
     logout(trans: Trans) {
         let user = trans.userIdentifier();
         if (!this._clients.has(user)) {
@@ -97,7 +104,7 @@ export class RIm implements IRouter {
         let m: ImSignalSignatureCode = trans.model;
         let user = trans.userIdentifier();
         let cl = this._clients.get(user);
-        m.code = cl.code();
+        m.signcode = cl.code();
         trans.submit();
     }
 }

@@ -13,7 +13,7 @@ import {
     Slot
 } from "../core/signals";
 import {CancelDelay, DateTime, Delay, Repeat, RepeatHandler} from "../core/time";
-import {Base} from "./model";
+import {Base, SimpleModel} from "./model";
 import {AbstractSocketConnector, AbstractSocketSession} from "./session";
 import {App} from "../manager/app";
 import {ListenMode} from "../server/rest/listener";
@@ -250,7 +250,7 @@ export class WebSocketSession extends AbstractSocketSession {
         logger.info('打开服务器 ' + this.host + ' 成功');
 
         // 初始化连接
-        let m = new Base();
+        let m = new SimpleModel();
         m.action = "socket.init";
         this.fetch(m, () => {
             logger.info('连接服务器 ' + this.host + ' 成功');
@@ -262,7 +262,7 @@ export class WebSocketSession extends AbstractSocketSession {
             });
 
             this._tmrPing = Repeat(30, () => {
-                let m = new Model();
+                let m = new SimpleModel();
                 m.action = "socket.ping";
                 this.fetch(m);
             });
@@ -290,9 +290,9 @@ export class WebSocketSession extends AbstractSocketSession {
             let mdl = this._fetchings.get(data._cmid);
             // 后处理
             mdl.quiet = data.quiet;
-            mdl.response = data;
-            mdl.processResponse();
-            mdl.__mdl_end();
+            mdl.data = data;
+            //mdl.processResponse();
+            //mdl.__mdl_end();
             this._fetchings.delete(data._cmid);
         }
 
@@ -300,8 +300,8 @@ export class WebSocketSession extends AbstractSocketSession {
         if (this._listenings.has(data._cmid)) {
             let mdl = this._listenings.get(data._cmid);
             mdl.quiet = data.quiet;
-            mdl.response = data;
-            mdl.processResponse();
+            mdl.data = data;
+            //mdl.processResponse();
         }
     }
 }

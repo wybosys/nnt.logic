@@ -20,6 +20,11 @@
           "export": {
             "router": [
               "entry://app/router/im"
+            ],
+            "model": [
+              "entry://nnt/core/models",
+              "entry://app/model/sample",
+              "entry://app/model/im"
             ]
           }
         }

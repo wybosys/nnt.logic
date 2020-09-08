@@ -1,14 +1,14 @@
 import {array, auth, boolean, input, integer, model, output, string} from "../../nnt/core/proto";
 
 @model()
-export class ImLogin {
+export class ImUserLogin {
 
     @string(1, [input], "用户")
     user: string;
 }
 
 @model([auth])
-export class ImLogout {
+export class ImUserLogout {
 
 }
 
@@ -46,5 +46,5 @@ export class ImSignalSignatureCode {
     target: string;
 
     @string(2, [output], "签名code")
-    code: string;
+    signcode: string;
 }

@@ -76,6 +76,15 @@ export class ModelError extends Error {
     code: number;
 }
 
+// 协议级授权
+export class Authorization {
+
+    // 协议层授权
+    user: string;
+    passwd: string;
+
+}
+
 // 服务端基础模型
 export abstract class Base extends SObject {
 
@@ -116,9 +125,11 @@ export abstract class Base extends SObject {
     // 使用logic架构规范
     logic: boolean = true;
 
-    // 协议层授权
-    user: string;
-    passwd: string;
+    // 静默
+    quiet: boolean;
+
+    // 协议级授权
+    authorization?: Authorization;
 
     // 组装请求的url
     abstract requestUrl(): string;
@@ -234,4 +245,13 @@ export function Decode(parser: AbstractParser, mdl: any, params: any) {
             continue;
         mdl[key] = parser.decodeField(fp, params[key], false, true);
     }
+}
+
+// 构造一个简单model
+export class SimpleModel extends Base {
+
+    requestUrl(): string {
+        return "";
+    }
+
 }
