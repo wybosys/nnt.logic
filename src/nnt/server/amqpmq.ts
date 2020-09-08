@@ -3,16 +3,9 @@ import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
 import {ReusableObjects, Variant} from "../core/object";
-import {
-    ArrayT,
-    Class,
-    IndexedObject,
-    KvObject,
-    ObjectT
-} from "../core/kernel";
+import {ArrayT, Class, IndexedObject, KvObject, ObjectT} from "../core/kernel";
 import {static_cast} from "../core/core";
 import amqplib = require("amqplib");
-import log = logger.log;
 
 interface AmqpNode {
 
@@ -44,6 +37,7 @@ class AmqpmqClient extends AbstractMQClient {
     // 如果是交换器，则交换器名
     private _exchange: string;
 
+    // 根据业务层传入的设置初始化连接到amqp服务器的客户端
     open(chann: string, opt: MQClientOption): Promise<this> {
         return new Promise(resolve => {
             super.open(chann, opt).then(() => {
@@ -259,6 +253,7 @@ export class Amqpmq extends AbstractServer implements IMQServer {
             opts.username = this.user;
             opts.password = this.password;
         }
+
         await this.doConnect(opts);
         this.onStart();
     }
@@ -477,9 +472,10 @@ class Channels {
         this._connections = new Connections(opts);
     }
 
+    // 打开通道
     async open(): Promise<Channels> {
-        // 打开默认连接
-        await this.connection();
+        // 创建默认连接
+        await this.acquire();
         return this;
     }
 
@@ -488,7 +484,7 @@ class Channels {
         let r: Channel = null;
         let retry = 5;
         while (!r && retry--) {
-            let connection = await this._connections.connection();
+            let connection = await this._connections.acquire();
             r = await connection.channel();
         }
         if (!r)
@@ -496,22 +492,27 @@ class Channels {
         return r;
     }
 
-    async connection(): Promise<Connection> {
-        return this._connections.connection();
+    // 创建一个新连接
+    async acquire(): Promise<Connection> {
+        return this._connections.acquire();
     }
 
+    // 复用
     async use(clazz?: Class<Channel>): Promise<Channel> {
         return this._pool.use(clazz);
     }
 
+    // 退回
     async unuse(chann: Channel, e?: any) {
         return this._pool.unuse(chann, e);
     }
 
+    // 安全调用cb实现的函数，避免amqp引发的exception
     async safe(cb: (obj: Channel) => Promise<void>, clazz?: Class<Channel>) {
         await this._pool.safe(cb, clazz);
     }
 
+    // 关闭通道
     close() {
         this._connections.close();
         this._pool.clear();
@@ -529,7 +530,7 @@ class Connections {
     }
 
     // 当前可用的连接
-    async connection(): Promise<Connection> {
+    async acquire(): Promise<Connection> {
         if (this._connection && !this._connection.valid)
             this._connection = null;
 

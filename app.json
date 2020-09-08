@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "config": {
     "sidexpire": 86400,
     "cidexpire": 600,
@@ -27,7 +28,7 @@
           }
         },
         "nnt.thirds.rmq.RAdmin": {
-          "host": "develop.91egame.com",
+          "host": "wybosys.com",
           "user": "root",
           "password": "root"
         }
@@ -55,7 +56,7 @@
     },
     {
       "id": "amqp",
-      "host": "develop.91egame.com",
+      "host": "wybosys.com",
       "vhost": "sample",
       "user": "sample",
       "password": "sample",
