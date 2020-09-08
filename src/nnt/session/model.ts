@@ -25,6 +25,8 @@ import {
 } from "../core/proto";
 import {AbstractParser} from "../server/parser/parser";
 import {STATUS} from "../core/models";
+import {SObject} from "../core/object";
+import {kSignalEnd, kSignalFailed, kSignalStart, kSignalSucceed, kSignalTimeout} from "../core/signals";
 
 export enum HttpMethod {
     GET = 0,
@@ -49,6 +51,7 @@ export class RequestParams {
     root = "root";
 }
 
+// 响应数据
 export class ResponseData {
 
     // 响应的code
@@ -74,7 +77,20 @@ export class ModelError extends Error {
 }
 
 // 服务端基础模型
-export abstract class Base {
+export abstract class Base extends SObject {
+
+    protected _initSignals() {
+        super._initSignals();
+        this._signals.register(kSignalStart);
+        this._signals.register(kSignalEnd);
+        this._signals.register(kSignalSucceed);
+        this._signals.register(kSignalFailed);
+        this._signals.register(kSignalTimeout);
+    }
+
+    // 唯一id
+    static HashCode = 0;
+    hashCode: number = ++Base.HashCode;
 
     // 请求的服务器地址
     host: string;
@@ -175,6 +191,9 @@ export abstract class Base {
 
     // data保存的时二级模型
     submodel: boolean;
+
+    // 由哪个session发起的请求
+    session?: Object;
 
     // 把annotation链接到model，避免需要在api中导入大量函数
     static integer = integer;

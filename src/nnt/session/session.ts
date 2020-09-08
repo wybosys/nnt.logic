@@ -3,10 +3,13 @@ import {logger} from "../core/logger";
 import {SObject} from "../core/object";
 import {
     kSignalClose,
+    kSignalConnected,
     kSignalDataChanged,
+    kSignalEnd,
     kSignalFailed,
     kSignalOpen,
     kSignalReopen,
+    kSignalSucceed,
     kSignalTimeout,
     Slot
 } from "../core/signals";
@@ -46,8 +49,9 @@ export abstract class Session {
     }
 }
 
-export abstract class SocketConnector extends SObject {
-    /** 地址 */
+export abstract class AbstractSocketConnector extends SObject {
+
+    // 连接地址
     host: string;
 
     protected _initSignals() {
@@ -77,10 +81,21 @@ export abstract class SocketConnector extends SObject {
 }
 
 // 用于socket通信的session
-export abstract class SocketSession {
+export abstract class AbstractSocketSession extends SObject {
+
+    protected _initSignals() {
+        super._initSignals();
+        this._signals.register(kSignalOpen);
+        this._signals.register(kSignalConnected);
+        this._signals.register(kSignalClose);
+        this._signals.register(kSignalTimeout);
+        this._signals.register(kSignalEnd);
+        this._signals.register(kSignalSucceed);
+        this._signals.register(kSignalFailed);
+    }
 
     // 连接器
-    connector: SocketConnector;
+    connector: AbstractSocketConnector;
 
     // 监听模型
     abstract watch(mdl: Base, cb?: (s?: Slot) => void, cbctx?: any): void;

@@ -2,7 +2,7 @@ import {toJson, toJsonObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import {kSignalClose, kSignalDataChanged, kSignalFailed, kSignalOpen} from "../core/signals";
 import {FromArrayBuffer} from "../core/string";
-import {SocketConnector, SocketSession} from "./session";
+import {AbstractSocketConnector, AbstractSocketSession} from "./session";
 
 
 // connect解析返回数据时必须实现的接口
@@ -16,7 +16,7 @@ export interface ISocketResponse {
 }
 
 
-export class WebSocketConnector extends SocketConnector {
+export class WebSocketConnector extends AbstractSocketConnector {
 
     open() {
         if (this._hdl)
@@ -84,9 +84,9 @@ export class WebSocketConnector extends SocketConnector {
     }
 
     private _hdl?: WebSocket;
-    private _session: SocketSession;
+    private _session: AbstractSocketSession;
 
-    get session(): SocketSession {
+    get session(): AbstractSocketSession {
         return this._session;
     }
 }

@@ -11,6 +11,7 @@ import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
 import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
 import {ArrayT, toJsonObject} from "../core/kernel";
+import {unsafeUuid} from "../core/random";
 
 export class App {
 
@@ -215,6 +216,16 @@ export class App {
             return false;
         let clazz = m[clsnm];
         return clazz != null;
+    }
+
+    // 获得当前的唯一id(运行期)
+    private _uniqueId: string;
+
+    get uniqueId(): string {
+        if (!this._uniqueId) {
+            this._uniqueId = unsafeUuid(16, 16);
+        }
+        return this._uniqueId;
     }
 }
 

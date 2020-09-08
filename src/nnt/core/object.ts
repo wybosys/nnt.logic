@@ -3,7 +3,7 @@ import {logger} from "./logger";
 import {Classname} from "./v8";
 import {IsDebug} from "../manager/config";
 import {CancelDelay, Delay, DelayHandler} from "./time";
-import {Class, IndexedObject, toJson, toJsonObject} from "./kernel";
+import {ArrayT, Class, IndexedObject, toJson, toJsonObject} from "./kernel";
 import fs = require("fs");
 import stmbuf = require("stream-buffers");
 
@@ -152,6 +152,30 @@ export class SObject implements IRefObject, ISObject {
     /** 比较函数 */
     isEqual(r: this): boolean {
         return this == r;
+    }
+
+    /** 绑定一个生命期 */
+    private _attachs: Array<any>;
+
+    // 将另一个对象的生命期绑定到自己
+    attachref(o: any) {
+        // 如果不存在生命期维护，则直接放弃
+        if (o.grab == undefined)
+            return;
+        if (this._attachs == null)
+            this._attachs = new Array<any>();
+        o.grab();
+        this._attachs.push(o);
+    }
+
+    // 释放另一个绑定对象的生命期
+    detachref(o: any) {
+        if (o.drop == undefined)
+            return;
+        if (this._attachs == null)
+            return;
+        o.drop();
+        ArrayT.RemoveObject(this._attachs, o);
     }
 }
 
