@@ -4,17 +4,19 @@ import {
     ImMessage,
     ImMessages,
     ImMessageUnreadCount,
+    ImNewMessage,
     ImSignalSignatureCode,
     ImUserLogin,
     ImUserLogout
 } from "../model/im";
 import {STATUS} from "../../nnt/core/models";
 import {Find} from "../../nnt/manager/servers";
-import {Multiplayers} from "../../nnt/server/multiplayers";
+import {Multiplayers, Transaction} from "../../nnt/server/multiplayers";
 import {logger} from "../../nnt/core/logger";
 import {SocketConnector, WebSocketSession} from "../../nnt/session/logic";
 import {kSignalOpen} from "../../nnt/core/signals";
 import {RSample} from "./sample";
+import {ImNewmsg} from "../model/framework-nntlogic-apis";
 
 // 演示用的客户端
 class ImClient {
@@ -25,13 +27,21 @@ class ImClient {
         this._ses.host = host;
         this._ses.SID = sid;
         this._ses.signals.connect(kSignalOpen, () => {
-            
+            // 等待接受消息
+            let m = ImNewmsg();
+            this._ses.watch(m, nm => {
+                this.receive(nm.data);
+            });
         }, null);
         this._ses.open();
     }
 
-    async receive(msg: ImMessage) {
-
+    receive(msg: ImNewMessage) {
+        let n = new ImNewMessage();
+        n.from = msg.from;
+        n.to = msg.to;
+        n.content = msg.content;
+        this.unreadeds.push(n);
     }
 
     code(): string {
@@ -92,6 +102,16 @@ export class RIm implements IRouter {
     @action(ImMessage)
     send(trans: Trans) {
         let m: ImMessage = trans.model;
+        m.from = trans.userIdentifier();
+        Multiplayers.AcquireOnlineUser("amqp", m.to).then(mq => {
+            let nm = new ImNewMessage();
+            nm.from = m.from;
+            nm.to = m.to;
+            nm.content = m.content;
+            nm.crypto = m.crypto;
+            mq.produce(Transaction.Encode(nm));
+        });
+        trans.submit();
     }
 
     @action(ImMessageUnreadCount)
@@ -99,6 +119,12 @@ export class RIm implements IRouter {
         let m: ImMessageUnreadCount = trans.model;
         let user = trans.userIdentifier();
         m.count = this._clients.get(user).unreadeds.length;
+        trans.submit();
+    }
+
+    @action(ImNewMessage)
+    newmsg(trans: Trans) {
+        trans.model = null;
         trans.submit();
     }
 

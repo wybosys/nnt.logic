@@ -158,7 +158,7 @@ export abstract class Base extends SObject {
     additionParams: IndexedObject = null;
 
     // 处理响应的结果
-    parseData(data: ResponseData, parser: AbstractParser, suc: () => void, error: (err: ModelError) => void) {
+    parseData(data: ResponseData, parser: AbstractParser, suc?: () => void, error?: (err: ModelError) => void) {
         if (this._signals)
             this._signals.emit(kSignalStart);
 
@@ -189,23 +189,26 @@ export abstract class Base extends SObject {
                 msg += this.error + " ";
             msg += "错误码:" + this.code + " " + data.raw;
             let err = new ModelError(this.code, msg);
-            error(err);
+            if (error)
+                error(err);
 
             if (this._signals)
-                this._signals.emit(kSignalFailed);
+                this._signals.emit(kSignalFailed, err);
         } else {
             try {
-                suc();
+                if (suc)
+                    suc();
             } catch (err) {
-                error(new ModelError(STATUS.EXCEPTION, err.message));
+                if (error)
+                    error(new ModelError(STATUS.EXCEPTION, err.message));
             }
 
-            if (this._signals)
-                this._signals.emit(kSignalSucceed);
+            if (this._signals && !this.quiet)
+                this._signals.emit(kSignalSucceed, this);
         }
 
         if (this._signals)
-            this._signals.emit(kSignalEnd);
+            this._signals.emit(kSignalEnd, this);
     }
 
     // 此次访问服务端返回的数据

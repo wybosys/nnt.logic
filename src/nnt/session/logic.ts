@@ -1,4 +1,4 @@
-import {ISocketResponse, WebSocketConnector} from "./socket";
+import {WebSocketConnector} from "./socket";
 import {IndexedObject, toJsonObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import {STATUS} from "../core/models";
@@ -13,7 +13,7 @@ import {
     Slot
 } from "../core/signals";
 import {CancelDelay, DateTime, Delay, Repeat, RepeatHandler} from "../core/time";
-import {Base, SimpleModel} from "./model";
+import {Base, ResponseData, SimpleModel} from "./model";
 import {AbstractSocketConnector, AbstractSocketSession} from "./session";
 import {App} from "../manager/app";
 import {ListenMode} from "../server/rest/listener";
@@ -289,7 +289,16 @@ export class WebSocketSession extends AbstractSocketSession {
     private _tmrPing: RepeatHandler;
 
     private __cnt_gotmessage(s: Slot) {
-        let data: ISocketResponse = s.data;
+        let data: IndexedObject = s.data;
+        let respndata: ResponseData = {
+            code: data.code,
+            type: "",
+            body: {
+                code: data.code,
+                data: data.data
+            },
+            raw: ""
+        };
 
         // 判断是否是fetch
         if (this._fetchings.has(data._cmid)) {
@@ -297,8 +306,8 @@ export class WebSocketSession extends AbstractSocketSession {
             let mdl = this._fetchings.get(data._cmid);
             // 后处理
             mdl.quiet = data.quiet;
-            mdl.data = data;
-            mdl.parseData(mdl.data, this._parser, null, null);
+            mdl.data = data.data;
+            mdl.parseData(respndata, this._parser, null, null);
             this._fetchings.delete(data._cmid);
         }
 
@@ -306,8 +315,8 @@ export class WebSocketSession extends AbstractSocketSession {
         if (this._listenings.has(data._cmid)) {
             let mdl = this._listenings.get(data._cmid);
             mdl.quiet = data.quiet;
-            mdl.data = data;
-            mdl.parseData(mdl.data, this._parser, null, null);
+            mdl.data = data.data;
+            mdl.parseData(respndata, this._parser, null, null);
         }
     }
 }

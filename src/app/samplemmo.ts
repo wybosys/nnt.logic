@@ -33,7 +33,7 @@ export class SampleMmo extends Multiplayers {
 
     protected async onConnectorAvaliable(connector: MmoConnector) {
         await super.onConnectorAvaliable(connector);
-        Manager.shared().user.startMessageBomb(connector.userIdentifier);
+        // Manager.shared().user.startMessageBomb(connector.userIdentifier);
     }
 
     protected async onConnectorUnavaliable(connector: MmoConnector) {

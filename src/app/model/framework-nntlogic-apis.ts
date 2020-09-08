@@ -268,13 +268,32 @@ class ApiModel extends Model {
 
   export class ImMessage extends ApiModel {
     
-        @Model.string(1, [Model.input, Model.output], "发送或接受的用户")
-        user:string;
+        @Model.string(1, [Model.output], "发送的用户")
+        from:string;
     
-        @Model.string(2, [Model.input, Model.output], "发送内容")
+        @Model.string(2, [Model.input, Model.output], "接受的用户")
+        to:string;
+    
+        @Model.string(3, [Model.input, Model.output], "发送内容")
         content:string;
     
-        @Model.boolean(3, [Model.input, Model.output], "是否加密")
+        @Model.boolean(4, [Model.input, Model.output, Model.optional], "是否加密")
+        crypto?:boolean;
+    
+  }
+
+  export class ImNewMessage extends ApiModel {
+    
+        @Model.string(1, [Model.output], "发送的用户")
+        from:string;
+    
+        @Model.string(2, [Model.output], "接受的用户")
+        to:string;
+    
+        @Model.string(3, [Model.output], "发送内容")
+        content:string;
+    
+        @Model.boolean(4, [Model.output], "是否加密")
         crypto:boolean;
     
   }
@@ -331,6 +350,8 @@ class Routers {
   static ImSend = ["im.send", ImMessage, ""];
 
   static ImUnreadcount = ["im.unreadcount", ImMessageUnreadCount, ""];
+
+  static ImNewmsg = ["im.newmsg", ImNewMessage, ""];
 
   static ImReceive = ["im.receive", ImMessages, ""];
 
@@ -389,6 +410,10 @@ class Routers {
 
   export function ImUnreadcount():ImMessageUnreadCount {
     return Model.NewRequest(Routers.ImUnreadcount);
+  }
+
+  export function ImNewmsg():ImNewMessage {
+    return Model.NewRequest(Routers.ImNewmsg);
   }
 
   export function ImReceive():ImMessages {
