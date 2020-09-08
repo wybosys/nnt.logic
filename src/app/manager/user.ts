@@ -31,7 +31,7 @@ class MessageBomb {
 
     constructor(uid: string) {
         this._uid = uid;
-        this._timer = Repeat(1, () => {
+        this._timer = Repeat(5, () => {
             this.send();
         });
     }

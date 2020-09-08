@@ -2254,7 +2254,9 @@ export function toJsonObject(o: jsonobj, def: any = null): IndexedObject {
         try {
             r = JSON.parse(o as string);
         } catch (err) {
-            logger.warn(o + " " + err);
+            if (o.length > 128)
+                o = o.substr(0, 128);
+            logger.log(o + " " + err);
             r = def;
         }
         return r;
@@ -2272,7 +2274,9 @@ export function toJsonArray(o: jsonobj, def: any[] = null): IndexedObject[] {
         try {
             r = JSON.parse(o as string);
         } catch (err) {
-            logger.warn(o + " " + err);
+            if (o.length > 128)
+                o = o.substr(0, 128);
+            logger.log(o + " " + err);
             r = def;
         }
         return r;

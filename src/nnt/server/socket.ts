@@ -6,7 +6,7 @@ import {IndexedObject, nonnull1st, ObjectT, toJson} from "../core/kernel";
 import {Config} from "../manager/config";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
-import {FindDecoder, IDecoder, RegisterDecoder} from "./socket/decoder";
+import {FindDecoder, RegisterDecoder} from "./socket/decoder";
 import {JsonDecoder} from "./socket/jsondecoder";
 import {Transaction as BaseTransaction} from "./transaction";
 import {STATUS} from "../core/models";
@@ -18,12 +18,12 @@ import {Variant} from "../core/object";
 import {Output} from "../core/proto";
 import {IHttpServer} from "./apiserver";
 import {static_cast} from "../core/core";
+import {AbstractRender, FindRender} from "./render/render";
+import {FindParser} from "./parser/parser";
 import ws = require("ws");
 import http = require("http");
 import https = require("https");
 import fs = require("fs");
-import {AbstractRender, FindRender} from "./render/render";
-import {FindParser} from "./parser/parser";
 
 export type SocketOutputType = string | Buffer | ArrayBuffer;
 
@@ -48,8 +48,10 @@ interface WsNode extends Node {
     authtimeout: number;
 }
 
+// ws的path注册为使用的数据解析器定义
 RegisterDecoder("/json", new JsonDecoder());
 
+// ws的事物，通过处理客户端modelid来判断当前使用的model实例
 export abstract class Transaction extends BaseTransaction {
 
     modelId(): number {
@@ -57,9 +59,13 @@ export abstract class Transaction extends BaseTransaction {
     }
 }
 
+// 对应客户端连接
 export class Connector {
 
+    // 当前sid
     sessionId: string;
+
+    // 当前客户端id
     clientId: string;
 
     // 输出的渲染器
@@ -113,8 +119,7 @@ export class Connector {
                 code: code,
                 message: msg
             }));
-        }
-        else {
+        } else {
             hdl.close(4000);
         }
     }
@@ -146,8 +151,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
         if (c.attach) {
             // 如果设置了attach，就不能再监听到独立端口
             this.attach = c.attach;
-        }
-        else {
+        } else {
             if (!c.port)
                 return false;
             this.listen = null;
@@ -158,11 +162,9 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             if (this.wss) {
                 if (Config.HTTPS_PFX) {
                     // pass
-                }
-                else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
+                } else if (Config.HTTPS_KEY && Config.HTTPS_CERT) {
                     // pass
-                }
-                else {
+                } else {
                     logger.warn("没有配置https的证书");
                     return false;
                 }
@@ -187,8 +189,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                 let cfg: IndexedObject = {};
                 if (Config.HTTPS_PFX) {
                     cfg["pfx"] = fs.readFileSync(expand(Config.HTTPS_PFX));
-                }
-                else {
+                } else {
                     cfg["key"] = fs.readFileSync(expand(Config.HTTPS_KEY));
                     cfg["cert"] = fs.readFileSync(expand(Config.HTTPS_CERT));
                 }
@@ -198,16 +199,14 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     rsp.writeHead(200);
                     rsp.end();
                 });
-            }
-            else {
+            } else {
                 this._srv = http.createServer((req, rsp) => {
                     rsp.writeHead(200);
                     rsp.end();
                 });
             }
             this._srv.listen(this.port, this.listen ? this.listen : "0.0.0.0");
-        }
-        else {
+        } else {
             // ws服务服用http的连接
             let srv = static_cast<IHttpServer>(Find(this.attach));
             this._srv = srv.httpserver();
@@ -294,8 +293,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             this.onBeforeInvoke(t);
             this.doInvoke(t, params, req, rsp, ac);
             this.onAfterInvoke(t);
-        }
-        catch (err) {
+        } catch (err) {
             logger.exception(err);
             t.status = STATUS.EXCEPTION;
             t.submit();
@@ -315,8 +313,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
             t.payload = {req: req, rsp: rsp};
             t.implSubmit = TransactionSubmit;
             t.implOutput = TransactionOutput;
-        }
-        else {
+        } else {
             t.implSubmit = ConsoleSubmit;
             t.implOutput = ConsoleOutput;
         }
@@ -341,15 +338,13 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                             this._routers.process(t);
                         }
                     });
-                }
-                else if (params["_listen"] === ListenMode.UNLISTEN) {
+                } else if (params["_listen"] === ListenMode.UNLISTEN) {
                     this._routers.listen(t).then(() => {
                         if (t.status == STATUS.OK) {
                             this.onListen(connector, t, false);
                         }
                     });
-                }
-                else {
+                } else {
                     // 新连接执行成功后，作为用户上线的标记
                     t.hookSubmit = async () => {
                         if (!connector.authed && t.status == STATUS.OK && connector.init(t)) {
@@ -365,8 +360,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     };
                     this._routers.process(t);
                 }
-            }
-            else {
+            } else {
                 if (params["_listen"] === ListenMode.LISTEN) {
                     this._routers.listen(t).then(() => {
                         if (t.status == STATUS.OK) {
@@ -376,8 +370,7 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                             this._routers.process(t);
                         }
                     });
-                }
-                else if (params["_listen"] === ListenMode.UNLISTEN) {
+                } else if (params["_listen"] === ListenMode.UNLISTEN) {
                     this._routers.listen(t).then(() => {
                         if (t.status == STATUS.OK) {
                             if (connector.authed)
@@ -385,15 +378,13 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                             this.onListen(connector, t, false);
                         }
                     });
-                }
-                else {
+                } else {
                     // 已经登录，则直接先初始化事务
                     if (connector.authed) {
                         connector.init(t);
                         // 直接调用处理逻辑
                         this._routers.process(t);
-                    }
-                    else {
+                    } else {
                         // 需要额外处理登录
                         t.hookSubmit = async () => {
                             if (t.status == STATUS.OK && connector.init(t)) {
@@ -413,20 +404,22 @@ export abstract class Socket extends AbstractServer implements IRouterable, ICon
                     }
                 }
             }
-        }
-        else {
+        } else {
             this._routers.process(t);
         }
     }
 
     protected async onConnectorAvaliable(connector: Connector) {
+        // pass
     }
 
     protected async onConnectorUnavaliable(connector: Connector) {
+        // pass
     }
 
     protected onListen(connector: Connector, tran: Transaction, listen: boolean) {
         // 处理加监听和取消监听的动作
+        // pass
     }
 }
 

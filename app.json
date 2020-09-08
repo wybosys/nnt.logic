@@ -19,7 +19,24 @@
         "nnt.server.apidoc.Router": {
           "export": {
             "router": [
-              "entry://app/router/sample"
+              "entry://app/router/im"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "sample",
+      "listen": "*",
+      "port": 8090,
+      "entry": "app.SampleRest",
+      "enable": "disable",
+      "router": {
+        "nnt.server.apidoc.Router": {
+          "export": {
+            "router": [
+              "entry://app/router/sample",
+              "entry://app/router/im"
             ],
             "model": [
               "entry://nnt/core/models",

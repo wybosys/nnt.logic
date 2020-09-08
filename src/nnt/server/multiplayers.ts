@@ -361,12 +361,14 @@ export abstract class Multiplayers extends Socket {
             connector.unlisten(model, trans.modelId());
     }
 
+    // 分配一个普通用户持久性通道
     static AcquireUser(mqsrv: string, uid: string): Promise<IMQClient> {
         return Acquire(mqsrv).open(PREFIX_USER + uid, {
             passive: true
         });
     }
 
+    // 为在线用户分配一个通道
     static AcquireOnlineUser(mqsrv: string, uid: string, opt?: MQClientOption): Promise<IMQClient> {
         return Acquire(mqsrv).open(PREFIX_USER_ONLINE + uid, {
             passive: true
