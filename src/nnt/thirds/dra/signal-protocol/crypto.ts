@@ -60,15 +60,16 @@ export class Crypto {
         return [T1, T2, T3];
     }
 
-    static CreateKeyPair(prvkey?: Buffer): nacl.BoxKeyPair {
+    static CreateKeyPair(prvkey?: Buffer): nacl.SignKeyPair {
         if (!prvkey) {
-            prvkey = Crypto.GetRandomBytes(32);
+            return nacl.sign.keyPair();
         }
-        return nacl.box.keyPair.fromSecretKey(prvkey);
+        return nacl.sign.keyPair.fromSecretKey(prvkey);
     }
 
     static ECDHE(pubkey: Uint8Array, prvkey: Uint8Array): Uint8Array {
-        return nacl.box.before(pubkey, prvkey);
+        // return nacl.sign.before(pubkey, prvkey);
+        return null;
     }
 
     static Ed25519Sign(seckey: Uint8Array, msg: Uint8Array): Uint8Array {
