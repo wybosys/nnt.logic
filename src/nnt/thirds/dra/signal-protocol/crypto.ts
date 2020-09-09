@@ -1,17 +1,27 @@
-import nacl = require("tweetnacl");
+import crypto = require("crypto");
 
 export class Crypto {
 
-    static GetRandomBytes(size: number): Uint8Array {
-        return nacl.randomBytes(size);
+    static Test() {
+        console.log(crypto.getCiphers(), crypto.getHashes(), crypto.getCurves());
     }
 
-    static Encrypt(key: Uint8Array, data: Uint8Array, iv: number) {
-
+    static GetRandomBytes(size: number): Buffer {
+        return crypto.randomBytes(size);
     }
 
-    static Decrypt(key: Uint8Array, data: Uint8Array, iv: number) {
+    static Encrypt(key: string, data: string, iv: string): Buffer {
+        let cip = crypto.createCipheriv('aes-128-cbc', key, iv);
+        let b0 = cip.update(data);
+        let b1 = cip.final();
+        return Buffer.concat([b0, b1]);
+    }
 
+    static Decrypt(key: string, data: Buffer, iv: string): string {
+        let cip = crypto.createDecipheriv('aes-128-cbc', key, iv);
+        let b0 = cip.update(data);
+        let b1 = cip.final();
+        return Buffer.concat([b0, b1]).toString('utf8');
     }
 
     static async Sign(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
