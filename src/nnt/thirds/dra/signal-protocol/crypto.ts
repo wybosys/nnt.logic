@@ -2,7 +2,7 @@ import crypto = require("crypto");
 
 export class Crypto {
 
-    static Test() {
+    static async Test() {
         console.log(crypto.getCiphers(), crypto.getHashes(), crypto.getCurves());
     }
 
@@ -24,8 +24,10 @@ export class Crypto {
         return Buffer.concat([b0, b1]).toString('utf8');
     }
 
-    static async Sign(key: Uint8Array, data: Uint8Array): Promise<Uint8Array> {
-        return null;
+    static Sign(key: string, data: string) {
+        let dig = crypto.createHmac('sha256', key);
+        let res = dig.update(data);
+        return res.digest();
     }
 
     static async Hash(data: Uint8Array): Promise<Uint8Array> {
