@@ -42,7 +42,7 @@ export class Crypto {
         return res.digest();
     }
 
-    static Hash(data: string): Buffer {
+    static Hash(data: BinaryLike): Buffer {
         let hs = crypto.createHash('sha512');
         let res = hs.update(data);
         return res.digest();
