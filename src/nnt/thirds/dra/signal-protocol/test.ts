@@ -23,8 +23,19 @@ function test_digest() {
     assert(r == tgt);
 }
 
+async function test_ecc() {
+    let kp = Crypto.CreateKeyPair();
+    console.log(kp);
+
+    let raw = Buffer.from("dfajfkdskalldsafkd");
+    let a = Crypto.Ed25519Sign(kp.secretKey, raw);
+    let b = Crypto.Ed25519Verify(kp.publicKey, raw, a);
+    assert(b);
+}
+
 export async function test_signal_protocol() {
     // Crypto.Test();
     await test_aes();
     await test_digest();
+    await test_ecc();
 }
