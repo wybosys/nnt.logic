@@ -17,6 +17,7 @@ import {SocketConnector, WebSocketSession} from "../../nnt/session/logic";
 import {kSignalOpen} from "../../nnt/core/signals";
 import {RSample} from "./sample";
 import {ImNewmsg} from "../model/framework-nntlogic-apis";
+import {MemoryConverstations} from "../../nnt/thirds/dra/dra-memory";
 
 // 演示用的客户端
 class ImClient {
@@ -59,6 +60,7 @@ export class RIm implements IRouter {
     action = "im";
 
     private _clients = new Map<string, ImClient>();
+    private _conversations = new MemoryConverstations();
 
     @action(ImUserLogin)
     async login(trans: Trans) {
@@ -103,6 +105,13 @@ export class RIm implements IRouter {
     send(trans: Trans) {
         let m: ImMessage = trans.model;
         m.from = trans.userIdentifier();
+        if (m.from == m.to) {
+            trans.status = STATUS.FAILED;
+            trans.message = "不能发给自己";
+            trans.submit();
+            return;
+        }
+        
         Multiplayers.AcquireOnlineUser("amqp", m.to).then(mq => {
             let nm = new ImNewMessage();
             nm.from = m.from;
