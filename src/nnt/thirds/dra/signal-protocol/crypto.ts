@@ -24,14 +24,16 @@ export class Crypto {
         return Buffer.concat([b0, b1]).toString('utf8');
     }
 
-    static Sign(key: string, data: string) {
+    static Sign(key: string, data: string): Buffer {
         let dig = crypto.createHmac('sha256', key);
         let res = dig.update(data);
         return res.digest();
     }
 
-    static async Hash(data: Uint8Array): Promise<Uint8Array> {
-        return null;
+    static Hash(data: string): Buffer {
+        let hs = crypto.createHash('sha512');
+        let res = hs.update(data);
+        return res.digest();
     }
 
     static async HKDF(input: Uint8Array, salt: Uint8Array, info: string): Promise<any[]> {
