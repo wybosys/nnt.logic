@@ -18,8 +18,8 @@ export class Crypto {
 
     }
 
-    static Hash() {
-
+    static async Hash(data: Uint8Array): Promise<Uint8Array> {
+        return null;
     }
 
     static HKDF() {
@@ -51,6 +51,6 @@ export class Crypto {
     }
 
     static CalculateMAC() {
-        
+
     }
 }
