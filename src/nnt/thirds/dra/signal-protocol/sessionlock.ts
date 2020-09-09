@@ -5,12 +5,12 @@
 
 import {IndexedObject} from "../../../core/kernel";
 
-type Job = Promise<void>;
+export type SessionJob<T> = () => Promise<T>;
 let jobQueue: IndexedObject = {};
 
-class SessionLock {
+export class SessionLock {
 
-    static QueueJobForNumber(id: number, runJob: Job): Job {
+    static QueueJobForNumber<T>(id: string, runJob: SessionJob<T>): SessionJob<T> {
         let runPrevious = jobQueue[id] || Promise.resolve();
         let runCurrent = jobQueue[id] = runPrevious.then(runJob, runJob);
         runCurrent.then(() => {
@@ -20,5 +20,5 @@ class SessionLock {
         });
         return runCurrent;
     }
-    
+
 }

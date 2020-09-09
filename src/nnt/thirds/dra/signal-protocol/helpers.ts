@@ -6,4 +6,8 @@ export class Util {
         return Buffer.from(obj).toString('binary');
     }
 
+    static ToArrayBuffer(obj: any): ArrayBuffer {
+        return null;
+    }
+
 }

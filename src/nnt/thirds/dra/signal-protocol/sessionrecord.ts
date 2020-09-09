@@ -1,12 +1,12 @@
 import {Util} from "./helpers";
 import {IndexedObject} from "../../../core/kernel";
 
-enum BaseKeyType {
+export enum BaseKeyType {
     OURS = 1,
     THEIRS = 2
 }
 
-enum ChainType {
+export enum ChainType {
     SENDING = 1,
     RECEIVING = 2
 }
@@ -56,9 +56,9 @@ function JsonThing(obj: any): string {
     return JSON.stringify(EnsureStringed(obj));
 }
 
-type SessionObject = IndexedObject;
+export type SessionObject = IndexedObject;
 
-class SessionRecord {
+export class SessionRecord {
 
     private _sessions: IndexedObject = {}; // string -> SessionObject
     private _version = SESSION_RECORD_VERSION;
@@ -84,7 +84,7 @@ class SessionRecord {
         });
     }
 
-    haveOpenSession() {
+    haveOpenSession(): boolean {
         let openSession = this.getOpenSession();
         return (!!openSession && typeof openSession.registrationId === 'number');
     }
@@ -190,12 +190,12 @@ class SessionRecord {
         }
     }
 
-    promoteState(session: IndexedObject) {
+    promoteState(session: SessionObject) {
         console.log('promoting session');
         session.indexInfo.closed = -1;
     }
 
-    removeOldChains(session: IndexedObject) {
+    removeOldChains(session: SessionObject) {
         // Sending ratchets are always removed when we step because we never need them again
         // Receiving ratchets are added to the oldRatchetList, which we parse
         // here and remove all but the last ten.
