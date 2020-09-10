@@ -11,7 +11,7 @@ export class KeyHelper {
         return registrationId & 0x3fff;
     }
 
-    static GenerateSignedPreKey() {
+    static GenerateSignedPreKey(identityKeyPair, signedKeyId) {
         if (!(identityKeyPair.privKey instanceof ArrayBuffer) ||
             identityKeyPair.privKey.byteLength != 32 ||
             !(identityKeyPair.pubKey instanceof ArrayBuffer) ||
@@ -35,7 +35,7 @@ export class KeyHelper {
         });
     }
 
-    static GeneratePreKey() {
+    static GeneratePreKey(keyId: number) {
         if (!isNonNegativeInteger(keyId)) {
             throw new TypeError('Invalid argument for keyId: ' + keyId);
         }
