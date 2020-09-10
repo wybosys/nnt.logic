@@ -1,15 +1,16 @@
 import {SessionStorage} from "./sessionstorage";
 import {SessionRecord} from "./sessionrecord";
 import {SessionLock} from "./sessionlock";
+import {Address} from "./address";
 
 export class SessionBuilder {
 
-    constructor(storage: SessionStorage, remoteAddress: string) {
+    constructor(storage: SessionStorage, remoteAddress: Address) {
         this._remoteAddress = remoteAddress;
         this._storage = storage;
     }
 
-    private _remoteAddress: string;
+    private _remoteAddress: Address;
     private _storage: SessionStorage;
 
     processPreKey(device) {

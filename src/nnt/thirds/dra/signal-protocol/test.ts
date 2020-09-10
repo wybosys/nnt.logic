@@ -27,7 +27,7 @@ async function test_ecc() {
     let kp = Crypto.CreateKeyPair();
     console.log(kp);
 
-    let sec = Crypto.ECDHE(kp.pubkey, kp.prvkey);
+    let sec = Crypto.ECDHE(kp.pubkey_x, kp.prvkey_x);
     console.log(sec);
 }
 

@@ -1,18 +1,20 @@
+import {toInt} from "../../../core/kernel";
+
 export class Address {
 
-    constructor(name: string, deviceId: string) {
+    constructor(name: string, deviceId: number) {
         this._name = name;
         this._deviceId = deviceId;
     }
 
     private _name: string;
-    private _deviceId: string;
+    private _deviceId: number;
 
     get name(): string {
         return this._name;
     }
 
-    get deviceId(): string {
+    get deviceId(): number {
         return this._deviceId;
     }
 
@@ -28,6 +30,6 @@ export class Address {
         let sp = str.split('.');
         if (sp.length != 2)
             return null;
-        return new Address(sp[0], sp[1]);
+        return new Address(sp[0], toInt(sp[1]));
     }
 }

@@ -1,5 +1,6 @@
 import crypto = require("crypto");
 import nacl = require("tweetnacl");
+import ed2curve = require("ed2curve");
 import {BinaryLike} from "crypto";
 import {FixedUint8Array} from "../../../core/buffer";
 
@@ -7,9 +8,16 @@ type X25519KeyType = FixedUint8Array<32>;
 type Ed25519PubKeyType = FixedUint8Array<32>;
 type Ed25519PrvKeyType = FixedUint8Array<64>;
 
-export class X25519KeyPair {
-    pubkey: X25519KeyType;
-    prvkey: X25519KeyType;
+export class KeyPair {
+
+    // ed25519用于签名
+    pubkey_ed: Ed25519PubKeyType;
+    prvkey_ed: Ed25519PrvKeyType;
+
+    // x25519用于加密和dh
+    pubkey_x: X25519KeyType;
+    prvkey_x: X25519KeyType;
+
 }
 
 export class Crypto {
@@ -70,11 +78,15 @@ export class Crypto {
         return [T1, T2, T3];
     }
 
-    static CreateKeyPair(): X25519KeyPair {
-        let kp = nacl.box.keyPair();
-        let r = new X25519KeyPair();
-        r.pubkey = kp.publicKey;
-        r.prvkey = kp.secretKey;
+    static CreateKeyPair(): KeyPair {
+        let kp = nacl.sign.keyPair();
+
+        let r = new KeyPair();
+        r.pubkey_ed = kp.publicKey;
+        r.prvkey_ed = kp.secretKey;
+        r.pubkey_x = ed2curve.convertPublicKey(r.pubkey_ed);
+        r.prvkey_x = ed2curve.convertSecretKey(r.prvkey_ed);
+
         return r;
     }
 
@@ -82,7 +94,6 @@ export class Crypto {
         return nacl.box.before(pubkey, prvkey);
     }
 
-    /*
     static Ed25519Sign(prvkey: Ed25519PrvKeyType, msg: Uint8Array): Uint8Array {
         return nacl.sign.detached(msg, prvkey);
     }
@@ -90,7 +101,6 @@ export class Crypto {
     static Ed25519Verify(pubkey: Ed25519PubKeyType, msg: Uint8Array, sig: Uint8Array): boolean {
         return nacl.sign.detached.verify(msg, sig, pubkey);
     }
-     */
 
     static VerifyMAC(data: Uint8Array, key: Uint8Array, mac: Uint8Array, length: number): boolean {
         let calculated_mac = Crypto.Sign(key, data);
