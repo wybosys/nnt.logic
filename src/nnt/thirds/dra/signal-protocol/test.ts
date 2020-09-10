@@ -24,6 +24,9 @@ function test_digest() {
 }
 
 async function test_ecc() {
+    let xx = Buffer.from("fdaf一二三");
+    let yy = xx.toString();
+
     let kp = Crypto.CreateKeyPair();
     console.log(kp);
 
