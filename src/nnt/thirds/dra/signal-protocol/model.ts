@@ -197,15 +197,15 @@ export class Ratchet implements IPodObject {
 }
 
 export class OldRatchet {
+    
     timeAdded: number;
+
     ephemeralKey: KeyPair;
 }
 
 export class RatchetChain implements IPodObject {
 
     messageKeys = new Map<number, FixedBuffer32>();
-
-    ephemeralKey: X25519Key;
 
     chainType: ChainType;
 
