@@ -1,5 +1,5 @@
 import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
-import {Session, X25519Key} from "./model";
+import {BaseKeyType, Session, X25519Key} from "./model";
 
 const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;
@@ -53,20 +53,18 @@ export class SessionRecord {
     getSessionByRemoteEphemeralKey(remoteEphemeralKey: X25519Key): Session {
         this.detectDuplicateOpenSessions();
 
-        let searchKey = remoteEphemeralKey.toString();
-        let openSession: Session;
-
+        let openSession: Session = null;
         for (let key in this._sessions) {
             let cur = this._sessions[key];
             if (cur.indexInfo.timeClosed == -1) {
                 openSession = cur;
             }
 
-            if (cur.remoteEphemeralKeys.has(searchKey))
+            if (cur.remoteEphemeralKeys.has(remoteEphemeralKey.hash))
                 return cur;
         }
 
-        return null;
+        return openSession;
     }
 
     getOpenSession(): Session {
@@ -152,13 +150,13 @@ export class SessionRecord {
             let oldest = session.oldRatchetList[0];
             for (let i = 0; i < session.oldRatchetList.length; i++) {
                 let cur = session.oldRatchetList[i];
-                if (cur.added < oldest.added) {
+                if (cur.timeAdded < oldest.timeAdded) {
                     oldest = cur;
                     index = i;
                 }
             }
-            console.log("Deleting chain closed at", oldest.added);
-            session.chains.delete(oldest.ephemeralKey.toString());
+            console.log("Deleting chain closed at", oldest.timeAdded);
+            session.chains.delete(oldest.ephemeralKey.hash);
             ArrayT.RemoveObjectAtIndex(session.oldRatchetList, index);
         }
     }

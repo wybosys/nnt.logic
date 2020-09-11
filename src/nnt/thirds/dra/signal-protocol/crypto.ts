@@ -100,12 +100,4 @@ export class Crypto {
 
         return result == 0;
     }
-
-    static DeriveSecrets(input: Buffer, salt: Buffer, info: Buffer) {
-        return Crypto.HKDF(input, salt, info);
-    }
-
-    static CalculateMAC(key: Buffer, data: Buffer) {
-        return Crypto.Sign(key, data);
-    }
 }
