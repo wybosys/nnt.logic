@@ -1,4 +1,4 @@
-import {FixedBuffer32, FixedBuffer64, FixedBufferType} from "../../../core/buffer";
+import {FixedBuffer32, FixedBuffer64, FixedBufferType, UnserializeFixedBuffer} from "../../../core/buffer";
 import {ArrayT, IndexedObject} from "../../../core/kernel";
 import {IPodObject} from "../../../core/object";
 import ed2curve = require("ed2curve");
@@ -71,19 +71,19 @@ export class KeyPair implements IPodObject {
 
     toPod(): IndexedObject {
         return {
-            pubKeyEd: this.pubKeyEd?.serialize(),
-            privKeyEd: this.privKeyEd?.serialize(),
-            pubKeyX: this.pubKeyX?.serialize(),
-            privKeyX: this.privKeyX?.serialize()
+            pubKeyEd: this.pubKeyEd.serialize()
         };
     }
 
     fromPod(obj: IndexedObject): boolean {
-        return false;
+        this.pubKeyEd = UnserializeFixedBuffer(new Ed25519PublicKey(), obj.pubKeyEd);
+        this.pubKeyX = this.pubKeyEd.toX();
+        return true;
     }
 }
 
-export class PreKey extends KeyPair {
+export class PreKey {
+    keyPair: KeyPair;
     keyId: number;
 
     toPod(): IndexedObject {

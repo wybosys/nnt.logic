@@ -1,7 +1,7 @@
 import crypto = require("crypto");
 import nacl = require("tweetnacl");
 import {BinaryLike} from "crypto";
-import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair, X25519Key} from "./model";
+import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair} from "./model";
 import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
 
 export class Crypto {
@@ -70,18 +70,18 @@ export class Crypto {
         return r;
     }
 
-    static ECDHE(pubkey: X25519Key, prvkey: X25519Key): FixedBuffer32 {
-        let res = nacl.box.before(pubkey.buffer, prvkey.buffer);
+    static ECDHE(pubkey: KeyPair, prvkey: KeyPair): FixedBuffer32 {
+        let res = nacl.box.before(pubkey.pubKeyX.buffer, prvkey.privKeyX.buffer);
         return new FixedBuffer32(res);
     }
 
-    static Ed25519Sign(prvkey: Ed25519PrivateKey, msg: Uint8Array): FixedBuffer64 {
-        let buf = nacl.sign.detached(msg, prvkey.buffer);
+    static Ed25519Sign(prvkey: KeyPair, msg: Uint8Array): FixedBuffer64 {
+        let buf = nacl.sign.detached(msg, prvkey.privKeyEd.buffer);
         return new FixedBuffer64(buf);
     }
 
-    static Ed25519Verify(pubkey: Ed25519PublicKey, msg: Uint8Array, sig: FixedBuffer64): boolean {
-        return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
+    static Ed25519Verify(pubkey: KeyPair, msg: Uint8Array, sig: FixedBuffer64): boolean {
+        return nacl.sign.detached.verify(msg, sig.buffer, pubkey.pubKeyEd.buffer);
     }
 
     static VerifyMAC(data: Buffer, key: BinaryLike, mac: Buffer, length: number): boolean {
