@@ -31,7 +31,7 @@ export class PreKeyWhisperMessage extends Protocol {
     signedPreKeyId: number;
     baseKey: X25519Key;
     identityKey: X25519Key;
-    message: Uint8Array;
+    message: Buffer;
 }
 
 export class KeyExchangeMessage extends Protocol {

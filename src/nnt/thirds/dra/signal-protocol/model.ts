@@ -148,9 +148,9 @@ export class DeviceKey implements IPodObject {
 export class Ratchet implements IPodObject {
     ephemeralKeyPair: KeyPair;
     rootKey: FixedBuffer32;
-    lastRemoteEphemeralKey: FixedBuffer32;
+    lastRemoteEphemeralKey: X25519Key;
     previousCounter: number;
-    added: number;
+    timeAdded: number; // 添加的时间
     oldRatchetList: Ratchet[] = [];
     ephemeralKey: X25519Key;
 
@@ -209,7 +209,7 @@ export class Session implements IPodObject {
     currentRatchet: Ratchet;
     chains = new Map<KeyHashType, RatchetChain>();
     indexInfo: SessionIndexInfo;
-    remoteEphemeralKeys = new Map<string, X25519Key>();
+    remoteEphemeralKeys = new Map<KeyHashType, X25519Key>();
     oldRatchetList: Ratchet[] = [];
     pendingPreKey: PendingPreKey;
 
@@ -226,4 +226,9 @@ export class EncryptedMessage {
     type: number;
     body: string;
     registrationId: number;
+}
+
+export class DecryptedMessage {
+    plaintext: string;
+    session: Session;
 }

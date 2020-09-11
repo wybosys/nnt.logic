@@ -21,11 +21,11 @@ export class Crypto {
         return Buffer.concat([b0, b1]);
     }
 
-    static Decrypt(key: string, data: Buffer, iv: string): string {
+    static Decrypt(key: BinaryLike, data: Buffer, iv: BinaryLike): Buffer {
         let cip = crypto.createDecipheriv('aes-128-cbc', key, iv);
         let b0 = cip.update(data);
         let b1 = cip.final();
-        return Buffer.concat([b0, b1]).toString('utf8');
+        return Buffer.concat([b0, b1]);
     }
 
     static Sign(key: BinaryLike, data: BinaryLike): FixedBuffer32 {
@@ -84,25 +84,21 @@ export class Crypto {
         return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
     }
 
-    static VerifyMAC(data: Uint8Array, key: Uint8Array, mac: Uint8Array, length: number): boolean {
+    static VerifyMAC(data: Buffer, key: BinaryLike, mac: Buffer, length: number): boolean {
         let calculated_mac = Crypto.Sign(key, data);
         if (mac.byteLength != length || calculated_mac.byteLength < length) {
             console.error("dra: Bad MAC length");
             return false;
         }
 
-        let a = new Uint8Array(calculated_mac);
+        let a = calculated_mac.buffer;
         let b = mac;
         let result = 0;
         for (var i = 0; i < mac.byteLength; ++i) {
             result = result | (a[i] ^ b[i]);
         }
 
-        if (result !== 0) {
-            console.log("dra: Bad MAC");
-            return false;
-        }
-        return true;
+        return result == 0;
     }
 
     static DeriveSecrets(input: Buffer, salt: Buffer, info: Buffer) {

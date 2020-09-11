@@ -10,7 +10,7 @@ export abstract class SessionStorage {
 
     abstract async getIdentityKeyPair(): Promise<IdentityKeyPair>;
 
-    abstract async removePreKey(keyid: string): Promise<void>;
+    abstract async removePreKey(keyid: number): Promise<void>;
 
     abstract async isTrustedIdentity(name: string, identityKey: FixedBuffer32, ct: ChainType): Promise<boolean>;
 

@@ -33,8 +33,20 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return true;
     }
 
+    at(idx: number): number {
+        return this._buf[idx];
+    }
+
     get length(): number {
         return this._digital.val;
+    }
+
+    get byteLength(): number {
+        return this._buf.byteLength;
+    }
+
+    get byteOffset(): number {
+        return this._buf.byteOffset;
     }
 
     get buffer(): Uint8Array {
