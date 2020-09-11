@@ -1,5 +1,5 @@
 import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
-import {BaseKeyType, KeyPair, Session, X25519Key} from "./model";
+import {BaseKeyType, KeyPair, Session} from "./model";
 
 const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;
@@ -50,7 +50,7 @@ export class SessionRecord {
         return session;
     }
 
-    getSessionByRemoteEphemeralKey(remoteEphemeralKey: X25519Key): Session {
+    getSessionByRemoteEphemeralKey(remoteEphemeralKey: KeyPair): Session {
         this.detectDuplicateOpenSessions();
 
         let openSession: Session = null;
@@ -60,7 +60,7 @@ export class SessionRecord {
                 openSession = cur;
             }
 
-            if (cur.remoteEphemeralKeys.has(remoteEphemeralKey.hash))
+            if (cur.chains.has(remoteEphemeralKey.hash))
                 return cur;
         }
 
