@@ -1,6 +1,6 @@
 import {FixedBuffer32, FixedBuffer33, FixedBuffer64} from "../../../core/buffer";
 import {IndexedObject} from "../../../core/kernel";
-import {ChainType} from "./sessionrecord";
+import {BaseKeyType, ChainType} from "./sessionrecord";
 
 export class KeyPair {
 
@@ -40,6 +40,9 @@ export class DeviceKey {
 export class Ratchet {
     ephemeralKeyPair: KeyPair;
     rootKey: FixedBuffer32;
+    lastRemoteEphemeralKey: FixedBuffer32;
+    previousCounter: number;
+    oldRatchetList: Ratchet[] = [];
 }
 
 export class RatchetChain {
@@ -51,7 +54,16 @@ export class RatchetChain {
     };
 }
 
+export class SessionIndexInfo {
+    remoteIdentityKey: FixedBuffer32;
+    closed: number;
+    baseKey: FixedBuffer32;
+    baseKeyType: BaseKeyType;
+}
+
 export class Session {
+    registrationId: number;
     currentRatchet: Ratchet;
     chains = new Map<string, RatchetChain>();
+    indexInfo: SessionIndexInfo;
 }

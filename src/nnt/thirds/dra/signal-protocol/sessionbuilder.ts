@@ -1,10 +1,11 @@
 import {SessionStorage} from "./sessionstorage";
-import {ChainType} from "./sessionrecord";
+import {BaseKeyType, ChainType} from "./sessionrecord";
 import {SessionLock} from "./sessionlock";
 import {Address} from "./address";
-import {DeviceKey, KeyPair, RatchetChain, Session} from "./model";
+import {DeviceKey, KeyPair, Ratchet, RatchetChain, Session, SessionIndexInfo} from "./model";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
+import {use} from "../../../core/kernel";
 
 export class SessionBuilder {
 
@@ -142,7 +143,36 @@ export class SessionBuilder {
 
         let masterKey = Crypto.HKDF(sharedSecret, new FixedBuffer32(), Buffer.from("WhisperText"));
 
+        let session = new Session();
+        session.registrationId = registrationId;
+
+        session.currentRatchet = use(new Ratchet(), r => {
+            r.rootKey = masterKey[0];
+            r.lastRemoteEphemeralKey = theirSignedPubKey;
+            r.previousCounter = 0;
+        });
+
+        session.indexInfo = use(new SessionIndexInfo(), info => {
+            info.remoteIdentityKey = theirIdentityPubKey;
+            info.closed = -1;
+        });
+
+        if (isInitiator) {
+            session.indexInfo.baseKey = ourEphemeralKey.pubKeyX;
+            session.indexInfo.baseKeyType = BaseKeyType.OURS;
+
+            let ourSendingEphemeralKey = Crypto.CreateKeyPair();
+            session.currentRatchet.ephemeralKeyPair = ourSendingEphemeralKey;
+            this.calculateSendingRatchet(session, theirSignedPubKey);
+        } else {
+            session.indexInfo.baseKey = theirEphemeralPubKey;
+            session.indexInfo.baseKeyType = BaseKeyType.THEIRS;
+            session.currentRatchet.ephemeralKeyPair = ourSignedKey;
+        }
+
+        return session;
     }
+
 
     calculateSendingRatchet(session: Session, remoteKey: FixedBuffer32) {
         let ratchet = session.currentRatchet;
@@ -150,7 +180,7 @@ export class SessionBuilder {
         let sharedSecret = Crypto.ECDHE(
             remoteKey, ratchet.ephemeralKeyPair.privKeyX);
 
-        let masterKey = Crypto.HKDF(sharedSecret, ratchet.rootKey, Buffer.from("WhisperRatchet"));
+        let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
 
         let rc = new RatchetChain();
         rc.chainType = ChainType.SENDING;
