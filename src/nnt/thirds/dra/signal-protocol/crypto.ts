@@ -2,23 +2,7 @@ import crypto = require("crypto");
 import nacl = require("tweetnacl");
 import ed2curve = require("ed2curve");
 import {BinaryLike} from "crypto";
-import {FixedUint8Array} from "../../../core/buffer";
-
-type X25519KeyType = FixedUint8Array<32>;
-type Ed25519PubKeyType = FixedUint8Array<32>;
-type Ed25519PrvKeyType = FixedUint8Array<64>;
-
-export class KeyPair {
-
-    // ed25519用于签名
-    pubkey_ed: Ed25519PubKeyType;
-    prvkey_ed: Ed25519PrvKeyType;
-
-    // x25519用于加密和dh
-    pubkey_x: X25519KeyType;
-    prvkey_x: X25519KeyType;
-
-}
+import {Ed25519PrvKeyType, Ed25519PubKeyType, KeyPair, X25519KeyType} from "./model";
 
 export class Crypto {
 
