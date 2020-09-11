@@ -2,10 +2,11 @@ import {SessionStorage} from "./sessionstorage";
 import {BaseKeyType, ChainType} from "./sessionrecord";
 import {SessionLock} from "./sessionlock";
 import {Address} from "./address";
-import {DeviceKey, KeyPair, Ratchet, RatchetChain, Session, SessionIndexInfo} from "./model";
+import {DeviceKey, ErrorExt, KeyPair, PreKey, Ratchet, RatchetChain, Session, SessionIndexInfo} from "./model";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
 import {use} from "../../../core/kernel";
+import {PreKeyWhisperMessage} from "./protocol";
 
 export class SessionBuilder {
 
@@ -38,68 +39,31 @@ export class SessionBuilder {
         });
     }
 
-    processV3(record, message) {
-        var preKeyPair, signedPreKeyPair, session;
-        return this.storage.isTrustedIdentity(
-            this.remoteAddress.getName(), message.identityKey.toArrayBuffer(), this.storage.Direction.RECEIVING
-        ).then(function (trusted) {
-            if (!trusted) {
-                var e = new Error('Unknown identity key');
-                e.identityKey = message.identityKey.toArrayBuffer();
-                throw e;
-            }
-            return Promise.all([
-                this.storage.loadPreKey(message.preKeyId),
-                this.storage.loadSignedPreKey(message.signedPreKeyId),
-            ]).then(function (results) {
-                preKeyPair = results[0];
-                signedPreKeyPair = results[1];
-            });
-        }).then(function () {
-            session = record.getSessionByBaseKey(message.baseKey);
-            if (session) {
-                console.log("Duplicate PreKeyMessage for session");
-                return;
-            }
+    async processV3(record, message: PreKeyWhisperMessage) {
+        let preKeyPair: PreKey;
+        let signedPreKeyPair: PreKey;
+        let session: Session;
 
-            session = record.getOpenSession();
+        let trusted = await this._storage.isTrustedIdentity(this._remoteAddress.name, message.identityKey, ChainType.SENDING);
 
-            if (signedPreKeyPair === undefined) {
-                // Session may or may not be the right one, but if its not, we
-                // can't do anything about it ...fall through and let
-                // decryptWhisperMessage handle that case
-                if (session !== undefined && session.currentRatchet !== undefined) {
-                    return;
-                } else {
-                    throw new Error("Missing Signed PreKey for PreKeyWhisperMessage");
-                }
-            }
+        if (!trusted) {
+            let e = new ErrorExt('dra: Unknown identity key');
+            e.identityKey = message.identityKey;
+            throw e;
+        }
 
-            if (session !== undefined) {
-                record.archiveCurrentState();
-            }
-            if (message.preKeyId && !preKeyPair) {
-                console.log('Invalid prekey id', message.preKeyId);
-            }
-            return this.initSession(false, preKeyPair, signedPreKeyPair,
-                message.identityKey.toArrayBuffer(),
-                message.baseKey.toArrayBuffer(), undefined, message.registrationId
-            ).then(function (new_session) {
-                // Note that the session is not actually saved until the very
-                // end of decryptWhisperMessage ... to ensure that the sender
-                // actually holds the private keys for all reported pubkeys
-                record.updateSessionState(new_session);
-                return this.storage.saveIdentity(this.remoteAddress.toString(), message.identityKey.toArrayBuffer()).then(function () {
-                    return message.preKeyId;
-                });
-            });
-        });
+        let results = [
+            await this._storage.loadPreKey(message.preKeyId),
+            await this._storage.loadSignedPreKey(message.signedPreKeyId)
+        ];
+
+        let session = record.getSessionByBaseKey(message.baseKey);
     }
 
     async initSession(isInitiator: boolean,
                       ourEphemeralKey: KeyPair, ourSignedKey: KeyPair,
                       theirIdentityPubKey: FixedBuffer32, theirEphemeralPubKey: FixedBuffer32, theirSignedPubKey: FixedBuffer32,
-                      registrationId: number) {
+                      registrationId: number): Promise<Session> {
         let ourIdentityKey = await this._storage.getIdentityKeyPair();
 
         if (isInitiator) {

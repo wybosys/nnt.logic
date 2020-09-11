@@ -1,9 +1,8 @@
 import crypto = require("crypto");
 import nacl = require("tweetnacl");
-import ed2curve = require("ed2curve");
 import {BinaryLike} from "crypto";
-import {KeyPair} from "./model";
-import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
+import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair, X25519Key} from "./model";
+import {FixedBuffer32} from "../../../core/buffer";
 
 export class Crypto {
 
@@ -63,25 +62,25 @@ export class Crypto {
         let kp = nacl.sign.keyPair();
 
         let r = new KeyPair();
-        r.pubKeyEd = new FixedBuffer32(kp.publicKey);
-        r.privKeyEd = new FixedBuffer64(kp.secretKey);
-        r.pubKeyX = new FixedBuffer32(ed2curve.convertPublicKey(kp.publicKey));
-        r.privKeyX = new FixedBuffer32(ed2curve.convertSecretKey(kp.secretKey));
+        r.pubKeyEd = new Ed25519PublicKey(kp.publicKey);
+        r.privKeyEd = new Ed25519PrivateKey(kp.secretKey);
+        r.pubKeyX = r.pubKeyEd.toX();
+        r.privKeyX = r.privKeyEd.toX();
 
         return r;
     }
 
-    static ECDHE(pubkey: FixedBuffer32, prvkey: FixedBuffer32): FixedBuffer32 {
+    static ECDHE(pubkey: X25519Key, prvkey: X25519Key): FixedBuffer32 {
         let res = nacl.box.before(pubkey.buffer, prvkey.buffer);
         return new FixedBuffer32(res);
     }
 
-    static Ed25519Sign(prvkey: FixedBuffer64, msg: Uint8Array): FixedBuffer32 {
+    static Ed25519Sign(prvkey: Ed25519PrivateKey, msg: Uint8Array): FixedBuffer32 {
         let buf = nacl.sign.detached(msg, prvkey.buffer);
         return new FixedBuffer32(buf);
     }
 
-    static Ed25519Verify(pubkey: FixedBuffer32, msg: Uint8Array, sig: FixedBuffer32): boolean {
+    static Ed25519Verify(pubkey: Ed25519PublicKey, msg: Uint8Array, sig: FixedBuffer32): boolean {
         return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
     }
 

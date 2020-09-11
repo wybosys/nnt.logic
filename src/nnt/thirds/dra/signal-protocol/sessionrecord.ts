@@ -1,5 +1,5 @@
-import {Util} from "./helpers";
-import {IndexedObject} from "../../../core/kernel";
+import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
+import {Session, X25519Key} from "./model";
 
 export enum BaseKeyType {
     OURS = 1,
@@ -15,52 +15,9 @@ const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;
 const SESSION_RECORD_VERSION = 'v1';
 
-function IsStringable(obj: any): boolean {
-    return obj == Object(obj) && (
-        obj instanceof ArrayBuffer ||
-        obj instanceof Uint8Array
-    );
-}
-
-function EnsureStringed(obj: any): any {
-    const typ = typeof obj;
-    if (typ == "string" || typ == "number" || typ == "boolean") {
-        return obj;
-    } else if (IsStringable(obj)) {
-        return Util.ToString(obj);
-    } else if (obj instanceof Array) {
-        let array: string[] = [];
-        for (let i = 0; i < obj.length; i++) {
-            array[i] = EnsureStringed(obj[i]);
-        }
-        return array;
-    } else if (obj == Object(obj)) {
-        let obj: IndexedObject = {};
-        for (var key in obj) {
-            try {
-                obj[key] = EnsureStringed(obj[key]);
-            } catch (ex) {
-                console.log('Error serializing key', key);
-                throw ex;
-            }
-        }
-        return obj;
-    } else if (obj == null) {
-        return null;
-    } else {
-        throw new Error("unsure of how to jsonify object of type " + typeof obj);
-    }
-}
-
-function JsonThing(obj: any): string {
-    return JSON.stringify(EnsureStringed(obj));
-}
-
-export type SessionObject = IndexedObject;
-
 export class SessionRecord {
 
-    private _sessions: IndexedObject = {}; // string -> SessionObject
+    private _sessions: KvObject<Session> = {};
     private _version = SESSION_RECORD_VERSION;
 
     static Deserialize(serialized: string): SessionRecord {
@@ -70,67 +27,65 @@ export class SessionRecord {
         }
 
         let record = new SessionRecord();
-        record._sessions = data.sessions;
-        if (!record._sessions || Array.isArray(record._sessions)) {
-            throw new Error("Error deserializing SessionRecord");
+        record._version = data.version;
+        for (let k in data.sessions) {
+            let ses = new Session();
+            ses.fromPod(data.sessions[k]);
+            record._sessions[k] = ses;
         }
+
         return record;
     }
 
     serialize(): string {
-        return JsonThing({
-            sessions: this._sessions,
-            version: this._version
+        let sess: IndexedObject = {};
+        for (let k in this._sessions) {
+            sess[k] = this._sessions[k].toPod();
+        }
+        return toJson({
+            version: this._version,
+            sessions: sess
         });
     }
 
     haveOpenSession(): boolean {
-        let openSession = this.getOpenSession();
-        return (!!openSession && typeof openSession.registrationId === 'number');
+        return this.getOpenSession() != null;
     }
 
-    getSessionByBaseKey(baseKey: Uint8Array): SessionObject {
-        let session = this._sessions[Util.ToString(baseKey)];
+    getSessionByBaseKey(baseKey: X25519Key): Session {
+        let session = this._sessions[baseKey.toString()];
         if (session && session.indexInfo.baseKeyType === BaseKeyType.OURS) {
-            console.log("Tried to lookup a session using our basekey");
-            return null;
+            throw new Error("dra: Tried to lookup a session using our basekey");
         }
         return session;
     }
 
-    getSessionByRemoteEphemeralKey(remoteEphemeralKey: Uint8Array): SessionObject {
+    getSessionByRemoteEphemeralKey(remoteEphemeralKey: X25519Key): Session {
         this.detectDuplicateOpenSessions();
-        var sessions = this._sessions;
 
-        var searchKey = Util.ToString(remoteEphemeralKey);
+        let searchKey = remoteEphemeralKey.toString();
+        let openSession: Session;
 
-        var openSession;
-        for (var key in sessions) {
-            if (sessions[key].indexInfo.closed == -1) {
-                openSession = sessions[key];
+        for (let key in this._sessions) {
+            let cur = this._sessions[key];
+            if (cur.indexInfo.timeClosed == -1) {
+                openSession = cur;
             }
-            if (sessions[key][searchKey] !== undefined) {
-                return sessions[key];
-            }
-        }
-        if (openSession !== undefined) {
-            return openSession;
+
+            if (cur.remoteEphemeralKeys.has(searchKey))
+                return cur;
         }
 
         return null;
     }
 
-    getOpenSession(): SessionObject {
-        let sessions = this._sessions;
-        if (!sessions) {
-            return null;
-        }
-
+    getOpenSession(): Session {
         this.detectDuplicateOpenSessions();
 
-        for (let key in sessions) {
-            if (sessions[key].indexInfo.closed == -1) {
-                return sessions[key];
+        for (let key in this._sessions) {
+            let cur = this._sessions[key];
+            if (cur.indexInfo.timeClosed == -1) {
+                return cur;
             }
         }
 
@@ -138,43 +93,46 @@ export class SessionRecord {
     }
 
     detectDuplicateOpenSessions() {
-        let openSession: SessionObject;
-        let sessions = this._sessions;
-        for (let key in sessions) {
-            if (sessions[key].indexInfo.closed == -1) {
-                if (openSession !== undefined) {
-                    throw new Error("Datastore inconsistensy: multiple open sessions");
+        let openSession: Session;
+        for (let key in this._sessions) {
+            let cur = this._sessions[key];
+            if (cur.indexInfo.timeClosed == -1) {
+                if (openSession) {
+                    throw new Error("dra: Datastore inconsistensy: multiple open sessions");
                 }
-                openSession = sessions[key];
+                openSession = cur;
             }
         }
     }
 
-    updateSessionState(session: SessionObject) {
+    updateSessionState(session: Session) {
         let sessions = this._sessions;
 
         this.removeOldChains(session);
 
-        sessions[Util.ToString(session.indexInfo.baseKey)] = session;
+        sessions[session.indexInfo.baseKey.toString()] = session;
 
         this.removeOldSessions();
     }
 
-    getSessions(): SessionObject[] {
+    getSessions(): Session[] {
         // return an array of sessions ordered by time closed,
         // followed by the open session
-        let list: SessionObject[] = [];
-        let openSession;
-        for (var k in this._sessions) {
-            if (this._sessions[k].indexInfo.closed === -1) {
-                openSession = this._sessions[k];
+        let list: Session[] = [];
+        let openSession: Session;
+        for (let k in this._sessions) {
+            let cur = this._sessions[k];
+            if (cur.indexInfo.timeClosed == -1) {
+                openSession = cur;
             } else {
-                list.push(this._sessions[k]);
+                list.push(cur);
             }
         }
-        list = list.sort(function (s1, s2) {
-            return s1.indexInfo.closed - s2.indexInfo.closed;
+
+        list = list.sort((s1, s2) => {
+            return s1.indexInfo.timeClosed - s2.indexInfo.timeClosed;
         });
+
         if (openSession) {
             list.push(openSession);
         }
@@ -183,19 +141,19 @@ export class SessionRecord {
 
     archiveCurrentState() {
         let open_session = this.getOpenSession();
-        if (open_session !== undefined) {
+        if (open_session) {
             console.log('closing session');
-            open_session.indexInfo.closed = Date.now();
+            open_session.indexInfo.timeClosed = Date.now();
             this.updateSessionState(open_session);
         }
     }
 
-    promoteState(session: SessionObject) {
+    promoteState(session: Session) {
         console.log('promoting session');
-        session.indexInfo.closed = -1;
+        session.indexInfo.timeClosed = -1;
     }
 
-    removeOldChains(session: SessionObject) {
+    removeOldChains(session: Session) {
         // Sending ratchets are always removed when we step because we never need them again
         // Receiving ratchets are added to the oldRatchetList, which we parse
         // here and remove all but the last ten.
@@ -203,14 +161,15 @@ export class SessionRecord {
             let index = 0;
             let oldest = session.oldRatchetList[0];
             for (let i = 0; i < session.oldRatchetList.length; i++) {
-                if (session.oldRatchetList[i].added < oldest.added) {
-                    oldest = session.oldRatchetList[i];
+                let cur = session.oldRatchetList[i];
+                if (cur.added < oldest.added) {
+                    oldest = cur;
                     index = i;
                 }
             }
             console.log("Deleting chain closed at", oldest.added);
-            delete session[Util.ToString(oldest.ephemeralKey)];
-            session.oldRatchetList.splice(index, 1);
+            session.chains.delete(oldest.ephemeralKey.toString());
+            ArrayT.RemoveObjectAtIndex(session.oldRatchetList, index);
         }
     }
 
@@ -219,16 +178,16 @@ export class SessionRecord {
         let sessions = this._sessions;
         let oldestBaseKey, oldestSession;
         while (Object.keys(sessions).length > ARCHIVED_STATES_MAX_LENGTH) {
-            for (var key in sessions) {
-                var session = sessions[key];
-                if (session.indexInfo.closed > -1 && // session is closed
-                    (!oldestSession || session.indexInfo.closed < oldestSession.indexInfo.closed)) {
+            for (let key in sessions) {
+                let session = sessions[key];
+                if (session.indexInfo.timeClosed > -1 && // session is closed
+                    (!oldestSession || session.indexInfo.timeClosed < oldestSession.indexInfo.timeClosed)) {
                     oldestBaseKey = key;
                     oldestSession = session;
                 }
             }
-            console.log("Deleting session closed at", oldestSession.indexInfo.closed);
-            delete sessions[Util.ToString(oldestBaseKey)];
+            console.log("Deleting session closed at", oldestSession.indexInfo.timeClosed);
+            delete sessions[oldestBaseKey.toString()];
         }
     }
 

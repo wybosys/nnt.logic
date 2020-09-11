@@ -1,6 +1,7 @@
 import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
+import {ISerializableObject} from "./object";
 
-type FixedBufferType = Buffer | Uint8Array;
+export type FixedBufferType = Buffer | Uint8Array;
 
 function ToBuffer(buf: FixedBufferType): Buffer {
     if (buf instanceof Buffer) {
@@ -9,7 +10,7 @@ function ToBuffer(buf: FixedBufferType): Buffer {
     return Buffer.from(buf);
 }
 
-export abstract class FixedBuffer<BYTELEN> {
+export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
 
     constructor(len: any, buf?: FixedBufferType) {
         this._digital = len;
@@ -44,7 +45,22 @@ export abstract class FixedBuffer<BYTELEN> {
 
     protected _buf: Buffer;
     private _digital: any;
+
+    serialize(): string {
+        return this._buf.toString('base64');
+    }
+
+    unserialize(str: string): boolean {
+        let buf = Buffer.from(str, 'base64');
+        return this.reset(buf);
+    }
 }
+
+export function UnserializeFixedBuffer<T extends ISerializableObject>(tmp: T, str?: string): T {
+    if (!str)
+        return null;
+    return tmp.unserialize(str) ? tmp : null;
+};
 
 export class FixedBuffer8 extends FixedBuffer<_8> {
 

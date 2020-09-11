@@ -1,4 +1,5 @@
 import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
+import {FixedBuffer32} from "../../../core/buffer";
 
 export class Protocol {
     serialout = (): string => {
@@ -28,7 +29,7 @@ export class PreKeyWhisperMessage extends Protocol {
     preKeyId: number;
     signedPreKeyId: number;
     baseKey: Uint8Array;
-    identityKey: Uint8Array;
+    identityKey: FixedBuffer32;
     message: Uint8Array;
 }
 

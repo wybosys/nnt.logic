@@ -7,6 +7,7 @@ import {ArrayT, Class, IndexedObject, toJson, toJsonObject} from "./kernel";
 import fs = require("fs");
 import stmbuf = require("stream-buffers");
 
+// 带计数器的基Object
 export class OidObject {
 
     private static __cnter = 0;
@@ -17,7 +18,7 @@ export class OidObject {
     }
 }
 
-/** 增加引用计数 */
+// 增加引用计数
 export function grab<T>(o: T): T {
     if (o == null)
         return undefined;
@@ -25,20 +26,21 @@ export function grab<T>(o: T): T {
     return o;
 }
 
-/** 减计数对象 */
+// 减计数对象
 export function drop<T>(o: T): T {
     if (o == null)
         return undefined;
     return (<any>o).drop();
 }
 
-/** 直接析构一个对象 */
+// 直接析构一个对象
 export function dispose<T>(o: T) {
     if (o == null)
         return;
     (<any>o).dispose();
 }
 
+// 序列化接口
 export interface ISerializableObject {
 
     // 序列化
@@ -48,26 +50,39 @@ export interface ISerializableObject {
     unserialize(str: string): boolean;
 }
 
+// POD简单化对象接口
+export interface IPodObject {
+
+    // 转换为pod对象
+    toPod(): IndexedObject;
+
+    // 从pod对象转回
+    fromPod(obj: IndexedObject): boolean;
+}
+
+// 带信号的对象接口
 export interface ISObject {
     signals: Signals;
 }
 
-/** 基类的接口 */
+// 基Object的接口
 export interface IObject {
     dispose(): void;
 }
 
-/** 引用计数的接口 */
+// 引用计数的接口
 export interface IReference {
     drop(): void;
 
     grab(): void;
 }
 
+// 基带引用Object的接口
 export interface IRefObject
     extends IObject, IReference {
 }
 
+// 带信号的基Object
 export class SObject implements IRefObject, ISObject {
 
     /** 构造函数 */
