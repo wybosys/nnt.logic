@@ -118,7 +118,7 @@ export type IdentityKeyPair = KeyPair;
 
 export class DeviceKey implements IPodObject {
 
-    identityKey: FixedBuffer32;
+    identityKey: Ed25519PublicKey;
     preKey: PreKey;
     signedPreKey: SignedPreKey;
 

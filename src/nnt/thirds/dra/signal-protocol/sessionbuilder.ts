@@ -1,8 +1,18 @@
 import {SessionStorage} from "./sessionstorage";
-import {BaseKeyType, ChainType} from "./sessionrecord";
+import {BaseKeyType, ChainType, SessionRecord} from "./sessionrecord";
 import {SessionLock} from "./sessionlock";
 import {Address} from "./address";
-import {DeviceKey, ErrorExt, KeyPair, PreKey, Ratchet, RatchetChain, Session, SessionIndexInfo} from "./model";
+import {
+    DeviceKey,
+    ErrorExt,
+    KeyPair,
+    PreKey,
+    Ratchet,
+    RatchetChain,
+    Session,
+    SessionIndexInfo,
+    X25519Key
+} from "./model";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
 import {use} from "../../../core/kernel";
@@ -32,14 +42,24 @@ export class SessionBuilder {
 
             let baseKey = Crypto.CreateKeyPair();
 
-            let devicePreKey: FixedBuffer32;
+            let devicePreKey: X25519Key;
             if (device.preKey) {
                 devicePreKey = device.preKey.keyPair.pubKeyX;
             }
+
+            let session = await this.initSession(
+                true,
+                baseKey,
+                null,
+                device.identityKey,
+                devicePreKey,
+                device.signedPreKey.publicKey,
+                device.registrationId
+            );
         });
     }
 
-    async processV3(record, message: PreKeyWhisperMessage) {
+    async processV3(record: SessionRecord, message: PreKeyWhisperMessage): Promise<number> {
         let preKeyPair: PreKey;
         let signedPreKeyPair: PreKey;
         let session: Session;
@@ -57,12 +77,58 @@ export class SessionBuilder {
             await this._storage.loadSignedPreKey(message.signedPreKeyId)
         ];
 
-        let session = record.getSessionByBaseKey(message.baseKey);
+        preKeyPair = results[0];
+        signedPreKeyPair = results[1];
+
+        session = record.getSessionByBaseKey(message.baseKey);
+        if (session) {
+            console.log("Duplicate PreKeyMessage for session");
+            return null;
+        }
+
+        session = record.getOpenSession();
+        if (!signedPreKeyPair) {
+            // Session may or may not be the right one, but if its not, we
+            // can't do anything about it ...fall through and let
+            // decryptWhisperMessage handle that case
+            if (session && session.currentRatchet) {
+                return null;
+            } else {
+                throw new Error("dra: Missing Signed PreKey for PreKeyWhisperMessage");
+            }
+        }
+
+        if (session) {
+            record.archiveCurrentState();
+        }
+
+        if (message.preKeyId && !preKeyPair) {
+            console.log('dra: Invalid prekey id', message.preKeyId);
+        }
+
+        let new_session = await this.initSession(
+            false,
+            preKeyPair.keyPair,
+            signedPreKeyPair.keyPair,
+            message.identityKey,
+            message.baseKey,
+            null,
+            message.registrationId
+        );
+
+        // Note that the session is not actually saved until the very
+        // end of decryptWhisperMessage ... to ensure that the sender
+        // actually holds the private keys for all reported pubkeys
+        record.updateSessionState(new_session);
+
+        await this._storage.saveIdentity(this._remoteAddress.toString(), message.identityKey);
+
+        return message.preKeyId;
     }
 
     async initSession(isInitiator: boolean,
                       ourEphemeralKey: KeyPair, ourSignedKey: KeyPair,
-                      theirIdentityPubKey: FixedBuffer32, theirEphemeralPubKey: FixedBuffer32, theirSignedPubKey: FixedBuffer32,
+                      theirIdentityPubKey: X25519Key, theirEphemeralPubKey: X25519Key, theirSignedPubKey: X25519Key,
                       registrationId: number): Promise<Session> {
         let ourIdentityKey = await this._storage.getIdentityKeyPair();
 
@@ -118,7 +184,6 @@ export class SessionBuilder {
 
         session.indexInfo = use(new SessionIndexInfo(), info => {
             info.remoteIdentityKey = theirIdentityPubKey;
-            info.closed = -1;
         });
 
         if (isInitiator) {
@@ -138,11 +203,10 @@ export class SessionBuilder {
     }
 
 
-    calculateSendingRatchet(session: Session, remoteKey: FixedBuffer32) {
+    calculateSendingRatchet(session: Session, remoteKey: X25519Key) {
         let ratchet = session.currentRatchet;
 
-        let sharedSecret = Crypto.ECDHE(
-            remoteKey, ratchet.ephemeralKeyPair.privKeyX);
+        let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair.privKeyX);
 
         let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
 
@@ -152,6 +216,7 @@ export class SessionBuilder {
             counter: -1,
             key: masterKey[1]
         };
+
         session.chains.set(ratchet.ephemeralKeyPair.pubKeyX.toString(), rc);
         ratchet.rootKey = masterKey[0];
     }

@@ -2,7 +2,7 @@ import crypto = require("crypto");
 import nacl = require("tweetnacl");
 import {BinaryLike} from "crypto";
 import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair, X25519Key} from "./model";
-import {FixedBuffer32} from "../../../core/buffer";
+import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
 
 export class Crypto {
 
@@ -75,12 +75,12 @@ export class Crypto {
         return new FixedBuffer32(res);
     }
 
-    static Ed25519Sign(prvkey: Ed25519PrivateKey, msg: Uint8Array): FixedBuffer32 {
+    static Ed25519Sign(prvkey: Ed25519PrivateKey, msg: Uint8Array): FixedBuffer64 {
         let buf = nacl.sign.detached(msg, prvkey.buffer);
-        return new FixedBuffer32(buf);
+        return new FixedBuffer64(buf);
     }
 
-    static Ed25519Verify(pubkey: Ed25519PublicKey, msg: Uint8Array, sig: FixedBuffer32): boolean {
+    static Ed25519Verify(pubkey: Ed25519PublicKey, msg: Uint8Array, sig: FixedBuffer64): boolean {
         return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
     }
 

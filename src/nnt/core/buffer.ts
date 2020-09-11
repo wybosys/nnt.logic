@@ -23,7 +23,7 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
 
     // 设置buffer，长度必须和类申明的一致
     reset(buf: Buffer): boolean {
-        if (buf.byteLength - buf.byteOffset != this._digital.val) {
+        if (buf.byteLength != this._digital.val) {
             console.error(`FixedBuffer:reset 长度不一致`);
             return false;
         }

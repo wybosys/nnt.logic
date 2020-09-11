@@ -34,14 +34,20 @@ async function test_ecc() {
     t = tbuf instanceof Buffer;
     t = tbuf instanceof Uint8Array;
 
-    let xx = Buffer.from("fdaf一二三");
-    let yy = xx.toString();
+    let raw = Buffer.from("fdaf一二三");
+    let yy = raw.toString();
 
     let kp = Crypto.CreateKeyPair();
     console.log(kp);
 
     let sec = Crypto.ECDHE(kp.pubKeyX, kp.privKeyX);
     console.log(sec);
+
+    let sig = Crypto.Ed25519Sign(kp.privKeyEd, raw);
+    let b = Crypto.Ed25519Verify(kp.pubKeyEd, raw, sig);
+    // b = Crypto.Ed25519Verify(kp.pubKeyX, raw, sig);
+
+
 }
 
 export async function test_signal_protocol() {
