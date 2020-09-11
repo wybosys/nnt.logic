@@ -2,17 +2,17 @@ import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 
 export abstract class FixedBuffer<BYTELEN> {
 
-    constructor(len: any, buf?: Uint8Array) {
+    constructor(len: any, buf?: Buffer) {
         this._digital = len;
         if (buf) {
             this.reset(buf);
         } else {
-            this._buf = new Uint8Array(this._digital.val);
+            this._buf = Buffer.alloc(this._digital.val);
         }
     }
 
     // 设置buffer，长度必须和类申明的一致
-    reset(buf: Uint8Array): boolean {
+    reset(buf: Buffer): boolean {
         if (buf.byteLength - buf.byteOffset != this._digital.val) {
             console.error(`FixedBuffer:reset 长度不一致`);
             return false;
@@ -29,13 +29,17 @@ export abstract class FixedBuffer<BYTELEN> {
         return this._buf;
     }
 
-    protected _buf: Uint8Array;
+    toString(encoding?: BufferEncoding, start?: number, end?: number): string {
+        return this._buf.toString(encoding, start, end);
+    }
+
+    protected _buf: Buffer;
     private _digital: any;
 }
 
 export class FixedBuffer8 extends FixedBuffer<_8> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_8.obj, buf);
         this._8 = _8.obj;
     }
@@ -45,7 +49,7 @@ export class FixedBuffer8 extends FixedBuffer<_8> {
 
 export class FixedBuffer16 extends FixedBuffer<_16> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_16.obj, buf);
         this._16 = _16.obj;
     }
@@ -55,7 +59,7 @@ export class FixedBuffer16 extends FixedBuffer<_16> {
 
 export class FixedBuffer32 extends FixedBuffer<_32> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_32.obj, buf);
         this._32 = _32.obj;
     }
@@ -65,7 +69,7 @@ export class FixedBuffer32 extends FixedBuffer<_32> {
 
 export class FixedBuffer33 extends FixedBuffer<_33> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_33.obj, buf);
         this._33 = _33.obj;
     }
@@ -75,7 +79,7 @@ export class FixedBuffer33 extends FixedBuffer<_33> {
 
 export class FixedBuffer64 extends FixedBuffer<_64> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_64.obj, buf);
         this._64 = _64.obj;
     }
@@ -85,7 +89,7 @@ export class FixedBuffer64 extends FixedBuffer<_64> {
 
 export class FixedBuffer128 extends FixedBuffer<_128> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_128.obj, buf);
         this._128 = _128.obj;
     }
@@ -95,7 +99,7 @@ export class FixedBuffer128 extends FixedBuffer<_128> {
 
 export class FixedBuffer256 extends FixedBuffer<_256> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_256.obj, buf);
         this._256 = _256.obj;
     }
@@ -105,7 +109,7 @@ export class FixedBuffer256 extends FixedBuffer<_256> {
 
 export class FixedBuffer512 extends FixedBuffer<_512> {
 
-    constructor(buf?: Uint8Array) {
+    constructor(buf?: Buffer) {
         super(_512.obj, buf);
         this._512 = _512.obj;
     }

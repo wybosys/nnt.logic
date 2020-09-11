@@ -1,7 +1,10 @@
 import {SessionStorage} from "./sessionstorage";
-import {SessionRecord} from "./sessionrecord";
+import {ChainType} from "./sessionrecord";
 import {SessionLock} from "./sessionlock";
 import {Address} from "./address";
+import {DeviceKey, RatchetChain, Session} from "./model";
+import {Crypto} from "./crypto";
+import {FixedBuffer32} from "../../../core/buffer";
 
 export class SessionBuilder {
 
@@ -13,57 +16,24 @@ export class SessionBuilder {
     private _remoteAddress: Address;
     private _storage: SessionStorage;
 
-    processPreKey(device) {
-        return SessionLock.QueueJobForNumber(this.remoteAddress.toString(), function () {
-            return this.storage.isTrustedIdentity(
-                this.remoteAddress.getName(), device.identityKey, this.storage.Direction.SENDING
-            ).then(function (trusted) {
-                if (!trusted) {
-                    throw new Error('Identity key changed');
-                }
+    async processPreKey(device: DeviceKey) {
+        return SessionLock.QueueJobForNumber(this._remoteAddress.toString(), async () => {
+            let trusted = await this._storage.isTrustedIdentity(this._remoteAddress.name, device.identityKey, ChainType.SENDING);
+            if (!trusted) {
+                throw new Error('dra: Identity key changed');
+            }
 
-                return crypto.Ed25519Verify(
-                    device.identityKey,
-                    device.signedPreKey.publicKey,
-                    device.signedPreKey.signature
-                );
-            }).then(function () {
-                return crypto.createKeyPair();
-            }).then(function (baseKey) {
-                var devicePreKey;
-                if (device.preKey) {
-                    devicePreKey = device.preKey.publicKey;
-                }
-                return this.initSession(true, baseKey, undefined, device.identityKey,
-                    devicePreKey, device.signedPreKey.publicKey, device.registrationId
-                ).then(function (session) {
-                    session.pendingPreKey = {
-                        signedKeyId: device.signedPreKey.keyId,
-                        baseKey: baseKey.pubKey
-                    };
-                    if (device.preKey) {
-                        session.pendingPreKey.preKeyId = device.preKey.keyId;
-                    }
-                    return session;
-                });
-            }).then(function (session) {
-                var address = this.remoteAddress.toString();
-                return this.storage.loadSession(address).then(function (serialized) {
-                    var record;
-                    if (serialized !== undefined) {
-                        record = SessionRecord.deserialize(serialized);
-                    } else {
-                        record = new SessionRecord();
-                    }
+            let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.keyPair.pubKeyX.buffer, device.signedPreKey.signature);
+            if (!verified) {
+                throw new Error('dra: Signature error');
+            }
 
-                    record.archiveCurrentState();
-                    record.updateSessionState(session);
-                    return Promise.all([
-                        this.storage.storeSession(address, record.serialize()),
-                        this.storage.saveIdentity(this.remoteAddress.toString(), session.indexInfo.remoteIdentityKey)
-                    ]);
-                });
-            });
+            let baseKey = Crypto.CreateKeyPair();
+
+            let devicePreKey: FixedBuffer32;
+            if (device.preKey) {
+                devicePreKey = device.preKey.keyPair.pubKeyX;
+            }
         });
     }
 
@@ -125,108 +95,26 @@ export class SessionBuilder {
         });
     }
 
-    initSession(isInitiator, ourEphemeralKey, ourSignedKey,
-                theirIdentityPubKey, theirEphemeralPubKey,
-                theirSignedPubKey, registrationId) {
-        return this.storage.getIdentityKeyPair().then(function (ourIdentityKey) {
-            if (isInitiator) {
-                if (ourSignedKey !== undefined) {
-                    throw new Error("Invalid call to initSession");
-                }
-                ourSignedKey = ourEphemeralKey;
-            } else {
-                if (theirSignedPubKey !== undefined) {
-                    throw new Error("Invalid call to initSession");
-                }
-                theirSignedPubKey = theirEphemeralPubKey;
-            }
-
-            var sharedSecret;
-            if (ourEphemeralKey === undefined || theirEphemeralPubKey === undefined) {
-                sharedSecret = new Uint8Array(32 * 4);
-            } else {
-                sharedSecret = new Uint8Array(32 * 5);
-            }
-
-            for (var i = 0; i < 32; i++) {
-                sharedSecret[i] = 0xff;
-            }
-
-            return Promise.all([
-                crypto.ECDHE(theirSignedPubKey, ourIdentityKey.privKey),
-                crypto.ECDHE(theirIdentityPubKey, ourSignedKey.privKey),
-                crypto.ECDHE(theirSignedPubKey, ourSignedKey.privKey)
-            ]).then(function (ecRes) {
-                if (isInitiator) {
-                    sharedSecret.set(new Uint8Array(ecRes[0]), 32);
-                    sharedSecret.set(new Uint8Array(ecRes[1]), 32 * 2);
-                } else {
-                    sharedSecret.set(new Uint8Array(ecRes[0]), 32 * 2);
-                    sharedSecret.set(new Uint8Array(ecRes[1]), 32);
-                }
-                sharedSecret.set(new Uint8Array(ecRes[2]), 32 * 3);
-
-                if (ourEphemeralKey !== undefined && theirEphemeralPubKey !== undefined) {
-                    return crypto.ECDHE(
-                        theirEphemeralPubKey, ourEphemeralKey.privKey
-                    ).then(function (ecRes4) {
-                        sharedSecret.set(new Uint8Array(ecRes4), 32 * 4);
-                    });
-                }
-            }).then(function () {
-                return HKDF(sharedSecret.buffer, new ArrayBuffer(32), "WhisperText");
-            }).then(function (masterKey) {
-                var session = {
-                    registrationId: registrationId,
-                    currentRatchet: {
-                        rootKey: masterKey[0],
-                        lastRemoteEphemeralKey: theirSignedPubKey,
-                        previousCounter: 0
-                    },
-                    indexInfo: {
-                        remoteIdentityKey: theirIdentityPubKey,
-                        closed: -1
-                    },
-                    oldRatchetList: []
-                };
-
-                // If we're initiating we go ahead and set our first sending ephemeral key now,
-                // otherwise we figure it out when we first maybeStepRatchet with the remote's ephemeral key
-                if (isInitiator) {
-                    session.indexInfo.baseKey = ourEphemeralKey.pubKey;
-                    session.indexInfo.baseKeyType = BaseKeyType.OURS;
-                    return crypto.createKeyPair().then(function (ourSendingEphemeralKey) {
-                        session.currentRatchet.ephemeralKeyPair = ourSendingEphemeralKey;
-                        return this.calculateSendingRatchet(session, theirSignedPubKey).then(function () {
-                            return session;
-                        });
-                    });
-                } else {
-                    session.indexInfo.baseKey = theirEphemeralPubKey;
-                    session.indexInfo.baseKeyType = BaseKeyType.THEIRS;
-                    session.currentRatchet.ephemeralKeyPair = ourSignedKey;
-                    return session;
-                }
-            });
-        });
+    async initSession(isInitiator, ourEphemeralKey, ourSignedKey,
+                      theirIdentityPubKey, theirEphemeralPubKey,
+                      theirSignedPubKey, registrationId) {
     }
 
-    calculateSendingRatchet(session, remoteKey) {
-        var ratchet = session.currentRatchet;
+    calculateSendingRatchet(session: Session, remoteKey: FixedBuffer32) {
+        let ratchet = session.currentRatchet;
 
-        return crypto.ECDHE(
-            remoteKey, util.toArrayBuffer(ratchet.ephemeralKeyPair.privKey)
-        ).then(function (sharedSecret) {
-            return HKDF(
-                sharedSecret, util.toArrayBuffer(ratchet.rootKey), "WhisperRatchet"
-            );
-        }).then(function (masterKey) {
-            session[util.toString(ratchet.ephemeralKeyPair.pubKey)] = {
-                messageKeys: {},
-                chainKey: {counter: -1, key: masterKey[1]},
-                chainType: ChainType.SENDING
-            };
-            ratchet.rootKey = masterKey[0];
-        });
+        let sharedSecret = Crypto.ECDHE(
+            remoteKey, ratchet.ephemeralKeyPair.privKeyX);
+
+        let masterKey = Crypto.HKDF(sharedSecret, ratchet.rootKey, Buffer.from("WhisperRatchet"));
+
+        let rc = new RatchetChain();
+        rc.chainType = ChainType.SENDING;
+        rc.chainKey = {
+            counter: -1,
+            key: masterKey[1]
+        };
+        session.chains.set(ratchet.ephemeralKeyPair.pubKeyX.toString(), rc);
+        ratchet.rootKey = masterKey[0];
     }
 }

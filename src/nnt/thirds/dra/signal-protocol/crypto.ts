@@ -41,11 +41,7 @@ export class Crypto {
         return res.digest();
     }
 
-    static async HKDF(input: Buffer, salt: Buffer, info: Buffer): Promise<Buffer[]> {
-        if (salt.byteLength != 32) {
-            throw new Error("Got salt of incorrect length");
-        }
-
+    static HKDF(input: FixedBuffer32, salt: FixedBuffer32, info: Buffer): FixedBuffer32[] {
         // Specific implementation of RFC 5869 that only returns the first 3 32-byte chunks
         // XTODO: We dont always need the third chunk, we might skip it
         let PRK = Crypto.Sign(salt, input);
