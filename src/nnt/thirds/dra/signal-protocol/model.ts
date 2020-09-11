@@ -178,7 +178,7 @@ export class Ratchet implements IPodObject {
     previousCounter: number;
 
     timeAdded: number; // 添加的时间
-    
+
     oldRatchetList: Ratchet[] = [];
 
     ephemeralKey: X25519Key;
@@ -187,7 +187,7 @@ export class Ratchet implements IPodObject {
         return {
             ephemeralKeyPair: this.ephemeralKeyPair.toPod(),
             rootKey: this.rootKey.serialize(),
-            lastRemoteEphemeralKey: this.lastRemoteEphemeralKey.serialize(),
+            lastRemoteEphemeralKey: this.lastRemoteEphemeralKey.toPod(),
             previousCounter: this.previousCounter,
             oldRatchetList: ArrayT.Convert(this.oldRatchetList, e => {
                 return e.toPod();
