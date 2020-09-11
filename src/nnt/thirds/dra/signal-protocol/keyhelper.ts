@@ -1,5 +1,5 @@
-import {Crypto, KeyPair} from "./crypto";
-import {IdentityKeyPair, PreKey, SignedPreKey} from "./model";
+import {Crypto} from "./crypto";
+import {IdentityKeyPair, KeyPair, PreKey, SignedPreKey} from "./model";
 
 export class KeyHelper {
 
