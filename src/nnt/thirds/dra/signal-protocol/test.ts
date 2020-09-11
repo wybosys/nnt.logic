@@ -5,11 +5,11 @@ function test_aes() {
     let key = '123456789abcdefg';
     let raw = '123abc一二三123abc一二三123abc一二三123abc一二三';
     let iv = '123456789abcdefg';
-    let a = Crypto.Encrypt(key, raw, iv);
+    let a = Crypto.Encrypt(key, Buffer.from(raw), iv);
     console.log(a.toString('hex'));
     console.log(a.toString('base64'));
     let b = Crypto.Decrypt(key, a, iv);
-    assert(b == raw);
+    console.log(b.toString('utf8') == raw);
 }
 
 function test_digest() {
@@ -40,14 +40,14 @@ async function test_ecc() {
     let kp = Crypto.CreateKeyPair();
     console.log(kp);
 
-    let sec = Crypto.ECDHE(kp.pubKeyX, kp.privKeyX);
+    let sec = Crypto.ECDHE(kp, kp);
     console.log(sec);
 
-    let sig = Crypto.Ed25519Sign(kp.privKeyEd, raw);
-    let b = Crypto.Ed25519Verify(kp.pubKeyEd, raw, sig);
+    let sig = Crypto.Ed25519Sign(kp, raw);
+    let b = Crypto.Ed25519Verify(kp, raw, sig);
     // b = Crypto.Ed25519Verify(kp.pubKeyX, raw, sig);
 
-    t = String.fromCharCode((3 << 4) | 3);
+    let c = String.fromCharCode((3 << 4) | 3);
     let res = String.fromCharCode((3 << 4) | 3) + raw.toString();
     console.log(res);
 }
