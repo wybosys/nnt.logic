@@ -2,12 +2,13 @@ import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
 import {X25519Key} from "./model";
 
 export class Protocol {
-    serialout = (): string => {
-        return toJson(this);
+
+    serialout = (): Buffer => {
+        return Buffer.from(toJson(this), 'utf8');
     }
 
-    serialin = (data: string): boolean => {
-        let o = toJsonObject(data);
+    serialin = (data: Buffer): boolean => {
+        let o = toJsonObject(data.toString('utf8'));
         if (!o)
             return false;
         for (let k in o) {
@@ -18,10 +19,10 @@ export class Protocol {
 }
 
 export class WhisperMessage extends Protocol {
-    ephemeralKey: Uint8Array;
+    ephemeralKey: X25519Key;
     counter: number;
     previousCounter: number;
-    ciphertext: Uint8Array;
+    ciphertext: Buffer;
 }
 
 export class PreKeyWhisperMessage extends Protocol {

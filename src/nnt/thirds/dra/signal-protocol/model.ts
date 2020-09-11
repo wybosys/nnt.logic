@@ -1,8 +1,17 @@
 import {FixedBuffer32, FixedBuffer64, FixedBufferType} from "../../../core/buffer";
 import {ArrayT, IndexedObject} from "../../../core/kernel";
-import {BaseKeyType, ChainType} from "./sessionrecord";
 import {IPodObject} from "../../../core/object";
 import ed2curve = require("ed2curve");
+
+export enum BaseKeyType {
+    OURS = 1,
+    THEIRS = 2
+}
+
+export enum ChainType {
+    SENDING = 1,
+    RECEIVING = 2
+}
 
 export class ErrorExt extends Error {
 
@@ -19,10 +28,6 @@ export class Ed25519PublicKey extends FixedBuffer32 {
         super(buf);
     }
 
-    toString() {
-        return super.toString('binary');
-    }
-
     toX(): X25519Key {
         return new X25519Key(ed2curve.convertPublicKey(this.buffer));
     }
@@ -34,10 +39,6 @@ export class Ed25519PrivateKey extends FixedBuffer64 {
 
     constructor(buf?: FixedBufferType) {
         super(buf);
-    }
-
-    toString() {
-        return super.toString('binary');
     }
 
     toX(): X25519Key {
@@ -53,12 +54,10 @@ export class X25519Key extends FixedBuffer32 {
         super(buf);
     }
 
-    toString() {
-        return super.toString('binary');
-    }
-
     _x25519: any;
 }
+
+export type KeyHashType = number;
 
 export class KeyPair implements IPodObject {
 
@@ -208,7 +207,7 @@ export class SessionIndexInfo implements IPodObject {
 export class Session implements IPodObject {
     registrationId: number;
     currentRatchet: Ratchet;
-    chains = new Map<string, RatchetChain>();
+    chains = new Map<KeyHashType, RatchetChain>();
     indexInfo: SessionIndexInfo;
     remoteEphemeralKeys = new Map<string, X25519Key>();
     oldRatchetList: Ratchet[] = [];
@@ -221,4 +220,10 @@ export class Session implements IPodObject {
     fromPod(obj: IndexedObject): boolean {
         return false;
     }
+}
+
+export class EncryptedMessage {
+    type: number;
+    body: string;
+    registrationId: number;
 }

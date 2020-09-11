@@ -1,5 +1,6 @@
 import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 import {ISerializableObject} from "./object";
+import {StringT} from "./kernel";
 
 export type FixedBufferType = Buffer | Uint8Array;
 
@@ -28,6 +29,7 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
             return false;
         }
         this._buf = buf;
+        this.makedirty();
         return true;
     }
 
@@ -39,12 +41,31 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return this._buf;
     }
 
+    slice(begin?: number, end?: number): Buffer {
+        return this._buf.slice(begin, end);
+    }
+
     toString(encoding?: BufferEncoding, start?: number, end?: number): string {
         return this._buf.toString(encoding, start, end);
     }
 
     protected _buf: Buffer;
     private _digital: any;
+
+    private _dirty_hash: boolean = true; // 用于缓存计算好的hash
+    private _hash: number;
+
+    get hash(): number {
+        if (this._dirty_hash) {
+            this._hash = StringT.Hash(this._buf.toString('binary'));
+            this._dirty_hash = false;
+        }
+        return this._hash;
+    }
+
+    protected makedirty() {
+        this._dirty_hash = true;
+    }
 
     serialize(): string {
         return this._buf.toString('base64');

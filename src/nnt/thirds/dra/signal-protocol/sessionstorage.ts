@@ -19,4 +19,6 @@ export abstract class SessionStorage {
     abstract async loadPreKey(keyId: number): Promise<PreKey>;
 
     abstract async loadSignedPreKey(keyId: number): Promise<SignedPreKey>;
+
+    abstract async getLocalRegistrationId(): Promise<number>;
 }

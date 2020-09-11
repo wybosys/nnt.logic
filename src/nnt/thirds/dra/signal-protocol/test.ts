@@ -47,7 +47,9 @@ async function test_ecc() {
     let b = Crypto.Ed25519Verify(kp.pubKeyEd, raw, sig);
     // b = Crypto.Ed25519Verify(kp.pubKeyX, raw, sig);
 
-
+    t = String.fromCharCode((3 << 4) | 3);
+    let res = String.fromCharCode((3 << 4) | 3) + raw.toString();
+    console.log(res);
 }
 
 export async function test_signal_protocol() {

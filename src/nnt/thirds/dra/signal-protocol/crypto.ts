@@ -14,7 +14,7 @@ export class Crypto {
         return crypto.randomBytes(size);
     }
 
-    static Encrypt(key: string, data: string, iv: string): Buffer {
+    static Encrypt(key: BinaryLike, data: Buffer, iv: BinaryLike): Buffer {
         let cip = crypto.createCipheriv('aes-128-cbc', key, iv);
         let b0 = cip.update(data);
         let b1 = cip.final();

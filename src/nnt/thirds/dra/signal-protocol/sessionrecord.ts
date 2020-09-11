@@ -1,16 +1,6 @@
 import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
 import {Session, X25519Key} from "./model";
 
-export enum BaseKeyType {
-    OURS = 1,
-    THEIRS = 2
-}
-
-export enum ChainType {
-    SENDING = 1,
-    RECEIVING = 2
-}
-
 const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;
 const SESSION_RECORD_VERSION = 'v1';
