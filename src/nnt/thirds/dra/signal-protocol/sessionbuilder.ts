@@ -6,6 +6,7 @@ import {
     DeviceKey,
     ErrorExt,
     KeyPair,
+    PendingPreKey,
     PreKey,
     Ratchet,
     RatchetChain,
@@ -35,7 +36,7 @@ export class SessionBuilder {
                 throw new Error('dra: Identity key changed');
             }
 
-            let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.keyPair.pubKeyX.buffer, device.signedPreKey.signature);
+            let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.pubKeyX.buffer, device.signedPreKey.signature);
             if (!verified) {
                 throw new Error('dra: Signature error');
             }
@@ -44,7 +45,7 @@ export class SessionBuilder {
 
             let devicePreKey: X25519Key;
             if (device.preKey) {
-                devicePreKey = device.preKey.keyPair.pubKeyX;
+                devicePreKey = device.preKey.pubKeyX;
             }
 
             let session = await this.initSession(
@@ -53,9 +54,34 @@ export class SessionBuilder {
                 null,
                 device.identityKey,
                 devicePreKey,
-                device.signedPreKey.publicKey,
+                device.signedPreKey.pubKeyX,
                 device.registrationId
             );
+
+            session.pendingPreKey = use(new PendingPreKey(), prk => {
+                prk.signedKeyId = device.signedPreKey.keyId;
+                prk.baseKey = baseKey.pubKeyX;
+            });
+
+            if (device.preKey) {
+                session.pendingPreKey.preKeyId = device.preKey.keyId;
+            }
+
+            let address = this._remoteAddress.toString();
+            let serialized = await this._storage.loadSession(address);
+
+            let record: SessionRecord;
+            if (serialized) {
+                record = SessionRecord.Deserialize(serialized);
+            } else {
+                record = new SessionRecord();
+            }
+
+            record.archiveCurrentState();
+            record.updateSessionState(session);
+
+            await this._storage.storeSession(address, record.serialize());
+            await this._storage.saveIdentity(address, session.indexInfo.remoteIdentityKey)
         });
     }
 
@@ -108,8 +134,8 @@ export class SessionBuilder {
 
         let new_session = await this.initSession(
             false,
-            preKeyPair.keyPair,
-            signedPreKeyPair.keyPair,
+            preKeyPair,
+            signedPreKeyPair,
             message.identityKey,
             message.baseKey,
             null,

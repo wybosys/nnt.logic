@@ -84,15 +84,11 @@ export class KeyPair implements IPodObject {
     }
 }
 
-export class PreKey implements IPodObject {
+export class PreKey extends KeyPair {
     keyId: number;
-    keyPair: KeyPair;
 
     toPod(): IndexedObject {
-        return {
-            keyId: this.keyId,
-            keyPair: this.keyPair.toPod()
-        };
+        return {};
     }
 
     fromPod(obj: IndexedObject): boolean {
@@ -101,12 +97,26 @@ export class PreKey implements IPodObject {
 }
 
 export class SignedPreKey extends PreKey {
-    signature: FixedBuffer32;
+    signature: FixedBuffer64;
 
     toPod(): IndexedObject {
         let obj = super.toPod();
         obj.signature = this.signature?.serialize();
         return obj;
+    }
+
+    fromPod(obj: IndexedObject): boolean {
+        return false;
+    }
+}
+
+export class PendingPreKey implements IPodObject {
+    preKeyId: number;
+    signedKeyId: number;
+    baseKey: X25519Key;
+
+    toPod(): IndexedObject {
+        return {};
     }
 
     fromPod(obj: IndexedObject): boolean {
@@ -121,6 +131,7 @@ export class DeviceKey implements IPodObject {
     identityKey: Ed25519PublicKey;
     preKey: PreKey;
     signedPreKey: SignedPreKey;
+    registrationId: number;
 
     toPod(): IndexedObject {
         return {
@@ -180,7 +191,7 @@ export class RatchetChain implements IPodObject {
 }
 
 export class SessionIndexInfo implements IPodObject {
-    remoteIdentityKey: FixedBuffer32;
+    remoteIdentityKey: X25519Key;
     timeClosed: number = -1; // 关闭时间
     baseKey: X25519Key;
     baseKeyType: BaseKeyType;
@@ -201,6 +212,7 @@ export class Session implements IPodObject {
     indexInfo: SessionIndexInfo;
     remoteEphemeralKeys = new Map<string, X25519Key>();
     oldRatchetList: Ratchet[] = [];
+    pendingPreKey: PendingPreKey;
 
     toPod(): IndexedObject {
         return {};
