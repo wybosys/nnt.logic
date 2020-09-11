@@ -123,8 +123,6 @@ export class PendingPreKey implements IPodObject {
     }
 }
 
-export type IdentityKeyPair = KeyPair;
-
 export class DeviceKey implements IPodObject {
 
     identityKey: Ed25519PublicKey;

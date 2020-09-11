@@ -1,6 +1,5 @@
 import {FixedBuffer32} from "../../../core/buffer";
-import {ChainType} from "./sessionrecord";
-import {IdentityKeyPair, PreKey, SignedPreKey, X25519Key} from "./model";
+import {ChainType, IdentityKeyPair, PreKey, SignedPreKey, X25519Key} from "./model";
 
 export abstract class SessionStorage {
 

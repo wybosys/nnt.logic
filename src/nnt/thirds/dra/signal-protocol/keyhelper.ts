@@ -1,5 +1,5 @@
 import {Crypto} from "./crypto";
-import {IdentityKeyPair, KeyPair, PreKey, SignedPreKey} from "./model";
+import {KeyPair, PreKey, SignedPreKey} from "./model";
 
 export class KeyHelper {
 
@@ -12,14 +12,14 @@ export class KeyHelper {
         return registrationId & 0x3fff;
     }
 
-    static GenerateSignedPreKey(identityKeyPair: IdentityKeyPair, signedKeyId: number): SignedPreKey {
+    static GenerateSignedPreKey(identityKeyPair: KeyPair, signedKeyId: number): SignedPreKey {
         if (signedKeyId <= 0) {
             console.error('dra: Invalid argument for signedKeyId: ' + signedKeyId);
             return null;
         }
 
         let keyPair = Crypto.CreateKeyPair();
-        let sig = Crypto.Ed25519Sign(identityKeyPair.privKeyEd, keyPair.pubKeyX.buffer);
+        let sig = Crypto.Ed25519Sign(identityKeyPair, keyPair.pubKeyX.buffer);
 
         let r = new SignedPreKey();
         r.keyId = signedKeyId;
