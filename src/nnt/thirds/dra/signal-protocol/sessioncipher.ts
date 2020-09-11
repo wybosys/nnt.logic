@@ -4,16 +4,7 @@ import {PreKeyWhisperMessage, WhisperMessage} from "./protocol";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
 import {Address} from "./address";
-import {
-    ChainType,
-    DecryptedMessage,
-    EncryptedMessage,
-    KeyPair,
-    Ratchet,
-    RatchetChain,
-    Session,
-    X25519Key
-} from "./model";
+import {ChainType, DecryptedMessage, EncryptedMessage, KeyPair, OldRatchet, RatchetChain, Session} from "./model";
 import {SessionBuilder} from "./sessionbuilder";
 
 export class SessionCipher {
@@ -234,20 +225,20 @@ export class SessionCipher {
 
         await this.fillMessageKeys(chain, message.counter);
 
-        let messageKey = chain.messageKeys[message.counter];
+        let messageKey = chain.messageKeys.get(message.counter);
         if (!messageKey) {
             let e = new Error("dra: Message key not found. The counter was repeated or the key was not filled.");
             e.name = 'MessageCounterError';
             throw e;
         }
-        delete chain.messageKeys[message.counter];
+        chain.messageKeys.delete(message.counter);
 
-        let keys = await Crypto.HKDF(messageKey, new FixedBuffer32(), Buffer.from("WhisperMessageKeys"));
+        let keys = await Crypto.HKDF(messageKey.buffer, new FixedBuffer32(), Buffer.from("WhisperMessageKeys"));
         let ourIdentityKey = await this._storage.getIdentityKeyPair();
 
         let macInput = new Buffer(messageProto.byteLength + 33 * 2 + 1);
-        macInput.set(session.indexInfo.remoteIdentityKey.buffer);
-        macInput.set(ourIdentityKey.pubKeyX.buffer, 33);
+        macInput.set(session.indexInfo.remoteIdentityKey.publicBuffer);
+        macInput.set(ourIdentityKey.publicBuffer, 33);
         macInput[33 * 2] = (3 << 4) | 3;
         macInput.set(messageProto, 33 * 2 + 1);
 
@@ -291,17 +282,17 @@ export class SessionCipher {
 
     async maybeStepRatchet(session: Session, remoteKey: KeyPair, previousCounter: number) {
         if (session.chains.has(remoteKey.hash))
-            return Promise.resolve();
+            return;
 
         console.log('dra: New remote ephemeral key');
         let ratchet = session.currentRatchet;
 
-        let previousRatchet = session.remoteEphemeralKeys.get(ratchet.lastRemoteEphemeralKey.hash);
+        let previousRatchet = session.chains.get(ratchet.lastRemoteEphemeralKey.hash);
         if (previousRatchet) {
             await this.fillMessageKeys(previousRatchet, previousCounter);
-            previousRatchet.chainKey.key = null;
+            previousRatchet.chainKey = null;
 
-            let r = new Ratchet();
+            let r = new OldRatchet();
             r.timeAdded = Date.now();
             r.ephemeralKey = ratchet.lastRemoteEphemeralKey;
             session.oldRatchetList.push(r);
@@ -310,10 +301,10 @@ export class SessionCipher {
         await this.calculateRatchet(session, remoteKey, false);
 
         // Now swap the ephemeral key and calculate the new sending chain
-        previousRatchet = ratchet.ephemeralKeyPair.pubKeyX;
-        if (session[previousRatchet] !== undefined) {
-            ratchet.previousCounter = session[previousRatchet].chainKey.counter;
-            delete session[previousRatchet];
+        let previousRatchetChain = session.chains.get(ratchet.ephemeralKeyPair.hash);
+        if (previousRatchetChain) {
+            ratchet.previousCounter = previousRatchetChain.chainCounter;
+            session.chains.delete(ratchet.ephemeralKeyPair.hash);
         }
 
         ratchet.ephemeralKeyPair = Crypto.CreateKeyPair();
@@ -321,23 +312,23 @@ export class SessionCipher {
         ratchet.lastRemoteEphemeralKey = remoteKey;
     }
 
-    async calculateRatchet(session: Session, remoteKey: X25519Key, sending: boolean) {
+    async calculateRatchet(session: Session, remoteKey: KeyPair, sending: boolean) {
         let ratchet = session.currentRatchet;
-        let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair.privKeyX);
+        let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair);
         let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
 
-        let ephemeralPublicKey: X25519Key;
+        let ephemeralPublicKey: KeyPair;
         if (sending) {
-            ephemeralPublicKey = ratchet.ephemeralKeyPair.pubKeyX;
+            ephemeralPublicKey = ratchet.ephemeralKeyPair;
         } else {
             ephemeralPublicKey = remoteKey;
         }
 
-        session[ephemeralPublicKey.hash] = {
-            messageKeys: {},
-            chainKey: {counter: -1, key: masterKey[1]},
-            chainType: sending ? ChainType.SENDING : ChainType.RECEIVING
-        };
+        let r = new RatchetChain();
+        r.chainKey = masterKey[1];
+        r.chainType = sending ? ChainType.SENDING : ChainType.RECEIVING;
+        session.chains.set(ephemeralPublicKey.hash, r);
+
         ratchet.rootKey = masterKey[0];
     }
 

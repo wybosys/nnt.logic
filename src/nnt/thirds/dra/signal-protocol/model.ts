@@ -176,8 +176,11 @@ export class Ratchet implements IPodObject {
     lastRemoteEphemeralKey: KeyPair;
 
     previousCounter: number;
+
     timeAdded: number; // 添加的时间
+    
     oldRatchetList: Ratchet[] = [];
+
     ephemeralKey: X25519Key;
 
     toPod(): IndexedObject {
@@ -195,6 +198,11 @@ export class Ratchet implements IPodObject {
     fromPod(obj: IndexedObject): boolean {
         return false;
     }
+}
+
+export class OldRatchet {
+    timeAdded: number;
+    ephemeralKey: KeyPair;
 }
 
 export class RatchetChain implements IPodObject {
@@ -243,12 +251,16 @@ export class SessionIndexInfo implements IPodObject {
 
 export class Session implements IPodObject {
     registrationId: number;
+
     currentRatchet: Ratchet;
+
     chains = new Map<KeyHashType, RatchetChain>();
+
     indexInfo: SessionIndexInfo;
-    // remoteEphemeralKeys = new Map<KeyHashType, X25519Key>();
-    oldRatchetList: Ratchet[] = [];
+
     pendingPreKey: PendingPreKey;
+
+    oldRatchetList: OldRatchet[] = [];
 
     toPod(): IndexedObject {
         return {};
