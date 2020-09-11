@@ -24,13 +24,23 @@ function test_digest() {
 }
 
 async function test_ecc() {
+    let buf = Buffer.alloc(32, 0xff);
+    console.log(buf);
+
+    let tbuf = new Uint8Array(32);
+
+    let t = buf instanceof Buffer;
+    t = buf instanceof Uint8Array;
+    t = tbuf instanceof Buffer;
+    t = tbuf instanceof Uint8Array;
+
     let xx = Buffer.from("fdaf一二三");
     let yy = xx.toString();
 
     let kp = Crypto.CreateKeyPair();
     console.log(kp);
 
-    let sec = Crypto.ECDHE(kp.pubkey_x, kp.prvkey_x);
+    let sec = Crypto.ECDHE(kp.pubKeyX, kp.privKeyX);
     console.log(sec);
 }
 

@@ -29,10 +29,10 @@ export class Crypto {
         return Buffer.concat([b0, b1]).toString('utf8');
     }
 
-    static Sign(key: BinaryLike, data: BinaryLike): Buffer {
+    static Sign(key: BinaryLike, data: BinaryLike): FixedBuffer32 {
         let dig = crypto.createHmac('sha256', key);
         let res = dig.update(data);
-        return res.digest();
+        return new FixedBuffer32(res.digest());
     }
 
     static Hash(data: BinaryLike): Buffer {
@@ -41,21 +41,21 @@ export class Crypto {
         return res.digest();
     }
 
-    static HKDF(input: FixedBuffer32, salt: FixedBuffer32, info: Buffer): FixedBuffer32[] {
+    static HKDF(input: BinaryLike, salt: FixedBuffer32, info: Buffer): FixedBuffer32[] {
         // Specific implementation of RFC 5869 that only returns the first 3 32-byte chunks
         // XTODO: We dont always need the third chunk, we might skip it
-        let PRK = Crypto.Sign(salt, input);
+        let PRK = Crypto.Sign(salt.buffer, input);
         let infoBuffer = new Uint8Array(32 + info.byteLength + 1);
         let infoArray = new Uint8Array(infoBuffer);
         infoArray.set(new Uint8Array(info), 32);
         infoArray[infoArray.length - 1] = 1;
-        let T1 = Crypto.Sign(PRK, infoBuffer.slice(32));
-        infoArray.set(new Uint8Array(T1));
+        let T1 = Crypto.Sign(PRK.buffer, infoBuffer.slice(32));
+        infoArray.set(T1.buffer);
         infoArray[infoArray.length - 1] = 2;
-        let T2 = Crypto.Sign(PRK, infoBuffer);
-        infoArray.set(new Uint8Array(T2));
+        let T2 = Crypto.Sign(PRK.buffer, infoBuffer);
+        infoArray.set(T2.buffer);
         infoArray[infoArray.length - 1] = 3;
-        let T3 = Crypto.Sign(PRK, infoBuffer);
+        let T3 = Crypto.Sign(PRK.buffer, infoBuffer);
         return [T1, T2, T3];
     }
 

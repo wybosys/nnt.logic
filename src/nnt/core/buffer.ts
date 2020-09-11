@@ -1,11 +1,20 @@
 import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 
+type FixedBufferType = Buffer | Uint8Array;
+
+function ToBuffer(buf: FixedBufferType): Buffer {
+    if (buf instanceof Buffer) {
+        return buf;
+    }
+    return Buffer.from(buf);
+}
+
 export abstract class FixedBuffer<BYTELEN> {
 
-    constructor(len: any, buf?: Buffer) {
+    constructor(len: any, buf?: FixedBufferType) {
         this._digital = len;
         if (buf) {
-            this.reset(buf);
+            this.reset(ToBuffer(buf));
         } else {
             this._buf = Buffer.alloc(this._digital.val);
         }
@@ -39,7 +48,7 @@ export abstract class FixedBuffer<BYTELEN> {
 
 export class FixedBuffer8 extends FixedBuffer<_8> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_8.obj, buf);
         this._8 = _8.obj;
     }
@@ -49,7 +58,7 @@ export class FixedBuffer8 extends FixedBuffer<_8> {
 
 export class FixedBuffer16 extends FixedBuffer<_16> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_16.obj, buf);
         this._16 = _16.obj;
     }
@@ -59,7 +68,7 @@ export class FixedBuffer16 extends FixedBuffer<_16> {
 
 export class FixedBuffer32 extends FixedBuffer<_32> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_32.obj, buf);
         this._32 = _32.obj;
     }
@@ -69,7 +78,7 @@ export class FixedBuffer32 extends FixedBuffer<_32> {
 
 export class FixedBuffer33 extends FixedBuffer<_33> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_33.obj, buf);
         this._33 = _33.obj;
     }
@@ -79,7 +88,7 @@ export class FixedBuffer33 extends FixedBuffer<_33> {
 
 export class FixedBuffer64 extends FixedBuffer<_64> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_64.obj, buf);
         this._64 = _64.obj;
     }
@@ -89,7 +98,7 @@ export class FixedBuffer64 extends FixedBuffer<_64> {
 
 export class FixedBuffer128 extends FixedBuffer<_128> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_128.obj, buf);
         this._128 = _128.obj;
     }
@@ -99,7 +108,7 @@ export class FixedBuffer128 extends FixedBuffer<_128> {
 
 export class FixedBuffer256 extends FixedBuffer<_256> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_256.obj, buf);
         this._256 = _256.obj;
     }
@@ -109,7 +118,7 @@ export class FixedBuffer256 extends FixedBuffer<_256> {
 
 export class FixedBuffer512 extends FixedBuffer<_512> {
 
-    constructor(buf?: Buffer) {
+    constructor(buf?: FixedBufferType) {
         super(_512.obj, buf);
         this._512 = _512.obj;
     }

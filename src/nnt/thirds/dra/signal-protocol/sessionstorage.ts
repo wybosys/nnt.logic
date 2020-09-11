@@ -1,5 +1,6 @@
 import {FixedBuffer32} from "../../../core/buffer";
 import {ChainType} from "./sessionrecord";
+import {IdentityKeyPair} from "./model";
 
 export abstract class SessionStorage {
 
@@ -7,7 +8,7 @@ export abstract class SessionStorage {
 
     abstract async storeSession(address: string, serialzed: string): Promise<void>;
 
-    abstract async getIdentityKeyPair(): Promise<any>;
+    abstract async getIdentityKeyPair(): Promise<IdentityKeyPair>;
 
     abstract async removePreKey(keyid: string): Promise<void>;
 
