@@ -177,11 +177,7 @@ export class Ratchet implements IPodObject {
 
     previousCounter: number;
 
-    timeAdded: number; // 添加的时间
-
     oldRatchetList: Ratchet[] = [];
-
-    ephemeralKey: X25519Key;
 
     toPod(): IndexedObject {
         return {
