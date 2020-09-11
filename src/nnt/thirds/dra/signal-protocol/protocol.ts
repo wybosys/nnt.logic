@@ -24,8 +24,11 @@ export abstract class Protocol implements IPodObject {
 
 export class WhisperMessage extends Protocol {
     ephemeralKey: KeyPair;
+
     counter: number;
+
     previousCounter: number;
+    
     ciphertext: Buffer;
 
     toPod(): IndexedObject {
@@ -58,7 +61,7 @@ export class PreKeyWhisperMessage extends Protocol {
     baseKey: KeyPair;
 
     identityKey: KeyPair;
-    
+
     message: Buffer;
 
     toPod(): IndexedObject {

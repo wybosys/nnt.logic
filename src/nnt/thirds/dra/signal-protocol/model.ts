@@ -73,6 +73,11 @@ export class KeyPair implements IPodObject {
         return this.pubKeyX.hash;
     }
 
+    // 用于输出的keybuffer
+    get publicBuffer(): Uint8Array {
+        return this.pubKeyEd.buffer;
+    }
+
     reset(r: KeyPair) {
         this.pubKeyEd = r.pubKeyEd;
         this.privKeyEd = r.privKeyEd;
@@ -194,7 +199,7 @@ export class Ratchet implements IPodObject {
 
 export class RatchetChain implements IPodObject {
 
-    messageKeys: IndexedObject = {};
+    messageKeys = new Map<number, FixedBuffer32>();
 
     ephemeralKey: X25519Key;
 
@@ -241,7 +246,7 @@ export class Session implements IPodObject {
     currentRatchet: Ratchet;
     chains = new Map<KeyHashType, RatchetChain>();
     indexInfo: SessionIndexInfo;
-    remoteEphemeralKeys = new Map<KeyHashType, X25519Key>();
+    // remoteEphemeralKeys = new Map<KeyHashType, X25519Key>();
     oldRatchetList: Ratchet[] = [];
     pendingPreKey: PendingPreKey;
 

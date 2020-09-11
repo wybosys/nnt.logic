@@ -1,14 +1,20 @@
 import {SessionStorage} from "./sessionstorage";
-import {ChainType, SessionRecord} from "./sessionrecord";
-import {IndexedObject} from "../../../core/kernel";
+import {SessionRecord} from "./sessionrecord";
 import {PreKeyWhisperMessage, WhisperMessage} from "./protocol";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
 import {Address} from "./address";
-import {DecryptedMessage, EncryptedMessage, Ratchet, Session, X25519Key} from "./model";
+import {
+    ChainType,
+    DecryptedMessage,
+    EncryptedMessage,
+    KeyPair,
+    Ratchet,
+    RatchetChain,
+    Session,
+    X25519Key
+} from "./model";
 import {SessionBuilder} from "./sessionbuilder";
-
-type SessionChain = IndexedObject;
 
 export class SessionCipher {
 
@@ -28,7 +34,7 @@ export class SessionCipher {
         return SessionRecord.Deserialize(serialized);
     }
 
-    async encrypt(buffer: Buffer, encoding: string): Promise<EncryptedMessage> {
+    async encrypt(buffer: Buffer): Promise<EncryptedMessage> {
         let address = this._remoteAddress.toString();
         let msg = new WhisperMessage();
 
@@ -45,34 +51,30 @@ export class SessionCipher {
             throw new Error("dra: No session to encrypt message for " + address);
         }
 
-        msg.ephemeralKey = session.currentRatchet.ephemeralKeyPair.pubKeyX;
+        msg.ephemeralKey = session.currentRatchet.ephemeralKeyPair;
 
         let chain = session.chains.get(msg.ephemeralKey.hash);
         if (chain.chainType === ChainType.RECEIVING) {
             throw new Error("Tried to encrypt on a receiving chain");
         }
 
-        await this.fillMessageKeys(chain, chain.chainKey.counter + 1);
+        await this.fillMessageKeys(chain, chain.chainCounter + 1);
 
         let keys = await Crypto.HKDF(
-            chain.messageKeys[chain.chainKey.counter],
+            chain.messageKeys.get(chain.chainCounter).buffer,
             new FixedBuffer32(),
             Buffer.from("WhisperMessageKeys"));
 
-        delete chain.messageKeys[chain.chainKey.counter];
-        msg.counter = chain.chainKey.counter;
+        chain.messageKeys.delete(chain.chainCounter);
+        msg.counter = chain.chainCounter;
         msg.previousCounter = session.currentRatchet.previousCounter;
+        msg.ciphertext = Crypto.Encrypt(keys[0].buffer, buffer, keys[2].slice(0, 16));
 
-        let ciphertext = Crypto.Encrypt(
-            keys[0].buffer, buffer, keys[2].slice(0, 16)
-        );
-
-        msg.ciphertext = ciphertext;
         let encodedMsg = msg.serialout();
 
-        let macInput = new Uint8Array(encodedMsg.byteLength + 33 * 2 + 1);
-        macInput.set(ourIdentityKey.pubKeyX.buffer);
-        macInput.set(session.indexInfo.remoteIdentityKey.buffer, 33);
+        let macInput = new Buffer(encodedMsg.byteLength + 33 * 2 + 1);
+        macInput.set(ourIdentityKey.publicBuffer);
+        macInput.set(session.indexInfo.remoteIdentityKey.publicBuffer, 33);
         macInput[33 * 2] = (3 << 4) | 3;
         macInput.set(encodedMsg, 33 * 2 + 1);
 
@@ -95,7 +97,7 @@ export class SessionCipher {
         let message = result;
         if (session.pendingPreKey !== undefined) {
             let preKeyMsg = new PreKeyWhisperMessage();
-            preKeyMsg.identityKey = ourIdentityKey.pubKeyX;
+            preKeyMsg.identityKey = ourIdentityKey;
             preKeyMsg.registrationId = myRegistrationId;
             preKeyMsg.baseKey = session.pendingPreKey.baseKey;
             if (session.pendingPreKey.preKeyId) {
@@ -260,35 +262,35 @@ export class SessionCipher {
         return r;
     }
 
-    async fillMessageKeys(chain: SessionChain, counter: number): Promise<void> {
-        if (chain.chainKey.counter >= counter) {
+    async fillMessageKeys(chain: RatchetChain, counter: number): Promise<void> {
+        if (chain.chainCounter >= counter) {
             return;
         }
-        if (counter - chain.chainKey.counter > 2000) {
+        if (counter - chain.chainCounter > 2000) {
             throw new Error('dra: Over 2000 messages into the future!');
         }
-        if (!chain.chainKey.key) {
+        if (!chain.chainKey) {
             throw new Error("dra: Got invalid request to extend chain after it was already closed");
         }
 
-        let key = chain.chainKey.key;
+        let key = chain.chainKey;
         let byteArray = Buffer.alloc(1);
 
         byteArray[0] = 1;
-        let mac1 = Crypto.Sign(key, byteArray);
+        let mac1 = Crypto.Sign(key.buffer, byteArray);
 
         byteArray[0] = 2;
-        let mac2 = Crypto.Sign(key, byteArray);
+        let mac2 = Crypto.Sign(key.buffer, byteArray);
 
-        chain.messageKeys[chain.chainKey.counter + 1] = mac1;
-        chain.chainKey.key = mac2;
-        chain.chainKey.counter += 1;
+        chain.messageKeys.set(chain.chainCounter + 1, mac1);
+        chain.chainKey = mac2;
+        chain.chainCounter += 1;
 
         await this.fillMessageKeys(chain, counter);
     }
 
-    async maybeStepRatchet(session: Session, remoteKey: X25519Key, previousCounter: number) {
-        if (session.remoteEphemeralKeys.has(remoteKey.hash))
+    async maybeStepRatchet(session: Session, remoteKey: KeyPair, previousCounter: number) {
+        if (session.chains.has(remoteKey.hash))
             return Promise.resolve();
 
         console.log('dra: New remote ephemeral key');
