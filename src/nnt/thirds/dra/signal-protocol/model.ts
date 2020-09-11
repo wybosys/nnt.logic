@@ -1,17 +1,22 @@
-import {FixedUint8Array} from "../../../core/buffer";
-
-export type X25519KeyType = FixedUint8Array<32>;
-export type Ed25519PubKeyType = FixedUint8Array<32>;
-export type Ed25519PrvKeyType = FixedUint8Array<64>;
+import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
 
 export class KeyPair {
 
     // ed25519用于签名
-    pubkey_ed: Ed25519PubKeyType;
-    prvkey_ed: Ed25519PrvKeyType;
+    pubkey_ed: FixedBuffer32;
+    prvkey_ed: FixedBuffer64;
 
     // x25519用于加密和dh
-    pubkey_x: X25519KeyType;
-    prvkey_x: X25519KeyType;
+    pubkey_x: FixedBuffer32;
+    prvkey_x: FixedBuffer32;
 
+}
+
+export class PreKey {
+    keyId: number;
+    keyPair: KeyPair;
+}
+
+export class SignedPreKey extends PreKey {
+    signature: FixedBuffer32;
 }

@@ -2,7 +2,8 @@ import crypto = require("crypto");
 import nacl = require("tweetnacl");
 import ed2curve = require("ed2curve");
 import {BinaryLike} from "crypto";
-import {Ed25519PrvKeyType, Ed25519PubKeyType, KeyPair, X25519KeyType} from "./model";
+import {KeyPair} from "./model";
+import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
 
 export class Crypto {
 
@@ -66,24 +67,26 @@ export class Crypto {
         let kp = nacl.sign.keyPair();
 
         let r = new KeyPair();
-        r.pubkey_ed = kp.publicKey;
-        r.prvkey_ed = kp.secretKey;
-        r.pubkey_x = ed2curve.convertPublicKey(r.pubkey_ed);
-        r.prvkey_x = ed2curve.convertSecretKey(r.prvkey_ed);
+        r.pubkey_ed = new FixedBuffer32(kp.publicKey);
+        r.prvkey_ed = new FixedBuffer64(kp.secretKey);
+        r.pubkey_x = new FixedBuffer32(ed2curve.convertPublicKey(kp.publicKey));
+        r.prvkey_x = new FixedBuffer32(ed2curve.convertSecretKey(kp.secretKey));
 
         return r;
     }
 
-    static ECDHE(pubkey: X25519KeyType, prvkey: X25519KeyType): Uint8Array {
-        return nacl.box.before(pubkey, prvkey);
+    static ECDHE(pubkey: FixedBuffer32, prvkey: FixedBuffer32): FixedBuffer32 {
+        let res = nacl.box.before(pubkey.buffer, prvkey.buffer);
+        return new FixedBuffer32(res);
     }
 
-    static Ed25519Sign(prvkey: Ed25519PrvKeyType, msg: Uint8Array): Uint8Array {
-        return nacl.sign.detached(msg, prvkey);
+    static Ed25519Sign(prvkey: FixedBuffer64, msg: Buffer): FixedBuffer32 {
+        let buf = nacl.sign.detached(msg, prvkey.buffer);
+        return new FixedBuffer32(buf);
     }
 
-    static Ed25519Verify(pubkey: Ed25519PubKeyType, msg: Uint8Array, sig: Uint8Array): boolean {
-        return nacl.sign.detached.verify(msg, sig, pubkey);
+    static Ed25519Verify(pubkey: FixedBuffer32, msg: Buffer, sig: FixedBuffer32): boolean {
+        return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
     }
 
     static VerifyMAC(data: Uint8Array, key: Uint8Array, mac: Uint8Array, length: number): boolean {

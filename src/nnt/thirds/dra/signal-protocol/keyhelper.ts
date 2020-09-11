@@ -1,4 +1,6 @@
 import {Crypto, KeyPair} from "./crypto";
+import {PreKey} from "./model";
+import {logger} from "../../../core/logger";
 
 export class KeyHelper {
 
@@ -35,13 +37,15 @@ export class KeyHelper {
         });
     }
 
-    static GeneratePreKey(keyId: number) {
-        if (!isNonNegativeInteger(keyId)) {
-            throw new TypeError('Invalid argument for keyId: ' + keyId);
+    static GeneratePreKey(keyId: number): PreKey {
+        if (keyId < 0) {
+            logger.fatal('Invalid argument for keyId: ' + keyId);
+            return null;
         }
 
-        return Internal.crypto.createKeyPair().then(function (keyPair) {
-            return {keyId: keyId, keyPair: keyPair};
-        });
+        let r = new PreKey();
+        r.keyId = keyId;
+        r.keyPair = Crypto.CreateKeyPair();
+        return r;
     }
 }
