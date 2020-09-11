@@ -67,10 +67,10 @@ export class Crypto {
         let kp = nacl.sign.keyPair();
 
         let r = new KeyPair();
-        r.pubkey_ed = new FixedBuffer32(kp.publicKey);
-        r.prvkey_ed = new FixedBuffer64(kp.secretKey);
-        r.pubkey_x = new FixedBuffer32(ed2curve.convertPublicKey(kp.publicKey));
-        r.prvkey_x = new FixedBuffer32(ed2curve.convertSecretKey(kp.secretKey));
+        r.pubKeyEd = new FixedBuffer32(kp.publicKey);
+        r.privKeyEd = new FixedBuffer64(kp.secretKey);
+        r.pubKeyX = new FixedBuffer32(ed2curve.convertPublicKey(kp.publicKey));
+        r.privKeyX = new FixedBuffer32(ed2curve.convertSecretKey(kp.secretKey));
 
         return r;
     }
@@ -80,19 +80,19 @@ export class Crypto {
         return new FixedBuffer32(res);
     }
 
-    static Ed25519Sign(prvkey: FixedBuffer64, msg: Buffer): FixedBuffer32 {
+    static Ed25519Sign(prvkey: FixedBuffer64, msg: Uint8Array): FixedBuffer32 {
         let buf = nacl.sign.detached(msg, prvkey.buffer);
         return new FixedBuffer32(buf);
     }
 
-    static Ed25519Verify(pubkey: FixedBuffer32, msg: Buffer, sig: FixedBuffer32): boolean {
+    static Ed25519Verify(pubkey: FixedBuffer32, msg: Uint8Array, sig: FixedBuffer32): boolean {
         return nacl.sign.detached.verify(msg, sig.buffer, pubkey.buffer);
     }
 
     static VerifyMAC(data: Uint8Array, key: Uint8Array, mac: Uint8Array, length: number): boolean {
         let calculated_mac = Crypto.Sign(key, data);
         if (mac.byteLength != length || calculated_mac.byteLength < length) {
-            // throw new Error("Bad MAC length");
+            console.error("dra: Bad MAC length");
             return false;
         }
 
@@ -104,7 +104,7 @@ export class Crypto {
         }
 
         if (result !== 0) {
-            //throw new Error("Bad MAC");
+            console.log("dra: Bad MAC");
             return false;
         }
         return true;

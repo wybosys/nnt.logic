@@ -1,14 +1,14 @@
-import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
+import {FixedBuffer32, FixedBuffer33, FixedBuffer64} from "../../../core/buffer";
 
 export class KeyPair {
 
     // ed25519用于签名
-    pubkey_ed: FixedBuffer32;
-    prvkey_ed: FixedBuffer64;
+    pubKeyEd: FixedBuffer32;
+    privKeyEd: FixedBuffer64;
 
     // x25519用于加密和dh
-    pubkey_x: FixedBuffer32;
-    prvkey_x: FixedBuffer32;
+    pubKeyX: FixedBuffer32;
+    privKeyX: FixedBuffer32;
 
 }
 
@@ -19,4 +19,12 @@ export class PreKey {
 
 export class SignedPreKey extends PreKey {
     signature: FixedBuffer32;
+}
+
+export class IdentityKeyPair {
+    pubKeyEd: FixedBuffer32;
+    privKeyEd: FixedBuffer64;
+
+    pubKeyX: FixedBuffer33;
+    privKeyX: FixedBuffer32;
 }

@@ -1,6 +1,5 @@
 import {Crypto, KeyPair} from "./crypto";
-import {PreKey} from "./model";
-import {logger} from "../../../core/logger";
+import {IdentityKeyPair, PreKey, SignedPreKey} from "./model";
 
 export class KeyHelper {
 
@@ -13,33 +12,25 @@ export class KeyHelper {
         return registrationId & 0x3fff;
     }
 
-    static GenerateSignedPreKey(identityKeyPair, signedKeyId) {
-        if (!(identityKeyPair.privKey instanceof ArrayBuffer) ||
-            identityKeyPair.privKey.byteLength != 32 ||
-            !(identityKeyPair.pubKey instanceof ArrayBuffer) ||
-            identityKeyPair.pubKey.byteLength != 33) {
-            throw new TypeError('Invalid argument for identityKeyPair');
-        }
-        if (!isNonNegativeInteger(signedKeyId)) {
-            throw new TypeError(
-                'Invalid argument for signedKeyId: ' + signedKeyId
-            );
+    static GenerateSignedPreKey(identityKeyPair: IdentityKeyPair, signedKeyId: number): SignedPreKey {
+        if (signedKeyId <= 0) {
+            console.error('dra: Invalid argument for signedKeyId: ' + signedKeyId);
+            return null;
         }
 
-        return Internal.crypto.createKeyPair().then(function (keyPair) {
-            return Internal.crypto.Ed25519Sign(identityKeyPair.privKey, keyPair.pubKey).then(function (sig) {
-                return {
-                    keyId: signedKeyId,
-                    keyPair: keyPair,
-                    signature: sig
-                };
-            });
-        });
+        let keyPair = Crypto.CreateKeyPair();
+        let sig = Crypto.Ed25519Sign(identityKeyPair.privKeyEd, keyPair.pubKeyX.buffer);
+
+        let r = new SignedPreKey();
+        r.keyId = signedKeyId;
+        r.keyPair = keyPair;
+        r.signature = sig;
+        return r;
     }
 
     static GeneratePreKey(keyId: number): PreKey {
         if (keyId < 0) {
-            logger.fatal('Invalid argument for keyId: ' + keyId);
+            console.error('dra: Invalid argument for keyId: ' + keyId);
             return null;
         }
 
