@@ -1,5 +1,5 @@
 import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
-import {BaseKeyType, Session, X25519Key} from "./model";
+import {BaseKeyType, KeyPair, Session, X25519Key} from "./model";
 
 const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;
@@ -42,7 +42,7 @@ export class SessionRecord {
         return this.getOpenSession() != null;
     }
 
-    getSessionByBaseKey(baseKey: X25519Key): Session {
+    getSessionByBaseKey(baseKey: KeyPair): Session {
         let session = this._sessions[baseKey.toString()];
         if (session && session.indexInfo.baseKeyType === BaseKeyType.OURS) {
             throw new Error("dra: Tried to lookup a session using our basekey");

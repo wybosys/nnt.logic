@@ -1,5 +1,4 @@
-import {FixedBuffer32} from "../../../core/buffer";
-import {ChainType, IdentityKeyPair, PreKey, SignedPreKey, X25519Key} from "./model";
+import {ChainType, KeyPair, PreKey, SignedPreKey} from "./model";
 
 export abstract class SessionStorage {
 
@@ -7,13 +6,13 @@ export abstract class SessionStorage {
 
     abstract async storeSession(address: string, serialzed: string): Promise<void>;
 
-    abstract async getIdentityKeyPair(): Promise<IdentityKeyPair>;
+    abstract async getIdentityKeyPair(): Promise<KeyPair>;
 
     abstract async removePreKey(keyid: number): Promise<void>;
 
-    abstract async isTrustedIdentity(name: string, identityKey: FixedBuffer32, ct: ChainType): Promise<boolean>;
+    abstract async isTrustedIdentity(name: string, identityKey: KeyPair, ct: ChainType): Promise<boolean>;
 
-    abstract async saveIdentity(address: string, key: X25519Key): Promise<void>;
+    abstract async saveIdentity(address: string, key: KeyPair): Promise<void>;
 
     abstract async loadPreKey(keyId: number): Promise<PreKey>;
 

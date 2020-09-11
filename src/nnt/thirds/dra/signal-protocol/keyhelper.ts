@@ -23,7 +23,7 @@ export class KeyHelper {
 
         let r = new SignedPreKey();
         r.keyId = signedKeyId;
-        r.keyPair = keyPair;
+        r.reset(keyPair);
         r.signature = sig;
         return r;
     }
@@ -34,9 +34,11 @@ export class KeyHelper {
             return null;
         }
 
+        let keyPair = Crypto.CreateKeyPair();
+
         let r = new PreKey();
         r.keyId = keyId;
-        r.keyPair = Crypto.CreateKeyPair();
+        r.reset(Crypto.CreateKeyPair());
         return r;
     }
 }

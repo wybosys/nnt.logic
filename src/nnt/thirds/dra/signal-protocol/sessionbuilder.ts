@@ -1,9 +1,10 @@
 import {SessionStorage} from "./sessionstorage";
-import {BaseKeyType, ChainType, SessionRecord} from "./sessionrecord";
-import {SessionLock} from "./sessionlock";
+import {SessionRecord} from "./sessionrecord";
 import {Address} from "./address";
 import {
-    DeviceKey,
+    BaseKeyType,
+    ChainType,
+    Device,
     ErrorExt,
     KeyPair,
     PendingPreKey,
@@ -11,8 +12,7 @@ import {
     Ratchet,
     RatchetChain,
     Session,
-    SessionIndexInfo,
-    X25519Key
+    SessionIndexInfo
 } from "./model";
 import {Crypto} from "./crypto";
 import {FixedBuffer32} from "../../../core/buffer";
@@ -29,67 +29,60 @@ export class SessionBuilder {
     private _remoteAddress: Address;
     private _storage: SessionStorage;
 
-    async processPreKey(device: DeviceKey) {
-        return SessionLock.QueueJobForNumber(this._remoteAddress.toString(), async () => {
-            let trusted = await this._storage.isTrustedIdentity(this._remoteAddress.name, device.identityKey, ChainType.SENDING);
-            if (!trusted) {
-                throw new Error('dra: Identity key changed');
-            }
+    async processPreKey(device: Device) {
+        let address = this._remoteAddress.toString();
 
-            let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.pubKeyX.buffer, device.signedPreKey.signature);
-            if (!verified) {
-                throw new Error('dra: Signature error');
-            }
+        let trusted = await this._storage.isTrustedIdentity(address, device.identityKey, ChainType.SENDING);
+        if (!trusted) {
+            throw new Error('dra: Identity key changed');
+        }
 
-            let baseKey = Crypto.CreateKeyPair();
+        let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.pubKeyX.buffer, device.signedPreKey.signature);
+        if (!verified) {
+            throw new Error('dra: Signature error');
+        }
 
-            let devicePreKey: X25519Key;
-            if (device.preKey) {
-                devicePreKey = device.preKey.pubKeyX;
-            }
+        let baseKey = Crypto.CreateKeyPair();
 
-            let session = await this.initSession(
-                true,
-                baseKey,
-                null,
-                device.identityKey,
-                devicePreKey,
-                device.signedPreKey.pubKeyX,
-                device.registrationId
-            );
+        let devicePreKey: PreKey;
+        if (device.preKey) {
+            devicePreKey = device.preKey;
+        }
 
-            session.pendingPreKey = use(new PendingPreKey(), prk => {
-                prk.signedKeyId = device.signedPreKey.keyId;
-                prk.baseKey = baseKey.pubKeyX;
-            });
+        let session = await this.initSession(
+            true,
+            baseKey,
+            null,
+            device.identityKey,
+            devicePreKey,
+            device.signedPreKey,
+            device.registrationId
+        );
 
-            if (device.preKey) {
-                session.pendingPreKey.preKeyId = device.preKey.keyId;
-            }
-
-            let address = this._remoteAddress.toString();
-            let serialized = await this._storage.loadSession(address);
-
-            let record: SessionRecord;
-            if (serialized) {
-                record = SessionRecord.Deserialize(serialized);
-            } else {
-                record = new SessionRecord();
-            }
-
-            record.archiveCurrentState();
-            record.updateSessionState(session);
-
-            await this._storage.storeSession(address, record.serialize());
-            await this._storage.saveIdentity(address, session.indexInfo.remoteIdentityKey)
+        session.pendingPreKey = use(new PendingPreKey(), prk => {
+            prk.signedKeyId = device.signedPreKey.keyId;
+            prk.baseKey = baseKey;
+            if (devicePreKey)
+                prk.preKeyId = devicePreKey.keyId;
         });
+
+        let serialized = await this._storage.loadSession(address);
+
+        let record: SessionRecord;
+        if (serialized) {
+            record = SessionRecord.Deserialize(serialized);
+        } else {
+            record = new SessionRecord();
+        }
+
+        record.archiveCurrentState();
+        record.updateSessionState(session);
+
+        await this._storage.storeSession(address, record.serialize());
+        await this._storage.saveIdentity(address, session.indexInfo.remoteIdentityKey)
     }
 
     async processV3(record: SessionRecord, message: PreKeyWhisperMessage): Promise<number> {
-        let preKeyPair: PreKey;
-        let signedPreKeyPair: PreKey;
-        let session: Session;
-
         let trusted = await this._storage.isTrustedIdentity(this._remoteAddress.name, message.identityKey, ChainType.SENDING);
 
         if (!trusted) {
@@ -103,10 +96,10 @@ export class SessionBuilder {
             await this._storage.loadSignedPreKey(message.signedPreKeyId)
         ];
 
-        preKeyPair = results[0];
-        signedPreKeyPair = results[1];
+        let preKeyPair = await this._storage.loadPreKey(message.preKeyId);
+        let signedPreKeyPair = await this._storage.loadSignedPreKey(message.signedPreKeyId);
 
-        session = record.getSessionByBaseKey(message.baseKey);
+        let session = record.getSessionByBaseKey(message.baseKey);
         if (session) {
             console.log("Duplicate PreKeyMessage for session");
             return null;
@@ -154,33 +147,27 @@ export class SessionBuilder {
 
     async initSession(isInitiator: boolean,
                       ourEphemeralKey: KeyPair, ourSignedKey: KeyPair,
-                      theirIdentityPubKey: X25519Key, theirEphemeralPubKey: X25519Key, theirSignedPubKey: X25519Key,
+                      theirIdentityKey: KeyPair, theirEphemeralKey: KeyPair, theirSignedKey: KeyPair,
                       registrationId: number): Promise<Session> {
         let ourIdentityKey = await this._storage.getIdentityKeyPair();
 
         if (isInitiator) {
-            if (ourSignedKey) {
-                throw new Error("dra: Invalid call to initSession");
-            }
             ourSignedKey = ourEphemeralKey;
         } else {
-            if (theirSignedPubKey) {
-                throw new Error("dra: Invalid call to initSession");
-            }
-            theirSignedPubKey = theirEphemeralPubKey;
+            theirSignedKey = theirEphemeralKey;
         }
 
         let sharedSecret: Buffer;
-        if (!ourEphemeralKey || !theirEphemeralPubKey) {
+        if (!ourEphemeralKey || !theirEphemeralKey) {
             sharedSecret = Buffer.alloc(32 * 4, 0xff);
         } else {
             sharedSecret = Buffer.alloc(32 * 5, 0xff);
         }
 
         let ecRes = [
-            Crypto.ECDHE(theirSignedPubKey, ourIdentityKey.privKeyX),
-            Crypto.ECDHE(theirIdentityPubKey, ourSignedKey.privKeyX),
-            Crypto.ECDHE(theirSignedPubKey, ourSignedKey.privKeyX)
+            Crypto.ECDHE(theirSignedKey, ourIdentityKey),
+            Crypto.ECDHE(theirIdentityKey, ourSignedKey),
+            Crypto.ECDHE(theirSignedKey, ourSignedKey)
         ];
 
         if (isInitiator) {
@@ -192,8 +179,8 @@ export class SessionBuilder {
         }
         sharedSecret.set(ecRes[2].buffer, 32 * 3);
 
-        if (ourEphemeralKey && theirEphemeralPubKey) {
-            let ecRes4 = Crypto.ECDHE(theirEphemeralPubKey, ourEphemeralKey.privKeyX);
+        if (ourEphemeralKey && theirEphemeralKey) {
+            let ecRes4 = Crypto.ECDHE(theirEphemeralKey, ourEphemeralKey);
             sharedSecret.set(ecRes4.buffer, 32 * 4);
         }
 
@@ -204,23 +191,23 @@ export class SessionBuilder {
 
         session.currentRatchet = use(new Ratchet(), r => {
             r.rootKey = masterKey[0];
-            r.lastRemoteEphemeralKey = theirSignedPubKey;
+            r.lastRemoteEphemeralKey = theirSignedKey;
             r.previousCounter = 0;
         });
 
         session.indexInfo = use(new SessionIndexInfo(), info => {
-            info.remoteIdentityKey = theirIdentityPubKey;
+            info.remoteIdentityKey = theirIdentityKey;
         });
 
         if (isInitiator) {
-            session.indexInfo.baseKey = ourEphemeralKey.pubKeyX;
+            session.indexInfo.baseKey = ourEphemeralKey;
             session.indexInfo.baseKeyType = BaseKeyType.OURS;
 
             let ourSendingEphemeralKey = Crypto.CreateKeyPair();
             session.currentRatchet.ephemeralKeyPair = ourSendingEphemeralKey;
-            this.calculateSendingRatchet(session, theirSignedPubKey);
+            this.calculateSendingRatchet(session, theirSignedKey);
         } else {
-            session.indexInfo.baseKey = theirEphemeralPubKey;
+            session.indexInfo.baseKey = theirEphemeralKey;
             session.indexInfo.baseKeyType = BaseKeyType.THEIRS;
             session.currentRatchet.ephemeralKeyPair = ourSignedKey;
         }
@@ -228,22 +215,18 @@ export class SessionBuilder {
         return session;
     }
 
-
-    calculateSendingRatchet(session: Session, remoteKey: X25519Key) {
+    calculateSendingRatchet(session: Session, remoteKey: KeyPair) {
         let ratchet = session.currentRatchet;
 
-        let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair.privKeyX);
+        let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair);
 
         let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
 
         let rc = new RatchetChain();
         rc.chainType = ChainType.SENDING;
-        rc.chainKey = {
-            counter: -1,
-            key: masterKey[1]
-        };
+        rc.chainKey = masterKey[1];
 
-        session.chains.set(ratchet.ephemeralKeyPair.pubKeyX.toString(), rc);
+        session.chains.set(ratchet.ephemeralKeyPair.hash, rc);
         ratchet.rootKey = masterKey[0];
     }
 }

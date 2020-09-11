@@ -19,7 +19,7 @@ export class ErrorExt extends Error {
         super(e);
     }
 
-    identityKey: FixedBuffer32;
+    identityKey: KeyPair;
 }
 
 export class Ed25519PublicKey extends FixedBuffer32 {
@@ -69,6 +69,17 @@ export class KeyPair implements IPodObject {
     pubKeyX: X25519Key;
     privKeyX: X25519Key;
 
+    get hash(): number {
+        return this.pubKeyX.hash;
+    }
+
+    reset(r: KeyPair) {
+        this.pubKeyEd = r.pubKeyEd;
+        this.privKeyEd = r.privKeyEd;
+        this.pubKeyX = r.pubKeyX;
+        this.privKeyX = r.privKeyX;
+    }
+
     toPod(): IndexedObject {
         return {
             pubKeyEd: this.pubKeyEd.serialize()
@@ -82,8 +93,8 @@ export class KeyPair implements IPodObject {
     }
 }
 
-export class PreKey {
-    keyPair: KeyPair;
+export class PreKey extends KeyPair {
+
     keyId: number;
 
     toPod(): IndexedObject {
@@ -111,8 +122,10 @@ export class SignedPreKey extends PreKey {
 
 export class PendingPreKey implements IPodObject {
     preKeyId: number;
+
     signedKeyId: number;
-    baseKey: X25519Key;
+
+    baseKey: KeyPair;
 
     toPod(): IndexedObject {
         return {};
@@ -123,16 +136,19 @@ export class PendingPreKey implements IPodObject {
     }
 }
 
-export class DeviceKey implements IPodObject {
+export class Device implements IPodObject {
 
-    identityKey: Ed25519PublicKey;
+    identityKey: KeyPair;
+
     preKey: PreKey;
+
     signedPreKey: SignedPreKey;
+
     registrationId: number;
 
     toPod(): IndexedObject {
         return {
-            identityKey: this.identityKey?.serialize(),
+            identityKey: this.identityKey.toPod(),
             preKey: this.preKey.toPod(),
             signedPreKey: this.signedPreKey.toPod()
         };
@@ -144,9 +160,16 @@ export class DeviceKey implements IPodObject {
 }
 
 export class Ratchet implements IPodObject {
+
+    // 双方临时key
     ephemeralKeyPair: KeyPair;
+
+    // HKDF[0]
     rootKey: FixedBuffer32;
-    lastRemoteEphemeralKey: X25519Key;
+
+    // createsession时使用的bob的signedkey
+    lastRemoteEphemeralKey: KeyPair;
+
     previousCounter: number;
     timeAdded: number; // 添加的时间
     oldRatchetList: Ratchet[] = [];
@@ -170,13 +193,16 @@ export class Ratchet implements IPodObject {
 }
 
 export class RatchetChain implements IPodObject {
-    ephemeralKey: X25519Key;
+
     messageKeys: IndexedObject = {};
+
+    ephemeralKey: X25519Key;
+
     chainType: ChainType;
-    chainKey: {
-        counter: number;
-        key: FixedBuffer32;
-    };
+
+    chainCounter: number = -1;
+
+    chainKey: FixedBuffer32;
 
     toPod(): IndexedObject {
         return {};
@@ -188,9 +214,17 @@ export class RatchetChain implements IPodObject {
 }
 
 export class SessionIndexInfo implements IPodObject {
-    remoteIdentityKey: X25519Key;
-    timeClosed: number = -1; // 关闭时间
-    baseKey: X25519Key;
+
+    // createsession时使用的bob的identitykey
+    remoteIdentityKey: KeyPair;
+
+    // session关闭时间
+    timeClosed: number = -1;
+
+    // 创建createsession时使用的临时key
+    baseKey: KeyPair;
+
+    // key的类型
     baseKeyType: BaseKeyType;
 
     toPod(): IndexedObject {

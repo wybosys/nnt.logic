@@ -50,10 +50,15 @@ export class WhisperMessage extends Protocol {
 
 export class PreKeyWhisperMessage extends Protocol {
     registrationId: number;
+
     preKeyId: number;
+
     signedPreKeyId: number;
+
     baseKey: KeyPair;
+
     identityKey: KeyPair;
+    
     message: Buffer;
 
     toPod(): IndexedObject {
