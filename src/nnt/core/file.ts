@@ -43,6 +43,12 @@ export class Mime {
         return def;
     }
 
+    private static ResultOf(res: string | string[]): string {
+        if (typeof res == 'string')
+            return res;
+        return res[0];
+    }
+
     static TypeOfFile(path: string, def: string = null): Promise<string> {
         return new Promise(resolve => {
             let h = new mmm.Magic(mmm.MAGIC_MIME_TYPE);
@@ -50,9 +56,8 @@ export class Mime {
                 if (err) {
                     logger.warn(err.message);
                     resolve(def);
-                }
-                else {
-                    resolve(res);
+                } else {
+                    resolve(Mime.ResultOf(res));
                 }
             });
         });
@@ -65,9 +70,8 @@ export class Mime {
                 if (err) {
                     logger.warn(err.message);
                     resolve(def);
-                }
-                else {
-                    resolve(res);
+                } else {
+                    resolve(Mime.ResultOf(res));
                 }
             });
         });

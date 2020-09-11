@@ -2,19 +2,24 @@ import {action, IRouter} from "../../core/router";
 import {
     RmqChannels,
     RmqConnections,
-    RmqConsumers, RmqDeleteNoConsumerQueues,
+    RmqConsumers,
+    RmqDeleteNoConsumerQueues,
     RmqDeleteQueue,
-    RmqExchanges, RmqFindQueue,
-    RmqModel, RmqPurgeQueue, RmqPurgeQueues, RmqQueue,
+    RmqExchanges,
+    RmqFindQueue,
+    RmqModel,
+    RmqPurgeQueue,
+    RmqPurgeQueues,
     RmqQueues,
     RmqVhosts
 } from "./model";
 import {Transaction} from "../../server/transaction";
 import {static_cast} from "../../core/core";
 import {Admin} from "./admin";
-import {ArrayT, IndexedObject} from "../../core/kernel";
+import {IndexedObject, use} from "../../core/kernel";
 import {Rest as RestSession} from "../../session/rest";
 import {STATUS} from "../../core/models";
+import {Authorization} from "../../session/model";
 
 interface AdminConfig {
     host: string;
@@ -292,12 +297,16 @@ export class RAdmin implements IRouter {
         if (trans.server instanceof Admin) {
             let srv = static_cast<Admin>(trans.server);
             m.host = 'http://' + srv.host + ':' + srv.port + '/api';
-            m.user = srv.user;
-            m.passwd = srv.password;
+            m.authorization = use(new Authorization(), au => {
+                au.user = srv.user;
+                au.passwd = srv.password;
+            });
         } else {
             m.host = 'http://' + this.host + ':' + this.port + '/api';
-            m.user = this.user;
-            m.passwd = this.password;
+            m.authorization = use(new Authorization(), au => {
+                au.user = this.user;
+                au.passwd = this.password;
+            });
         }
         return m;
     }

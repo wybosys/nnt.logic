@@ -94,9 +94,6 @@ export abstract class AbstractSocketSession extends SObject {
         this._signals.register(kSignalFailed);
     }
 
-    // 连接器
-    connector: AbstractSocketConnector;
-
     // 监听模型
     abstract watch(mdl: Base, cb?: (s?: Slot) => void, cbctx?: any): void;
 
