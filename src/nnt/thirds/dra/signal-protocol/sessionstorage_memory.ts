@@ -81,6 +81,10 @@ export class SessionStorageMemory extends SessionStorage {
         }
     }
 
+    async storeLocalRegistrationId(id: number): Promise<void> {
+        this.set('registrationId', id);
+    }
+
     async getLocalRegistrationId(): Promise<number> {
         return this.get('registrationId');
     }

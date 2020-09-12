@@ -30,6 +30,8 @@ export abstract class SessionStorage {
 
     abstract async removeAllSessions(identifier: string): Promise<void>;
 
+    abstract async storeLocalRegistrationId(id: number): Promise<void>;
+
     abstract async getLocalRegistrationId(): Promise<number>;
 
 }

@@ -367,7 +367,7 @@ export class Session implements IPodObject {
 // 加密成功后的信息
 export class EncryptedMessage {
     type: number;
-    body: string;
+    body: Buffer;
     registrationId: number;
 }
 

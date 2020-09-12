@@ -95,7 +95,11 @@ export class SessionCipher {
             }
             preKeyMsg.signedPreKeyId = session.pendingPreKey.signedKeyId;
             preKeyMsg.message = message;
-            let body = String.fromCharCode((3 << 4) | 3) + preKeyMsg.serialout().toString('utf8')
+
+            let body = Buffer.concat([
+                Buffer.alloc(1, (3 << 4) | 3),
+                preKeyMsg.serialout()
+            ]);
             return {
                 type: 3,
                 body: body,
@@ -105,7 +109,7 @@ export class SessionCipher {
         } else {
             return {
                 type: 1,
-                body: message.toString('utf8'),
+                body: message,
                 registrationId: session.registrationId
             };
         }
