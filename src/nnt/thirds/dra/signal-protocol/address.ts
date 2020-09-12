@@ -1,10 +1,11 @@
-import {toInt} from "../../../core/kernel";
+import {StringT, toInt} from "../../../core/kernel";
 
 export class Address {
 
     constructor(name: string, deviceId: number) {
         this._name = name;
         this._deviceId = deviceId;
+        this._hash = StringT.Hash(this.toString());
     }
 
     private _name: string;
@@ -20,6 +21,12 @@ export class Address {
 
     toString(): string {
         return `${this._name}.${this._deviceId}`;
+    }
+
+    private _hash: number;
+
+    get hash(): number {
+        return this._hash;
     }
 
     equals(r: Address): boolean {
