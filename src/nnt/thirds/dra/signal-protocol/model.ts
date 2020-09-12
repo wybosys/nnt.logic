@@ -1,4 +1,4 @@
-import {FixedBuffer32, FixedBuffer64, FixedBufferType, UnserializeFixedBuffer} from "../../../core/buffer";
+import {FixedBuffer32, FixedBuffer64, FixedBufferType} from "../../../core/buffer";
 import {ArrayT, IndexedObject} from "../../../core/kernel";
 import {IPodObject} from "../../../core/object";
 import ed2curve = require("ed2curve");
@@ -86,15 +86,16 @@ export class KeyPair implements IPodObject {
     }
 
     toPod(): IndexedObject {
+        // 不序列化私钥，x的公钥可以通过ed导出
         return {
             pubKeyEd: this.pubKeyEd.serialize()
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        this.pubKeyEd = UnserializeFixedBuffer(new Ed25519PublicKey(), obj.pubKeyEd);
+    fromPod(obj: IndexedObject): this {
+        this.pubKeyEd = new Ed25519PublicKey().unserialize(obj.pubKeyEd);
         this.pubKeyX = this.pubKeyEd.toX();
-        return true;
+        return this;
     }
 }
 
@@ -103,29 +104,42 @@ export class PreKey extends KeyPair {
     keyId: number;
 
     toPod(): IndexedObject {
-        return {};
+        let obj = super.toPod();
+        return {
+            ...obj,
+            keyId: this.keyId
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        super.fromPod(obj);
+        this.keyId = obj.keyId;
+        return this;
     }
 }
 
 export class SignedPreKey extends PreKey {
+
     signature: FixedBuffer64;
 
     toPod(): IndexedObject {
         let obj = super.toPod();
-        obj.signature = this.signature?.serialize();
-        return obj;
+        return {
+            ...obj,
+            signature: this.signature?.serialize()
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        super.fromPod(obj);
+        if (obj.signature)
+            this.signature = new FixedBuffer64().unserialize(obj.signature);
+        return this;
     }
 }
 
 export class PendingPreKey implements IPodObject {
+
     preKeyId: number;
 
     signedKeyId: number;
@@ -133,11 +147,18 @@ export class PendingPreKey implements IPodObject {
     baseKey: KeyPair;
 
     toPod(): IndexedObject {
-        return {};
+        return {
+            preKeyId: this.preKeyId,
+            signedKeyId: this.signedKeyId,
+            baseKey: this.baseKey.toPod()
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.preKeyId = obj.preKeyId;
+        this.signedKeyId = obj.signedKeyId;
+        this.baseKey = new KeyPair().fromPod(obj.baseKey);
+        return this;
     }
 }
 
@@ -155,12 +176,17 @@ export class Device implements IPodObject {
         return {
             identityKey: this.identityKey.toPod(),
             preKey: this.preKey.toPod(),
-            signedPreKey: this.signedPreKey.toPod()
+            signedPreKey: this.signedPreKey.toPod(),
+            registrationId: this.registrationId
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.identityKey = new KeyPair().fromPod(obj.identityKey);
+        this.preKey = new PreKey().fromPod(obj.preKey);
+        this.signedPreKey = new SignedPreKey().fromPod(obj.signedPreKey);
+        this.registrationId = obj.registrationId;
+        return this;
     }
 }
 
@@ -177,30 +203,42 @@ export class Ratchet implements IPodObject {
 
     previousCounter: number;
 
-    oldRatchetList: Ratchet[] = [];
-
     toPod(): IndexedObject {
         return {
             ephemeralKeyPair: this.ephemeralKeyPair.toPod(),
             rootKey: this.rootKey.serialize(),
             lastRemoteEphemeralKey: this.lastRemoteEphemeralKey.toPod(),
-            previousCounter: this.previousCounter,
-            oldRatchetList: ArrayT.Convert(this.oldRatchetList, e => {
-                return e.toPod();
-            })
+            previousCounter: this.previousCounter
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.ephemeralKeyPair = new KeyPair().fromPod(obj.ephemeralKeyPair);
+        this.rootKey = new FixedBuffer32().unserialize(obj.rootKey);
+        this.lastRemoteEphemeralKey = new KeyPair().fromPod(obj.lastRemoteEphemeralKey);
+        this.previousCounter = obj.previousCounter;
+        return this;
     }
 }
 
-export class OldRatchet {
-    
+export class OldRatchet implements IPodObject {
+
     timeAdded: number;
 
     ephemeralKey: KeyPair;
+
+    toPod(): IndexedObject {
+        return {
+            timeAdded: this.timeAdded,
+            ephemeralKey: this.ephemeralKey.toPod()
+        };
+    }
+
+    fromPod(obj: IndexedObject): this {
+        this.timeAdded = obj.timeAdded;
+        this.ephemeralKey = new KeyPair().fromPod(obj.ephemeralKey);
+        return this;
+    }
 }
 
 export class RatchetChain implements IPodObject {
@@ -214,11 +252,28 @@ export class RatchetChain implements IPodObject {
     chainKey: FixedBuffer32;
 
     toPod(): IndexedObject {
-        return {};
+        let mks: IndexedObject = {};
+        this.messageKeys.forEach((v, k) => {
+            mks[k] = v.serialize();
+        });
+        return {
+            messageKeys: mks,
+            chainType: this.chainType,
+            chainCounter: this.chainCounter,
+            chainKey: this.chainKey.serialize()
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.messageKeys.clear();
+        for (let k in obj.messageKeys) {
+            let v = obj.messageKeys[k];
+            this.messageKeys.set(<any>k, new FixedBuffer32().unserialize(v));
+        }
+        this.chainType = obj.chainType;
+        this.chainCounter = obj.chainCounter;
+        this.chainKey = new FixedBuffer32().unserialize(obj.chainKey);
+        return this;
     }
 }
 
@@ -237,15 +292,25 @@ export class SessionIndexInfo implements IPodObject {
     baseKeyType: BaseKeyType;
 
     toPod(): IndexedObject {
-        return {};
+        return {
+            remoteIdentityKey: this.remoteIdentityKey.toPod(),
+            timeClosed: this.timeClosed,
+            baseKey: this.baseKey.toPod(),
+            baseKeyType: this.baseKeyType
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.remoteIdentityKey = new KeyPair().fromPod(obj.remoteIdentityKey);
+        this.timeClosed = obj.timeClosed;
+        this.baseKey = new KeyPair().fromPod(obj.baseKey);
+        this.baseKeyType = obj.baseKeyType;
+        return this;
     }
 }
 
 export class Session implements IPodObject {
+
     registrationId: number;
 
     currentRatchet: Ratchet;
@@ -259,20 +324,50 @@ export class Session implements IPodObject {
     oldRatchetList: OldRatchet[] = [];
 
     toPod(): IndexedObject {
-        return {};
+        let cs: IndexedObject = {};
+        this.chains.forEach((v, k) => {
+            cs[k] = v.toPod();
+        });
+
+        return {
+            registrationId: this.registrationId,
+            currentRatchet: this.currentRatchet.toPod(),
+            chains: cs,
+            indexInfo: this.indexInfo.toPod(),
+            pendingPreKey: this.pendingPreKey.toPod(),
+            oldRatchetList: ArrayT.Convert(this.oldRatchetList, e => {
+                return e.toPod();
+            })
+        };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        return false;
+    fromPod(obj: IndexedObject): this {
+        this.registrationId = obj.registrationId;
+        this.currentRatchet = new Ratchet().fromPod(obj.currentRatchet);
+
+        this.chains.clear();
+        for (let k in obj.chains) {
+            let v = obj.chains[k];
+            this.chains.set(<any>k, new RatchetChain().fromPod(v));
+        }
+
+        this.indexInfo = new SessionIndexInfo().fromPod(obj.indexInfo);
+        this.pendingPreKey = new PendingPreKey().fromPod(obj.pendingPreKey);
+        this.oldRatchetList = ArrayT.Convert(obj.oldRatchetList, e => {
+            return new OldRatchet().fromPod(e);
+        });
+        return this;
     }
 }
 
+// 加密成功后的信息
 export class EncryptedMessage {
     type: number;
     body: string;
     registrationId: number;
 }
 
+// 解密信息
 export class DecryptedMessage {
     plaintext: string;
     session: Session;

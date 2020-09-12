@@ -149,7 +149,7 @@ export type jsonobj = string | IndexedObject;
 export interface pair<K, V> {
     k: K,
     v: V
-};
+}
 
 export type tuple<A, B> = { 0: A, 1: B };
 export type tuple2<A, B> = { 0: A, 1: B };

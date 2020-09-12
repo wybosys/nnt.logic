@@ -1,4 +1,4 @@
-import {IndexedObject, toJson, toJsonObject, use} from "../../../core/kernel";
+import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
 import {KeyPair} from "./model";
 import {IPodObject} from "../../../core/object";
 import {FixedBuffer32} from "../../../core/buffer";
@@ -19,16 +19,17 @@ export abstract class Protocol implements IPodObject {
 
     abstract toPod(): IndexedObject;
 
-    abstract fromPod(obj: IndexedObject): boolean;
+    abstract fromPod(obj: IndexedObject): this;
 }
 
 export class WhisperMessage extends Protocol {
+
     ephemeralKey: KeyPair;
 
     counter: number;
 
     previousCounter: number;
-    
+
     ciphertext: Buffer;
 
     toPod(): IndexedObject {
@@ -40,18 +41,17 @@ export class WhisperMessage extends Protocol {
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
-        this.ephemeralKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.ephemeralKey);
-        });
+    fromPod(obj: IndexedObject): this {
+        this.ephemeralKey = new KeyPair().fromPod(obj.ephemeralKey);
         this.counter = obj.counter;
         this.previousCounter = obj.previousCounter;
         this.ciphertext = Buffer.from(obj.ciphertext, 'base64');
-        return true;
+        return this;
     }
 }
 
 export class PreKeyWhisperMessage extends Protocol {
+
     registrationId: number;
 
     preKeyId: number;
@@ -75,26 +75,27 @@ export class PreKeyWhisperMessage extends Protocol {
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
+    fromPod(obj: IndexedObject): this {
         this.registrationId = obj.registrationId;
         this.preKeyId = obj.preKeyId;
         this.signedPreKeyId = obj.signedPreKeyId;
-        this.baseKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.baseKey);
-        });
-        this.identityKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.identityKey);
-        });
+        this.baseKey = new KeyPair().fromPod(obj.baseKey);
+        this.identityKey = new KeyPair().fromPod(obj.identityKey);
         this.message = Buffer.from(obj.message, 'base64');
-        return true;
+        return this;
     }
 }
 
 export class KeyExchangeMessage extends Protocol {
+
     id: number;
+
     baseKey: KeyPair;
+
     ephemeralKey: KeyPair;
+
     identityKey: KeyPair;
+
     baseKeySignature: FixedBuffer32;
 
     toPod(): IndexedObject {
@@ -107,21 +108,13 @@ export class KeyExchangeMessage extends Protocol {
         };
     }
 
-    fromPod(obj: IndexedObject): boolean {
+    fromPod(obj: IndexedObject): this {
         this.id = obj.id;
-        this.baseKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.baseKey);
-        });
-        this.ephemeralKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.ephemeralKey);
-        });
-        this.identityKey = use(new KeyPair(), kp => {
-            kp.fromPod(obj.identityKey);
-        });
-        this.baseKeySignature = use(new FixedBuffer32(), buf => {
-            buf.unserialize(obj.baseKeySignature);
-        });
-        return true;
+        this.baseKey = new KeyPair().fromPod(obj.baseKey);
+        this.ephemeralKey = new KeyPair().fromPod(obj.ephemeralKey);
+        this.identityKey = new KeyPair().fromPod(obj.identityKey);
+        this.baseKeySignature = new FixedBuffer32().unserialize(obj.baseKeySignature);
+        return this;
     }
 }
 

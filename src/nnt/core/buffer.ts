@@ -83,9 +83,9 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return this._buf.toString('base64');
     }
 
-    unserialize(str: string): boolean {
+    unserialize(str: string): this {
         let buf = Buffer.from(str, 'base64');
-        return this.reset(buf);
+        return this.reset(buf) ? this : null;
     }
 }
 

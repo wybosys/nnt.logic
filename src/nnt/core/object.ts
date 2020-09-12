@@ -46,8 +46,8 @@ export interface ISerializableObject {
     // 序列化
     serialize(): string;
 
-    // 反序列化
-    unserialize(str: string): boolean;
+    // 反序列化，序列化成功返回自身，不成功返回null
+    unserialize(str: string): this;
 }
 
 // POD简单化对象接口
@@ -56,8 +56,8 @@ export interface IPodObject {
     // 转换为pod对象
     toPod(): IndexedObject;
 
-    // 从pod对象转回
-    fromPod(obj: IndexedObject): boolean;
+    // 从pod对象转回, 成功返回this，失败返回null
+    fromPod(obj: IndexedObject): this;
 }
 
 // 带信号的对象接口
@@ -357,33 +357,33 @@ export class Variant implements ISerializableObject {
         return toJson(s);
     }
 
-    unserialize(str: string): boolean {
+    unserialize(str: string): this {
         let obj: any = toJsonObject(str);
         if (!obj)
-            return false;
+            return null;
         if (obj._i != "vo") {
             switch (typeof obj) {
                 case "number": {
                     this._type = VariantType.NUMBER;
                     this._num = obj;
-                    return true;
+                    return this;
                 }
                 case "string": {
                     this._type = VariantType.STRING;
                     this._str = obj;
-                    return true;
+                    return this;
                 }
                 case "boolean": {
                     this._type = VariantType.BOOLEAN;
                     this._bol = obj;
-                    return true;
+                    return this;
                 }
             }
-            return false;
+            return null;
         }
         this._type = obj._t;
         this.value = obj._d;
-        return true;
+        return this;
     }
 }
 
