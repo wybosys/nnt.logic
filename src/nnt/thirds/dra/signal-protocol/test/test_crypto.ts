@@ -1,15 +1,16 @@
-import {Crypto} from "./crypto";
-import assert = require("assert");
+import {Crypto} from "../crypto";
+import assert = require('assert');
 
 function test_aes() {
     let key = '123456789abcdefg';
     let raw = '123abc一二三123abc一二三123abc一二三123abc一二三';
     let iv = '123456789abcdefg';
     let a = Crypto.Encrypt(key, Buffer.from(raw), iv);
-    console.log(a.toString('hex'));
-    console.log(a.toString('base64'));
+    //console.log(a.toString('hex'));
+    //console.log(a.toString('base64'));
     let b = Crypto.Decrypt(key, a, iv);
-    console.log(b.toString('utf8') == raw);
+    //console.log(b.toString('utf8') == raw);
+    assert(b.toString('utf8') == raw, "aes 加解密失败");
 }
 
 function test_digest() {
@@ -20,10 +21,10 @@ function test_digest() {
 
     tgt = '210e229ca46aeff622d08f03743bcb304c585cfcbfba7ddb6a3703d920fa22876205f706acb237a4462f09ecc0374992862dedce5e065c51645c427502d7c16e';
     r = Crypto.Hash(raw).toString('hex');
-    assert(r == tgt);
+    assert(r == tgt, "hash测试失败");
 }
 
-async function test_ecc() {
+function test_ecc() {
     let buf = Buffer.alloc(32, 0xff);
     console.log(buf);
 
@@ -38,28 +39,21 @@ async function test_ecc() {
     let yy = raw.toString();
 
     let kp = Crypto.CreateKeyPair();
-    console.log(kp);
-
+    //console.log(kp);
     let sec = Crypto.ECDHE(kp, kp);
-    console.log(sec);
+    //console.log(sec);
 
     let sig = Crypto.Ed25519Sign(kp, raw);
     let b = Crypto.Ed25519Verify(kp, raw, sig);
     // b = Crypto.Ed25519Verify(kp.pubKeyX, raw, sig);
+    assert(b, "Ed25519签名验证失败");
 
-    let c = String.fromCharCode((3 << 4) | 3);
-    let res = String.fromCharCode((3 << 4) | 3) + raw.toString();
-    console.log(res);
+    //let c = String.fromCharCode((3 << 4) | 3);
+    //let res = String.fromCharCode((3 << 4) | 3) + raw.toString();
+    //console.log(res);
 }
 
-async function test_message() {
-
-}
-
-export async function test_signal_protocol() {
-    await Crypto.Test();
-    await test_aes();
-    await test_digest();
-    await test_ecc();
-    await test_message();
+export function test_crypto() {
+    test_aes();
+    test_digest();
 }
