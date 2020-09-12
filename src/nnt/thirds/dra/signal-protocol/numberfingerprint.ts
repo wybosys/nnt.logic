@@ -1,9 +1,10 @@
 import {Crypto} from "./crypto";
+import {X25519Key} from "./model";
 
 let VERSION = 0;
 
-function IterateHash(data: Uint8Array, key: Uint8Array, count: number): Uint8Array {
-    data = Buffer.concat([data, key]);
+function IterateHash(data: Uint8Array, key: X25519Key, count: number): Uint8Array {
+    data = Buffer.concat([data, key.buffer]);
     let result = Crypto.Hash(data);
     if (--count == 0) {
         return result;
@@ -30,9 +31,9 @@ function GetEncodedChunk(hash: Uint8Array, offset: number): string {
     return s;
 }
 
-function GetDisplayStringFor(identifier: Uint8Array, key: Uint8Array, iterations: number): string {
+function GetDisplayStringFor(identifier: string, key: X25519Key, iterations: number): string {
     let bytes = Buffer.concat([
-        ShortToArrayBuffer(VERSION), key, identifier
+        ShortToArrayBuffer(VERSION), key.buffer, Buffer.from(identifier)
     ]);
     let output = IterateHash(bytes, key, iterations);
     return GetEncodedChunk(output, 0) +
@@ -51,8 +52,8 @@ export class FingerprintGenerator {
 
     private _iterations: number;
 
-    createFor(localIdentifier: Uint8Array, localIdentityKey: Uint8Array,
-              remoteIdentifier: Uint8Array, remoteIdentityKey: Uint8Array): string {
+    createFor(localIdentifier: string, localIdentityKey: X25519Key,
+              remoteIdentifier: string, remoteIdentityKey: X25519Key): string {
         let fingerprints = [
             GetDisplayStringFor(localIdentifier, localIdentityKey, this._iterations),
             GetDisplayStringFor(remoteIdentifier, remoteIdentityKey, this._iterations)
