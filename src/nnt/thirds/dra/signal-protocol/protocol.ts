@@ -129,12 +129,14 @@ export class PushMessage extends Protocol {
 
     toPod(): IndexedObject {
         return {
-            flag: this.flag
+            flag: this.flag,
+            body: this.body.toString('base64')
         };
     }
 
     fromPod(obj: IndexedObject): this {
         this.flag = obj.flag;
+        this.body = Buffer.from(obj.body, 'base64');
         return this;
     }
 }
