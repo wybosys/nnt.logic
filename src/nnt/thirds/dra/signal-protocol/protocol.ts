@@ -9,12 +9,12 @@ export abstract class Protocol implements IPodObject {
         return Buffer.from(toJson(this.toPod()), 'utf8');
     }
 
-    serialin = (data: Buffer): boolean => {
+    serialin = (data: Buffer): this => {
         let o = toJsonObject(data.toString('utf8'));
         if (!o)
-            return false;
+            return null;
         this.fromPod(o);
-        return true;
+        return this;
     }
 
     abstract toPod(): IndexedObject;
@@ -118,3 +118,23 @@ export class KeyExchangeMessage extends Protocol {
     }
 }
 
+export enum PushMessageFlag {
+    END_SESSION = 1
+}
+
+export class PushMessage extends Protocol {
+
+    flag: PushMessageFlag;
+    body: Buffer;
+
+    toPod(): IndexedObject {
+        return {
+            flag: this.flag
+        };
+    }
+
+    fromPod(obj: IndexedObject): this {
+        this.flag = obj.flag;
+        return this;
+    }
+}

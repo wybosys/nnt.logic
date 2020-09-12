@@ -44,14 +44,14 @@ async function TestSessionBuilder() {
             let ciphertext = await aliceSessionCipher.encrypt(originalMessage);
             assert(ciphertext.type == 3); // PREKEY_BUNDLE
             let plaintext = await bobSessionCipher.decryptPreKeyWhisperMessage(ciphertext.body);
-            assert(plaintext.plaintext == originalMessage.toString());
+            assert(plaintext.plaintext.compare(originalMessage) == 0);
         }
 
         // the session can decrypt
         {
             let ciphertext = await bobSessionCipher.encrypt(originalMessage);
             let plaintext = await aliceSessionCipher.decryptWhisperMessage(ciphertext.body);
-            assert(plaintext.plaintext == originalMessage.toString());
+            assert(plaintext.plaintext.compare(originalMessage) == 0);
         }
 
         // accepts a new preKey with the same identity'
@@ -115,14 +115,14 @@ async function TestSessionBuilder() {
             let ciphertext = await aliceSessionCipher.encrypt(originalMessage);
             assert(ciphertext.type == 3); // PREKEY_BUNDLE
             let plaintext = await bobSessionCipher.decryptPreKeyWhisperMessage(ciphertext.body);
-            assert(plaintext.plaintext == originalMessage.toString());
+            assert(plaintext.plaintext.compare(originalMessage) == 0);
         }
 
         // the session can decrypt
         {
             let ciphertext = await bobSessionCipher.encrypt(originalMessage);
             let plaintext = await aliceSessionCipher.decryptWhisperMessage(ciphertext.body);
-            assert(plaintext.plaintext == originalMessage.toString());
+            assert(plaintext.plaintext.compare(originalMessage) == 0);
         }
 
         // accepts a new preKey with the same identity

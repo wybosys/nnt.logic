@@ -13,6 +13,11 @@ export enum ChainType {
     RECEIVING = 2
 }
 
+export enum MessageType {
+    CIPHERTEXT = 1,
+    PREKEY_BUNDLE = 2,
+}
+
 export class ErrorExt extends Error {
 
     constructor(e: any) {
@@ -373,6 +378,6 @@ export class EncryptedMessage {
 
 // 解密信息
 export class DecryptedMessage {
-    plaintext: string;
+    plaintext: Buffer;
     session: Session;
 }

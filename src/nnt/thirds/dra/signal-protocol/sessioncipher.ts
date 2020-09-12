@@ -251,7 +251,7 @@ export class SessionCipher {
 
         let r = new DecryptedMessage();
         r.session = session;
-        r.plaintext = Crypto.Decrypt(keys[0].buffer, message.ciphertext, keys[2].slice(0, 16)).toString('utf8');
+        r.plaintext = Crypto.Decrypt(keys[0].buffer, message.ciphertext, keys[2].slice(0, 16));
         session.pendingPreKey = null;
         return r;
     }
@@ -347,8 +347,8 @@ export class SessionCipher {
         return openSession.registrationId;
     }
 
-    async hasOpenSession(): Promise<boolean> {
-        let record = await this.getRecord(this._remoteAddress.toString());
+    async hasOpenSession(identifier?: string): Promise<boolean> {
+        let record = await this.getRecord(identifier ? identifier : this._remoteAddress.toString());
         if (!record) {
             return false;
         }
