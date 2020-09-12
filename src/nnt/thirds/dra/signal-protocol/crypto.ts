@@ -1,7 +1,7 @@
 import crypto = require("crypto");
 import nacl = require("tweetnacl");
 import {BinaryLike} from "crypto";
-import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair} from "./model";
+import {Ed25519PrivateKey, Ed25519PublicKey, KeyPair, X25519Key} from "./model";
 import {FixedBuffer32, FixedBuffer64} from "../../../core/buffer";
 
 export class Crypto {
@@ -40,26 +40,30 @@ export class Crypto {
         return res.digest();
     }
 
-    static HKDF(input: BinaryLike, salt: FixedBuffer32, info: Buffer): FixedBuffer32[] {
+    static HKDF(input: BinaryLike, salt: BinaryLike, info: Buffer): FixedBuffer32[] {
         // Specific implementation of RFC 5869 that only returns the first 3 32-byte chunks
         // XTODO: We dont always need the third chunk, we might skip it
-        let PRK = Crypto.Sign(salt.buffer, input);
-        let infoBuffer = new Uint8Array(32 + info.byteLength + 1);
-        let infoArray = new Uint8Array(infoBuffer);
+        let PRK = Crypto.Sign(salt, input);
+        let infoArray = new Uint8Array(32 + info.byteLength + 1);
         infoArray.set(new Uint8Array(info), 32);
         infoArray[infoArray.length - 1] = 1;
-        let T1 = Crypto.Sign(PRK.buffer, infoBuffer.slice(32));
+        let T1 = Crypto.Sign(PRK.buffer, infoArray.slice(32));
         infoArray.set(T1.buffer);
         infoArray[infoArray.length - 1] = 2;
-        let T2 = Crypto.Sign(PRK.buffer, infoBuffer);
+        let T2 = Crypto.Sign(PRK.buffer, infoArray);
         infoArray.set(T2.buffer);
         infoArray[infoArray.length - 1] = 3;
-        let T3 = Crypto.Sign(PRK.buffer, infoBuffer);
+        let T3 = Crypto.Sign(PRK.buffer, infoArray);
         return [T1, T2, T3];
     }
 
-    static CreateKeyPair(): KeyPair {
-        let kp = nacl.sign.keyPair();
+    static CreateKeyPair(privkey?: FixedBuffer64): KeyPair {
+        let kp: nacl.SignKeyPair;
+        if (privkey) {
+            kp = nacl.sign.keyPair.fromSecretKey(privkey.buffer);
+        } else {
+            kp = nacl.sign.keyPair();
+        }
 
         let r = new KeyPair();
         r.pubKeyEd = new Ed25519PublicKey(kp.publicKey);
@@ -67,6 +71,20 @@ export class Crypto {
         r.pubKeyX = r.pubKeyEd.toX();
         r.privKeyX = r.privKeyEd.toX();
 
+        return r;
+    }
+
+    static CreateKeyPairX25519(privkey?: FixedBuffer32): KeyPair {
+        let kp: nacl.BoxKeyPair;
+        if (privkey) {
+            kp = nacl.box.keyPair.fromSecretKey(privkey.buffer);
+        } else {
+            kp = nacl.box.keyPair();
+        }
+
+        let r = new KeyPair();
+        r.pubKeyX = new X25519Key(kp.publicKey);
+        r.privKeyX = new X25519Key(kp.secretKey);
         return r;
     }
 

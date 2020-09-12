@@ -57,7 +57,7 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return this._buf.byteOffset;
     }
 
-    get buffer(): Uint8Array {
+    get buffer(): Buffer {
         return this._buf;
     }
 

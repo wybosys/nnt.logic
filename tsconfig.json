@@ -7,7 +7,6 @@
     "removeComments": true,
     "experimentalDecorators": true,
     "noImplicitAny": true,
-    "noImplicitUseStrict": true,
     "noImplicitReturns": true,
     "alwaysStrict": true,
     "moduleResolution": "node"

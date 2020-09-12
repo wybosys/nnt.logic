@@ -15,7 +15,6 @@ import {
     SessionIndexInfo
 } from "./model";
 import {Crypto} from "./crypto";
-import {FixedBuffer32} from "../../../core/buffer";
 import {use} from "../../../core/kernel";
 import {PreKeyWhisperMessage} from "./protocol";
 
@@ -184,7 +183,7 @@ export class SessionBuilder {
             sharedSecret.set(ecRes4.buffer, 32 * 4);
         }
 
-        let masterKey = Crypto.HKDF(sharedSecret, new FixedBuffer32(), Buffer.from("WhisperText"));
+        let masterKey = Crypto.HKDF(sharedSecret, Buffer.alloc(32), Buffer.from("WhisperText"));
 
         let session = new Session();
         session.registrationId = registrationId;
@@ -220,7 +219,7 @@ export class SessionBuilder {
 
         let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair);
 
-        let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
+        let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey.buffer, Buffer.from("WhisperRatchet"));
 
         let rc = new RatchetChain();
         rc.chainType = ChainType.SENDING;

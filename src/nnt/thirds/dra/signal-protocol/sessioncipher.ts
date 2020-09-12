@@ -2,7 +2,6 @@ import {SessionStorage} from "./sessionstorage";
 import {SessionRecord} from "./sessionrecord";
 import {PreKeyWhisperMessage, WhisperMessage} from "./protocol";
 import {Crypto} from "./crypto";
-import {FixedBuffer32} from "../../../core/buffer";
 import {Address} from "./address";
 import {ChainType, DecryptedMessage, EncryptedMessage, KeyPair, OldRatchet, RatchetChain, Session} from "./model";
 import {SessionBuilder} from "./sessionbuilder";
@@ -53,7 +52,7 @@ export class SessionCipher {
 
         let keys = await Crypto.HKDF(
             chain.messageKeys.get(chain.chainCounter).buffer,
-            new FixedBuffer32(),
+            Buffer.alloc(32),
             Buffer.from("WhisperMessageKeys"));
 
         chain.messageKeys.delete(chain.chainCounter);
@@ -233,7 +232,7 @@ export class SessionCipher {
         }
         chain.messageKeys.delete(message.counter);
 
-        let keys = await Crypto.HKDF(messageKey.buffer, new FixedBuffer32(), Buffer.from("WhisperMessageKeys"));
+        let keys = await Crypto.HKDF(messageKey.buffer, Buffer.alloc(32), Buffer.from("WhisperMessageKeys"));
         let ourIdentityKey = await this._storage.getIdentityKeyPair();
 
         let macInput = new Buffer(messageProto.byteLength + 33 * 2 + 1);
@@ -315,7 +314,7 @@ export class SessionCipher {
     async calculateRatchet(session: Session, remoteKey: KeyPair, sending: boolean) {
         let ratchet = session.currentRatchet;
         let sharedSecret = Crypto.ECDHE(remoteKey, ratchet.ephemeralKeyPair);
-        let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey, Buffer.from("WhisperRatchet"));
+        let masterKey = Crypto.HKDF(sharedSecret.buffer, ratchet.rootKey.buffer, Buffer.from("WhisperRatchet"));
 
         let ephemeralPublicKey: KeyPair;
         if (sending) {
