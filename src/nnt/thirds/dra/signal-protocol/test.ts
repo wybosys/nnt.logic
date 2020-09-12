@@ -52,9 +52,14 @@ async function test_ecc() {
     console.log(res);
 }
 
+async function test_message() {
+
+}
+
 export async function test_signal_protocol() {
     await Crypto.Test();
     await test_aes();
     await test_digest();
     await test_ecc();
+    await test_message();
 }

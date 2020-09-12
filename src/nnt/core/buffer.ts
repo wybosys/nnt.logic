@@ -33,6 +33,14 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return true;
     }
 
+    compare(r: FixedBuffer<BYTELEN>): number {
+        return this._buf.compare(r._buf);
+    }
+
+    isEqual(r: FixedBuffer<BYTELEN>): boolean {
+        return this.compare(r) == 0;
+    }
+
     at(idx: number): number {
         return this._buf[idx];
     }

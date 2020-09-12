@@ -97,6 +97,10 @@ export class KeyPair implements IPodObject {
         this.pubKeyX = this.pubKeyEd.toX();
         return this;
     }
+
+    isEqual(r: KeyPair): boolean {
+        return this.pubKeyEd.isEqual(r.pubKeyEd);
+    }
 }
 
 export class PreKey extends KeyPair {
