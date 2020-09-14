@@ -1,5 +1,5 @@
 import {User} from "./user";
-import {SObject} from "../../nnt/core/object";
+import {SObject} from "../../nnt/core/sobject";
 import {logger} from "../../nnt/core/logger";
 
 export class Manager extends SObject {

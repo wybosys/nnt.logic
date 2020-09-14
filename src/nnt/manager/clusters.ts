@@ -1,6 +1,6 @@
 import cluster = require("cluster");
 import os = require("os");
-import {SObject} from "../core/object";
+import {SObject} from "../core/sobject";
 import {logger} from "../core/logger";
 import {Find, Get, Set} from "./dbmss";
 import {KvRedis} from "../store/kvredis";
@@ -51,8 +51,7 @@ export class Clusters {
             cluster.on('exit', (worker, code, signal) => {
                 console.log(`worker ${worker.process.pid} died`);
             });
-        }
-        else {
+        } else {
             proc();
             console.log(`Worker ${process.pid} started`);
         }
@@ -144,8 +143,7 @@ class _ClusterVotes extends SObject {
                     rcd.heartbeat = now;
                     rcd.heartbeats++;
                     Set(make_tuple(ClusterRecord, this.dbid), "master", rcd);
-                }
-                else {
+                } else {
                     // master 没有在 2 倍的 ttl 内响应，则代表超时
                     if (now - rcd.heartbeat > (ttl + ttl)) {
                         // 尝试自举一次，避免其他检查器同时自举

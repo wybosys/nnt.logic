@@ -2,7 +2,7 @@ import {Node} from "../config/config";
 import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
-import {ReusableObjects} from "../core/object";
+import {ReusableObjects} from "../core/reusable";
 import {Class, IndexedObject, KvObject} from "../core/kernel";
 import {static_cast} from "../core/core";
 import {Variant} from "../core/variant";

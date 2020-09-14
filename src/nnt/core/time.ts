@@ -1,7 +1,7 @@
 import {IndexedObject} from "./kernel";
 import {logger} from "./logger";
 import {colinteger} from "../store/proto";
-import {OidObject} from "./object";
+import {OidObject} from "./oid";
 
 export type DateTimeRange = {
     from: number, // 开始

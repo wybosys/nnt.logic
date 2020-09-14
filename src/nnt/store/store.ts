@@ -1,5 +1,5 @@
 import {Node} from "../config/config"
-import {ObjectExt} from "../core/object";
+import {ObjectExt} from "../core/sobject";
 
 export abstract class AbstractDbms extends ObjectExt {
     // 唯一标记

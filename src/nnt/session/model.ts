@@ -25,7 +25,7 @@ import {
 } from "../core/proto";
 import {AbstractParser} from "../server/parser/parser";
 import {STATUS} from "../core/models";
-import {SObject} from "../core/object";
+import {SObject} from "../core/sobject";
 import {kSignalEnd, kSignalFailed, kSignalStart, kSignalSucceed} from "../core/signals";
 
 export enum HttpMethod {

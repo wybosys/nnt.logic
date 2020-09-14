@@ -1,5 +1,5 @@
 import {Node} from "../config/config"
-import {ObjectExt} from "../core/object";
+import {ObjectExt} from "../core/sobject";
 import {AcEntity} from "../acl/acl";
 import {IndexedObject} from "../core/kernel";
 

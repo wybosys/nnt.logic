@@ -1,4 +1,4 @@
-import {ObjectExt} from "../core/object";
+import {ObjectExt} from "../core/sobject";
 import {Attribute, Node} from "../config/config";
 import {AppNodes} from "../config/app";
 import {SStatus} from "../core/models";

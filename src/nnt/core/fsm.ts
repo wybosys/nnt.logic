@@ -1,4 +1,4 @@
-import {SObject} from "./object";
+import {SObject} from "./sobject";
 import {IndexedObject} from "./kernel";
 import {CancelDelay, DateTime, Delay, DelayHandler, Interval} from "./time";
 import {logger} from "./logger";
@@ -64,8 +64,7 @@ export class Fsm extends SObject {
             if (ods && ods.hdl)
                 CancelDelay(ods.hdl); // 覆盖掉老的
             this.delaystates[state] = {time: delay, hdl: hdl};
-        }
-        else {
+        } else {
             this.doSetState(state);
         }
     }
@@ -141,8 +140,7 @@ export class Fsm extends SObject {
             });
             let os: Status = this.status[status];
             this.status[status] = {hdl: hdl};
-        }
-        else {
+        } else {
             this.status[status] = null;
         }
         this.signals.emit(kSignalStatusSet, status);
@@ -232,8 +230,7 @@ export abstract class DFsm extends SObject {
         if (delay) {
             fsm.delays.set(state, delay);
             this.onDelayChanged(fsm, state, delay, true);
-        }
-        else {
+        } else {
             this.doSetState(fsm, state);
         }
     }
@@ -269,8 +266,7 @@ export abstract class DFsm extends SObject {
         if (duration) {
             fsm.status.set(status, duration);
             this.onStatusChanged(fsm, status, duration, true);
-        }
-        else {
+        } else {
             fsm.status.set(status, null);
             this.onStatusChanged(fsm, status, null, true);
         }
@@ -366,8 +362,7 @@ export abstract class DFsm extends SObject {
             if (e.started) {
                 // 已经执行
                 this.elapse(e, 1);
-            }
-            else {
+            } else {
                 // 启动
                 e.started = DateTime.Now();
                 this.start(e);

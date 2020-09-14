@@ -1,6 +1,6 @@
 import {Base, ModelError} from "./model";
 import {logger} from "../core/logger";
-import {SObject} from "../core/object";
+import {SObject} from "../core/sobject";
 import {
     kSignalClose,
     kSignalConnected,

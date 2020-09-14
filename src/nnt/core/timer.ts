@@ -1,9 +1,10 @@
 /** 定时器 */
-import {dispose, SObject} from "./object";
+import {dispose} from "./object";
 import {logger} from "./logger";
 import {kSignalAction, kSignalDone, Slot} from "./signals";
 import {DateTime, Defer, Interval} from "./time";
 import {ArrayT} from "./arrayt";
+import {SObject} from "./sobject";
 
 export abstract class CTimer
     extends SObject {
