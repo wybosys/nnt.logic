@@ -1,6 +1,6 @@
 import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 import {ISerializableObject} from "./object";
-import {StringT} from "./kernel";
+import {ArrayT, StringT} from "./kernel";
 
 export type FixedBufferType = Buffer | Uint8Array;
 
@@ -181,4 +181,45 @@ export class FixedBuffer512 extends FixedBuffer<_512> {
     }
 
     private _512: _512;
+}
+
+export class Buffers implements ISerializableObject {
+
+    clear() {
+        this._arr.length = 0;
+    }
+
+    serialize(): string {
+        // count(32bits) + buffers[](size + buffer)
+        const count = this._arr.length;
+        const lbufs = ArrayT.Sum(this._arr, e => e.byteLength);
+        let fbuf = new Buffer(4 + 4 * count + lbufs);
+
+        // 填充数据
+        let offset = fbuf.writeInt32BE(count);
+        this._arr.forEach(e => {
+            offset += fbuf.writeInt32BE(e.byteLength, offset);
+            fbuf.set(e, offset);
+            offset += e.byteLength;
+        });
+
+        return fbuf.toString('base64');
+    }
+
+    unserialize(str: string): this {
+        let buf = Buffer.from(str, 'base64');
+        this._arr.length = 0;
+
+        let offset = 0;
+        const count = buf.readInt32BE(offset);
+        for (let i = 0; i < count; ++i) {
+            let size = buf.readInt32BE(offset);
+            let cur = buf.slice(offset, size);
+            this._arr.push(cur);
+        }
+
+        return this;
+    }
+
+    private _arr: Buffer[] = [];
 }
