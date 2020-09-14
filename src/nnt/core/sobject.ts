@@ -4,7 +4,12 @@ import {Signals} from "./signals";
 import {IsDebug} from "../manager/config";
 import {logger} from "./logger";
 import {Classname} from "./v8";
-import {IRefObject, ISObject} from "./object";
+import {IRefObject} from "./object";
+
+// 带信号的对象接口
+export interface ISObject {
+    signals: Signals;
+}
 
 export class SObject implements IRefObject, ISObject {
 

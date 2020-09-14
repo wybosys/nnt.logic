@@ -1,4 +1,3 @@
-import {Signals} from "./signals";
 import {IndexedObject} from "./kernel";
 
 // 增加引用计数
@@ -51,11 +50,6 @@ export interface IPodObject {
 
     // 从pod对象转回, 成功返回this，失败返回null
     fromPod(obj: IndexedObject): this;
-}
-
-// 带信号的对象接口
-export interface ISObject {
-    signals: Signals;
 }
 
 // 基Object的接口
