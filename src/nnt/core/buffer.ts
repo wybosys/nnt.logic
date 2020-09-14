@@ -185,8 +185,34 @@ export class FixedBuffer512 extends FixedBuffer<_512> {
 
 export class Buffers implements ISerializableObject {
 
-    clear() {
+    constructor(...bufs: Buffer[]) {
+        this._arr = bufs;
+    }
+
+    add(...bufs: Buffer[]): this {
+        if (bufs.length > 1) {
+            this._arr = this._arr.concat(bufs);
+        } else if (bufs.length == 1) {
+            this._arr.push(bufs[0]);
+        }
+        return this;
+    }
+
+    clear(): this {
         this._arr.length = 0;
+        return this;
+    }
+
+    get size(): number {
+        return this._arr.length;
+    }
+
+    at(idx: number): Buffer {
+        return this._arr[idx];
+    }
+
+    forEach(fn: (e: Buffer, idx?: number) => void) {
+        this._arr.forEach(fn);
     }
 
     serialize(): string {
@@ -198,7 +224,7 @@ export class Buffers implements ISerializableObject {
         // 填充数据
         let offset = fbuf.writeInt32BE(count);
         this._arr.forEach(e => {
-            offset += fbuf.writeInt32BE(e.byteLength, offset);
+            offset = fbuf.writeInt32BE(e.byteLength, offset);
             fbuf.set(e, offset);
             offset += e.byteLength;
         });
@@ -212,9 +238,12 @@ export class Buffers implements ISerializableObject {
 
         let offset = 0;
         const count = buf.readInt32BE(offset);
+        offset += 4;
         for (let i = 0; i < count; ++i) {
             let size = buf.readInt32BE(offset);
-            let cur = buf.slice(offset, size);
+            offset += 4;
+            let cur = buf.slice(offset, offset + size);
+            offset += size;
             this._arr.push(cur);
         }
 
