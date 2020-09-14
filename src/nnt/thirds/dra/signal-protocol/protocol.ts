@@ -1,7 +1,8 @@
-import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
+import {IndexedObject} from "../../../core/kernel";
 import {KeyPair} from "./model";
 import {IPodObject, ISerializableObject} from "../../../core/object";
 import {FixedBuffer32, StreamBuffer, TYPEBYTES} from "../../../core/buffer";
+import {toJson, toJsonObject} from "../../../core/json";
 
 export abstract class Protocol implements IPodObject {
 

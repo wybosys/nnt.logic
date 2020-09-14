@@ -3,6 +3,7 @@ import {logger} from "./logger";
 import {Classname} from "./v8";
 import {IsDebug} from "../manager/config";
 import {Class, IndexedObject} from "./kernel";
+import {ArrayT} from "./arrayt";
 
 // 带计数器的基Object
 export class OidObject {

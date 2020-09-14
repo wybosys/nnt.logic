@@ -2,7 +2,7 @@ import {IRouter} from "../core/router";
 import {logger} from "../core/logger";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
-import {MapT} from "../core/kernel";
+import {MapT} from "../core/mapt";
 import {Config} from "../manager/config";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "./devops/permissions";
 import {ModelError} from "../session/model";

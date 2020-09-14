@@ -1,5 +1,5 @@
 import {AbstractKv} from "./kv";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import {IndexedObject} from "../core/kernel";
 import {DbExecuteStat} from "./store";
 import {logger} from "../core/logger";

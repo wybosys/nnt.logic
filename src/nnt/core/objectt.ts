@@ -1,3 +1,5 @@
+import {COMPARERESULT, IndexedObject, KvObject, make_tuple2, tuple2} from "./kernel";
+
 export class ObjectT {
 
     // 任意对象的比较
@@ -223,7 +225,7 @@ export class ObjectT {
     }
 
     static QueryObjects<V>(m: KvObject<V>, proc: (v: V, k: string) => boolean): V[] {
-        let r = new Array();
+        let r = [];
         for (let k in m) {
             let v = m[k];
             if (proc(v, k))

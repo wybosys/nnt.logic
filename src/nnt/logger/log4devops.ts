@@ -1,7 +1,7 @@
 import {AbstractLogger} from "./logger";
 import {Node} from "../config/config";
 import {SStatus, STATUS} from "../core/models";
-import {toJson} from "../core/kernel";
+import {toJson} from "../core/json";
 import {DateTime} from "../core/time";
 import redis = require("redis");
 import os = require("os");

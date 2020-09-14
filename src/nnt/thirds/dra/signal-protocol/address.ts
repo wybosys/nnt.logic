@@ -1,4 +1,5 @@
-import {StringT, toInt} from "../../../core/kernel";
+import {toInt} from "../../../core/kernel";
+import {StringT} from "../../../core/stringt";
 
 export class Address {
 

@@ -2,7 +2,7 @@ import {AbstractServer} from "./server";
 import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import redis = require("redis");
 
 class RedisClient extends AbstractMQClient {

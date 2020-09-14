@@ -1,11 +1,11 @@
 import {AbstractKv} from "./kv";
-import level = require("level");
 import {logger} from "../core/logger";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import {DbExecuteStat} from "./store";
 import {Node} from "../config/config";
-import tmp = require("tmp");
 import {expand} from "../core/url";
+import level = require("level");
+import tmp = require("tmp");
 
 interface KvLevelNode {
 

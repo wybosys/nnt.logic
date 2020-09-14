@@ -1,8 +1,15 @@
 import sharp = require("sharp");
-import {sep} from "path";
 import {logger} from "../../core/logger";
-import {ArrayT} from "../../core/kernel";
+import {ArrayT} from "../../core/arrayt";
 import {FileInfo} from "../fileinfo";
+// 注册滤镜，必须放到最后面
+import {Gray} from "./gray";
+import {Scale} from "./scale";
+import {Resize} from "./resize";
+import {Quality} from "./quality";
+import {Blur} from "./blur";
+import {Gridscale} from "./gridscale";
+import {Roundlize} from "./roundlize";
 
 export type image_t = sharp.Sharp;
 
@@ -54,8 +61,7 @@ export class Filter {
         }, (output: image_t) => {
             if (!output) {
                 cb(new Error("转换图片失败"));
-            }
-            else {
+            } else {
                 output.toFile(info.output, (err, info) => {
                     if (err)
                         logger.warn(err.message);
@@ -82,15 +88,6 @@ let filters = new Map<string, ImageFilter>();
 export function RegisterImageFilter(obj: ImageFilter) {
     filters.set(obj.action, obj);
 }
-
-// 注册滤镜，必须放到最后面
-import {Gray} from "./gray";
-import {Scale} from "./scale";
-import {Resize} from "./resize";
-import {Quality} from "./quality";
-import {Blur} from "./blur";
-import {Gridscale} from "./gridscale";
-import {Roundlize} from "./roundlize";
 
 RegisterImageFilter(new Gray());
 RegisterImageFilter(new Scale());

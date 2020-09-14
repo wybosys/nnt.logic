@@ -1,7 +1,9 @@
-import {ArrayT, asString, Random, Range} from "../core/kernel";
+import {asString, Range} from "../core/kernel";
 import {logger} from "../core/logger";
 import {Sleep} from "../core/time";
 import {toJson, toJsonObject} from "../core/json";
+import {ArrayT} from "../core/arrayt";
+import {Random} from "../core/random";
 import tmp = require('tmp');
 import fs = require('fs');
 

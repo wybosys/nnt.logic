@@ -1,8 +1,10 @@
 import {Hook, STARTED} from "../../manager/app";
 import {Config} from "../../manager/config";
 import {KvRedis, RedisNode} from "../../store/kvredis";
-import {ArrayT, IndexedObject, toJsonObject} from "../../core/kernel";
+import {IndexedObject} from "../../core/kernel";
 import {logger} from "../../core/logger";
+import {toJsonObject} from "../../core/json";
+import {ArrayT} from "../../core/arrayt";
 import fs = require("fs");
 import mask = require("netmask");
 
@@ -46,8 +48,7 @@ class _Permissions {
             if (fs.existsSync('/work/run/permission.cfg')) {
                 let jsobj = toJsonObject(fs.readFileSync('/work/run/permission.cfg', "utf8"));
                 this._id = jsobj['id'];
-            }
-            else {
+            } else {
                 logger.warn("没有获取到permissionid");
             }
         }

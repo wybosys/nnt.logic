@@ -1,5 +1,5 @@
 import {WebSocketConnector} from "./socket";
-import {IndexedObject, toJsonObject} from "../core/kernel";
+import {IndexedObject} from "../core/kernel";
 import {logger} from "../core/logger";
 import {STATUS} from "../core/models";
 import {
@@ -18,6 +18,7 @@ import {AbstractSocketConnector, AbstractSocketSession} from "./session";
 import {App} from "../manager/app";
 import {ListenMode} from "../server/rest/listener";
 import {FindParser} from "../server/parser/parser";
+import {toJsonObject} from "../core/json";
 import WebSocket = require("ws");
 
 export class SocketConnector extends WebSocketConnector {

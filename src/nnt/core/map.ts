@@ -1,3 +1,5 @@
+import {ArrayT} from "./arrayt";
+
 // 一个key多个value
 export class Multimap<K, V> {
 

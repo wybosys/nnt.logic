@@ -1,6 +1,7 @@
 import {FixedBuffer32, FixedBuffer64, FixedBufferType} from "../../../core/buffer";
-import {ArrayT, IndexedObject} from "../../../core/kernel";
+import {IndexedObject} from "../../../core/kernel";
 import {IPodObject} from "../../../core/object";
+import {ArrayT} from "../../../core/arrayt";
 import ed2curve = require("ed2curve");
 
 export enum BaseKeyType {

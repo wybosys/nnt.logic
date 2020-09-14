@@ -2,13 +2,15 @@ import {Connector as BaseConnector, Socket, Transaction as BaseTransaction} from
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {GetObjectClassName} from "../core/core";
-import {ArrayT, IndexedObject, Multimap} from "../core/kernel";
+import {IndexedObject} from "../core/kernel";
 import {Acquire, IMQClient, MQClientOption} from "./mq";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import {Encode, Output} from "../core/proto";
 import {STATUS} from "../core/models";
 import {Parellel} from "../core/operation";
 import {UUID} from "../core/random";
+import {ArrayT} from "../core/arrayt";
+import {Multimap} from "../core/map";
 
 export interface IMPMessage {
 

@@ -2,9 +2,10 @@
 import watch = require("watch");
 import {AbstractServer} from "./server";
 import {Node} from "../config/config";
-import {ArrayT, Multimap} from "../core/kernel";
 import {expand} from "../core/url";
 import {logger} from "../core/logger";
+import {ArrayT} from "../core/arrayt";
+import {Multimap} from "../core/map";
 
 interface HotUpgradeNode extends Node {
 
@@ -38,8 +39,7 @@ export class HotUpgrade extends AbstractServer {
                     let mnm = require.resolve(f);
                     if (!require(mnm)) {
                         logger.warn("热更添加失败 {{=it.file}}", {file: mnm});
-                    }
-                    else {
+                    } else {
                         logger.info("热更添加 {{=it.file}}", {file: mnm});
                     }
                 });
@@ -59,8 +59,7 @@ export class HotUpgrade extends AbstractServer {
                     if (!nem) {
                         logger.warn("热更失败 {{=it.file}}", {file: mnm});
                         require.cache[mnm] = old;
-                    }
-                    else {
+                    } else {
                         this._olds.push(mnm, old.exports);
                         // 刷新所有的老定义
                         this._olds.get(mnm).forEach(oldexp => {

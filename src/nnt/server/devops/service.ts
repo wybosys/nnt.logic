@@ -1,7 +1,7 @@
 import {action, IRouter} from "../../core/router";
 import {Transaction} from "../transaction";
 import {array, output, string, string_t} from "../../core/proto";
-import {ObjectT} from "../../core/kernel";
+import {ObjectT} from "../../core/objectt";
 import {Config} from "../../manager/config";
 import {Permissions} from "./permissions";
 

@@ -1,4 +1,4 @@
-import {toJson, toJsonObject} from "../core/kernel";
+import {toJson, toJsonObject} from "../core/json";
 import {logger} from "../core/logger";
 import {kSignalClose, kSignalDataChanged, kSignalFailed, kSignalOpen} from "../core/signals";
 import {FromArrayBuffer} from "../core/string";

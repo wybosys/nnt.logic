@@ -1,6 +1,6 @@
 import {AbstractDbms, DbExecuteStat, IterateCursorProcess} from "./store";
 import {IndexedObject} from "../core/kernel";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import {ITransaction} from "../manager/dbms/transaction";
 import {Filter} from "./filter";
 

@@ -4,7 +4,8 @@ import {static_cast} from "../../core/core";
 import {logger} from "../../core/logger";
 import {Decode, input, integer, json, model, optional, output, string, type} from "../../core/proto";
 import {Call, Fetch} from "../../server/remote";
-import {ArrayT, IndexedObject} from "../../core/kernel";
+import {IndexedObject} from "../../core/kernel";
+import {ArrayT} from "../../core/arrayt";
 
 // yiyou小游戏平台
 

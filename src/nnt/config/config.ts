@@ -1,5 +1,5 @@
 import {Config} from "../manager/config";
-import {ArrayT} from "../core/kernel";
+import {ArrayT} from "../core/arrayt";
 
 export interface Node {
 

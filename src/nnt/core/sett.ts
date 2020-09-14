@@ -1,3 +1,5 @@
+import {IterateT} from "./iteratort";
+
 export class SetT {
 
     static ToArray<T>(arr: Set<T>): T[] {

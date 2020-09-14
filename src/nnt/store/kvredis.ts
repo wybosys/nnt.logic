@@ -4,7 +4,7 @@ import {logger} from "../core/logger";
 import {GetStoreInfo, TableSetting} from "./proto";
 import {IndexedObject, toInt} from "../core/kernel";
 import {DbExecuteStat} from "./store";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import redis = require("redis");
 
 export interface RedisNode extends Node {

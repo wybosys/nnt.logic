@@ -2,13 +2,16 @@ import {AbstractNosql, InnerIdType, NosqlCmdType, RecordObject} from "./kv";
 import {Node} from "../config/config";
 import {logger} from "../core/logger";
 import {DbExecuteStat, IterateCursorProcess} from "./store";
-import {ArrayT, indexed, IndexedObject, ObjectT, toJson} from "../core/kernel";
-import {Variant} from "../core/object";
+import {indexed, IndexedObject} from "../core/kernel";
+import {Variant} from "../core/variant";
 import {static_cast} from "../core/core";
 import {IsDebug} from "../manager/config";
 import {ITransaction, TransactionDef} from "../manager/dbms/transaction";
 import {Filter} from "./filter";
 import {UpdateOne} from "../manager/dbmss";
+import {ObjectT} from "../core/objectt";
+import {ArrayT} from "../core/arrayt";
+import {toJson} from "../core/json";
 import mongo = require("mongodb");
 
 let DEFAULT_PORT = 27017;

@@ -1,3 +1,7 @@
+import stmbuf = require("stream-buffers");
+import {logger} from "./logger";
+import * as fs from "fs";
+
 export class Stream {
 
     bindRead(stm: NodeJS.ReadableStream): this {

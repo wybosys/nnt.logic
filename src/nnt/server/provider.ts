@@ -1,16 +1,16 @@
 import {action, IRouter} from "../core/router";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
-import {StringT} from "../core/kernel";
+import {StringT} from "../core/stringt";
 import {Config} from "../manager/config";
 import {logger} from "../core/logger";
 import {RespFile} from "./file";
 import {expand} from "../core/url";
 import {Mime} from "../core/file";
+import {enumerate, enumm, input, model, string} from "../core/proto";
 import fs = require("fs");
 import mini = require("minify");
 import zlib = require("zlib");
-import {enumerate, enumm, input, model, string} from "../core/proto";
 
 // 返回的数据格式
 @model([enumm])
@@ -59,8 +59,7 @@ export class Provider implements IRouter {
                 trans.output(Mime.Type(".js"), RespFile.Regular(js));
             else
                 trans.output(Mime.Type(".txt"), RespFile.Regular(txt));
-        }
-        else {
+        } else {
             if (!fs.existsSync(pf.file)) {
                 logger.fatal("没有找到注册的provider文件 {{=it.file}}", {file: pf.file});
                 trans.status = STATUS.FILE_NOT_FOUND;

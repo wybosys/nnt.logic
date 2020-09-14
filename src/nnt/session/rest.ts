@@ -1,11 +1,14 @@
 import {ErrorCallBack, Session, SuccessCallback} from "./session";
 import {Base, HttpContentType, HttpMethod, ModelError, ResponseData} from "./model";
 import {logger} from "../core/logger";
-import {IndexedObject, ObjectT, toJson, toJsonObject, UploadedFileHandle} from "../core/kernel";
+import {IndexedObject} from "../core/kernel";
 import {AbstractParser, FindParser} from "../server/parser/parser";
 import {STATUS} from "../core/models";
 import {KEY_PERMISSIONID, KEY_SKIPPERMISSION, Permissions} from "../server/devops/permissions";
 import {Config} from "../manager/config";
+import {ObjectT} from "../core/objectt";
+import {UploadedFile} from "../core/uploadedfile";
+import {toJson, toJsonObject} from "../core/json";
 import xml = require("xmlbuilder");
 import xml2js = require("xml2js");
 import fs = require("fs");
@@ -28,7 +31,7 @@ export class Rest extends Session {
 
         // 从params里提取出文件
         let files = ObjectT.PopTuplesByFilter(params.fields, v => {
-            return v instanceof UploadedFileHandle;
+            return v instanceof UploadedFile;
         });
         if (files.length)
             m.method = HttpMethod.POST; // 含有文件的必须走post
@@ -129,7 +132,7 @@ export class Rest extends Session {
                         form[k] = v;
                     });
                     files.forEach(e => {
-                        let ufh: UploadedFileHandle = e[1];
+                        let ufh: UploadedFile = e[1];
                         form[e[0]] = {
                             value: fs.createReadStream(ufh.path),
                             options: {
@@ -153,7 +156,7 @@ export class Rest extends Session {
                         form[k] = v;
                     });
                     files.forEach(e => {
-                        let ufh: UploadedFileHandle = e[1];
+                        let ufh: UploadedFile = e[1];
                         form[e[0]] = {
                             value: fs.createReadStream(ufh.path),
                             options: {

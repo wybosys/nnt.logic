@@ -1,18 +1,9 @@
 // 数据库定义
-import {
-    AnyClass,
-    asString,
-    IndexedObject,
-    IntFloat,
-    KvObject,
-    ObjectT,
-    toDouble,
-    toInt,
-    toNumber,
-    ToObject
-} from "../core/kernel";
+import {AnyClass, asString, IndexedObject, KvObject, toDouble, toInt, toNumber, ToObject} from "../core/kernel";
 import {double_t, integer_t} from "../core/proto";
 import {MapNumber} from "../core/stl";
+import {ObjectT} from "../core/objectt";
+import {IntFloat} from "../core/intfloat";
 
 export const key = "key";
 export const subkey = "subkey";

@@ -1,6 +1,9 @@
 import {DateTime, Delay} from "./time";
-import {ArrayT, KvObject, ObjectT, SetT} from "./kernel";
+import {KvObject} from "./kernel";
 import {logger} from "./logger";
+import {ArrayT} from "./arrayt";
+import {SetT} from "./sett";
+import {ObjectT} from "./objectt";
 
 // 用于穿透整个emit流程的对象
 export class SlotTunnel {

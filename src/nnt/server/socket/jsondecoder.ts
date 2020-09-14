@@ -1,7 +1,8 @@
 import {DecoderMsgType, IDecoder} from "./decoder";
-import {IndexedObject, toJsonObject} from "../../core/kernel";
+import {IndexedObject} from "../../core/kernel";
 import {FindRender} from "../render/render";
 import {FindParser} from "../parser/parser";
+import {toJsonObject} from "../../core/json";
 
 export class JsonDecoder implements IDecoder {
 

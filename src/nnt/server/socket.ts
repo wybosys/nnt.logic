@@ -2,7 +2,7 @@ import {AbstractServer, IConsoleServer} from "./server"
 import {Node} from "../config/config"
 import {IRouterable, Routers} from "./routers";
 import {AcEntity} from "../acl/acl";
-import {IndexedObject, nonnull1st, ObjectT, toJson} from "../core/kernel";
+import {IndexedObject, nonnull1st} from "../core/kernel";
 import {Config} from "../manager/config";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
@@ -14,12 +14,14 @@ import {ConsoleOutput, ConsoleSubmit, Find} from "../manager/servers";
 import {RSocket} from "./socket/router";
 import {CancelDelay, Delay} from "../core/time";
 import {ListenMode} from "./rest/listener";
-import {Variant} from "../core/object";
+import {Variant} from "../core/variant";
 import {Output} from "../core/proto";
 import {IHttpServer} from "./apiserver";
 import {static_cast} from "../core/core";
 import {AbstractRender, FindRender} from "./render/render";
 import {FindParser} from "./parser/parser";
+import {ObjectT} from "../core/objectt";
+import {toJson} from "../core/json";
 import ws = require("ws");
 import http = require("http");
 import https = require("https");

@@ -1,6 +1,7 @@
 import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 import {ISerializableObject} from "./object";
-import {ArrayT, StringT} from "./kernel";
+import {StringT} from "./stringt";
+import {ArrayT} from "./arrayt";
 
 export type FixedBufferType = Buffer | Uint8Array;
 

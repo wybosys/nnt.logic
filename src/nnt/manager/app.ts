@@ -10,8 +10,9 @@ import {assets} from "./assets";
 import {expand, home, pathd, RegisterScheme} from "../core/url";
 import {logger} from "../core/logger";
 import {Config, IsDebug, IsDevops, IsDevopsDevelop, IsDevopsRelease, IsLocal} from "./config";
-import {ArrayT, toJsonObject} from "../core/kernel";
 import {unsafeUuid} from "../core/random";
+import {toJsonObject} from "../core/json";
+import {ArrayT} from "../core/arrayt";
 
 export class App {
 

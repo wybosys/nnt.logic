@@ -1,5 +1,7 @@
-import {ArrayT, IndexedObject, KvObject, toJson} from "../../../core/kernel";
+import {IndexedObject, KvObject} from "../../../core/kernel";
 import {BaseKeyType, KeyPair, Session} from "./model";
+import {toJson} from "../../../core/json";
+import {ArrayT} from "../../../core/arrayt";
 
 const ARCHIVED_STATES_MAX_LENGTH = 40;
 const OLD_RATCHETS_MAX_LENGTH = 10;

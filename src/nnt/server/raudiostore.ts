@@ -1,7 +1,7 @@
 import {action, IRouter} from "../core/router";
 import {enumerate, enumm, file, input, model, optional, output, string} from "../core/proto";
 import {expand} from "../core/url";
-import {Fs, IndexedObject, toInt} from "../core/kernel";
+import {IndexedObject, toInt} from "../core/kernel";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {Base64File, Mime} from "../core/file";
@@ -11,6 +11,7 @@ import {RespFile} from "./file";
 import {Config, IsDebug} from "../manager/config";
 import {IMediaStore} from "./imediastore";
 import {UUID} from "../core/random";
+import {Fs} from "../core/fs";
 import fs = require("fs");
 import Hashids = require("hashids");
 import req = require("request");

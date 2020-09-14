@@ -1,6 +1,5 @@
 import {IndexedObject} from "../../core/kernel";
 import ws = require("ws");
-import {AbstractRender} from "../render/render";
 
 export type DecoderMsgType = ws.Data;
 

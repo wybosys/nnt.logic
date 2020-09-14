@@ -1,6 +1,6 @@
 import fs = require("fs-extra");
 import {expand} from "./url";
-import {StringT} from "./kernel";
+import {StringT} from "./stringt";
 
 interface DevopsConfig {
     path: string;

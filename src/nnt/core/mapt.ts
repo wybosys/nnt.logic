@@ -1,3 +1,6 @@
+import {COMPARERESULT, IndexedObject, make_tuple, tuple} from "./kernel";
+import {ObjectT} from "./objectt";
+
 export class MapT {
 
     static Get<K, V>(m: Map<K, V>, k: K, def?: V): V {

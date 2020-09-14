@@ -1,5 +1,5 @@
 import qr = require("qr-image");
-import {Stream} from "../core/object";
+import {Stream} from "../core/stream";
 
 export enum QROutpuType {
     SVG = 1,

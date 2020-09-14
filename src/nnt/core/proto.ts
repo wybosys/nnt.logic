@@ -1,23 +1,14 @@
 // 协议数据定义
-import {
-    AnyClass,
-    ArrayT,
-    asString,
-    IndexedObject,
-    IntFloat,
-    Multimap,
-    ObjectT,
-    toBoolean,
-    toDouble,
-    toInt,
-    toJsonObject,
-    toNumber,
-    ToObject,
-    UploadedFileHandle
-} from "./kernel";
+import {AnyClass, asString, IndexedObject, toBoolean, toDouble, toInt, toNumber, ToObject} from "./kernel";
 import {Config} from "../manager/config";
 import {logger} from "./logger";
 import {Filter} from "../store/filter";
+import {UploadedFile} from "./uploadedfile";
+import {ObjectT} from "./objectt";
+import {toJsonObject} from "./json";
+import {Multimap} from "./map";
+import {ArrayT} from "./arrayt";
+import {IntFloat} from "./intfloat";
 
 export interface IUpdatable {
     updateData(): void;
@@ -60,7 +51,7 @@ export const number_t = "number";
 export const boolean_t = "boolean";
 
 // 文件类型
-export type FileType = UploadedFileHandle | string;
+export type FileType = UploadedFile | string;
 
 export interface ModelOption {
 

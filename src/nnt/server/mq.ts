@@ -1,8 +1,8 @@
 import {Find} from "../manager/servers";
 import {static_cast} from "../core/core";
 import {logger} from "../core/logger";
-import {LayerMap} from "../core/kernel";
-import {Variant} from "../core/object";
+import {LayerMap} from "../core/map";
+import {Variant} from "../core/variant";
 
 export interface MQClientOption {
 

@@ -1,3 +1,7 @@
+import {ISerializableString} from "./object";
+import {IndexedObject} from "./kernel";
+import {toJson, toJsonObject} from "./json";
+
 export enum VariantType {
     UNKNOWN = 0,
     BUFFER = 1,

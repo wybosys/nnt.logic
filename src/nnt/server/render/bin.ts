@@ -2,9 +2,11 @@ import {AbstractRender} from "./render";
 import {Mime} from "../../core/file";
 import {Transaction, TransactionSubmitOption} from "../transaction";
 import {BytesBuilder} from "../../core/bytes";
-import {asString, IndexedObject, Multimap, numstr, toJson, toNumber} from "../../core/kernel";
+import {asString, IndexedObject} from "../../core/kernel";
 import {boolean_t, double_t, FieldOption, FP_KEY, integer_t, string_t} from "../../core/proto";
 import {logger} from "../../core/logger";
+import {toJson} from "../../core/json";
+import {Multimap} from "../../core/map";
 
 export class Bin extends AbstractRender {
 
@@ -22,8 +24,7 @@ export class Bin extends AbstractRender {
 
             this.writeHeader(trans, bytes);
             Bin.WriteModel(trans.model, bytes);
-        }
-        else {
+        } else {
             this.writeHeader(trans, bytes);
             Bin.WriteModel(trans.model, bytes);
         }
@@ -75,27 +76,23 @@ export class Bin extends AbstractRender {
                             ref.forEach(e => {
                                 Bin.WriteString(e, bytes);
                             });
-                        }
-                        else if (fp.valtype == integer_t) {
+                        } else if (fp.valtype == integer_t) {
                             const ref: number[] = val;
                             ref.forEach(e => {
                                 bytes.addInt32(e);
                             });
-                        }
-                        else if (fp.valtype == double_t) {
+                        } else if (fp.valtype == double_t) {
                             const ref: number[] = val;
                             ref.forEach(e => {
                                 bytes.addDouble(e);
                             });
-                        }
-                        else if (fp.valtype == boolean_t) {
+                        } else if (fp.valtype == boolean_t) {
                             const ref: boolean[] = val;
                             ref.forEach(e => {
                                 bytes.addInt8(e ? 1 : 0);
                             });
                         }
-                    }
-                    else {
+                    } else {
                         const ref: any[] = val;
                         ref.forEach(e => {
                             Bin.WriteModel(e, bytes);
@@ -103,8 +100,7 @@ export class Bin extends AbstractRender {
                     }
                     // 回写真实尺寸
                     bytes.setUInt32(bytes.offset - pos, pos);
-                }
-                else if (fp.map) {
+                } else if (fp.map) {
                     const ref: Map<any, any> = val;
                     let pos = bytes.offset;
                     bytes.addUInt32(0);
@@ -112,38 +108,30 @@ export class Bin extends AbstractRender {
                         // 输出key
                         if (fp.keytype == string_t) {
                             Bin.WriteString(k, bytes);
-                        }
-                        else if (fp.keytype == integer_t) {
+                        } else if (fp.keytype == integer_t) {
                             bytes.addInt32(k);
-                        }
-                        else if (fp.keytype == double_t) {
+                        } else if (fp.keytype == double_t) {
                             bytes.addDouble(k);
-                        }
-                        else {
+                        } else {
                             logger.fatal("遇到不支持的key类型");
                         }
                         // 输出val
                         if (typeof fp.valtype == "string") {
                             if (fp.valtype == string_t) {
                                 Bin.WriteString(v, bytes);
-                            }
-                            else if (fp.valtype == integer_t) {
+                            } else if (fp.valtype == integer_t) {
                                 bytes.addInt32(v);
-                            }
-                            else if (fp.valtype == double_t) {
+                            } else if (fp.valtype == double_t) {
                                 bytes.addDouble(v);
-                            }
-                            else if (fp.valtype == boolean_t) {
+                            } else if (fp.valtype == boolean_t) {
                                 bytes.addInt8(v ? 1 : 0);
                             }
-                        }
-                        else {
+                        } else {
                             Bin.WriteModel(v, bytes);
                         }
                     });
                     bytes.setUInt32(bytes.offset - pos, pos);
-                }
-                else if (fp.multimap) {
+                } else if (fp.multimap) {
                     const ref: Multimap<any, any> = val;
                     let pos = bytes.offset;
                     bytes.addUInt32(0);
@@ -151,14 +139,11 @@ export class Bin extends AbstractRender {
                         // 输出key
                         if (fp.keytype == string_t) {
                             Bin.WriteString(k, bytes);
-                        }
-                        else if (fp.keytype == integer_t) {
+                        } else if (fp.keytype == integer_t) {
                             bytes.addInt32(k);
-                        }
-                        else if (fp.keytype == double_t) {
+                        } else if (fp.keytype == double_t) {
                             bytes.addDouble(k);
-                        }
-                        else {
+                        } else {
                             logger.fatal("遇到不支持的key类型");
                         }
                         // 输出val
@@ -168,59 +153,46 @@ export class Bin extends AbstractRender {
                                 ref.forEach(e => {
                                     Bin.WriteString(e, bytes);
                                 });
-                            }
-                            else if (fp.valtype == integer_t) {
+                            } else if (fp.valtype == integer_t) {
                                 const ref: number[] = v;
                                 ref.forEach(e => {
                                     bytes.addInt32(e);
                                 });
-                            }
-                            else if (fp.valtype == double_t) {
+                            } else if (fp.valtype == double_t) {
                                 const ref: number[] = v;
                                 ref.forEach(e => {
                                     bytes.addDouble(e);
                                 });
-                            }
-                            else if (fp.valtype == boolean_t) {
+                            } else if (fp.valtype == boolean_t) {
                                 const ref: boolean[] = v;
                                 ref.forEach(e => {
                                     bytes.addInt8(e ? 1 : 0);
                                 });
                             }
-                        }
-                        else {
+                        } else {
                             Bin.WriteModel(v, bytes);
                         }
                     });
                     bytes.setUInt32(bytes.offset - pos, pos);
-                }
-                else if (fp.enum) {
+                } else if (fp.enum) {
                     bytes.addInt32(val);
-                }
-                else {
+                } else {
                     Bin.WriteModel(val, bytes);
                 }
-            }
-            else {
+            } else {
                 if (fp.string) {
                     Bin.WriteString(val, bytes);
-                }
-                else if (fp.integer) {
+                } else if (fp.integer) {
                     bytes.addInt32(val);
-                }
-                else if (fp.double) {
+                } else if (fp.double) {
                     bytes.addDouble(val);
-                }
-                else if (fp.boolean) {
+                } else if (fp.boolean) {
                     bytes.addInt8(val ? 1 : 0);
-                }
-                else if (fp.enum) {
+                } else if (fp.enum) {
                     bytes.addInt32(val);
-                }
-                else if (fp.json) {
+                } else if (fp.json) {
                     Bin.WriteString(toJson(val), bytes);
-                }
-                else {
+                } else {
                     Bin.WriteModel(val, bytes);
                 }
             }

@@ -1,5 +1,5 @@
 import {enumerate, enumm, input, model, output, string} from "../../core/proto";
-import {SetT} from "../../core/kernel";
+import {SetT} from "../../core/sett";
 import {SvgConvertor} from "./svgcvt";
 import {FileInfo} from "../fileinfo";
 import {Config} from "../../manager/config";

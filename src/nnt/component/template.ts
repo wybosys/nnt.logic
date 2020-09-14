@@ -1,4 +1,5 @@
-import {IndexedObject, ObjectT} from "../core/kernel";
+import {IndexedObject} from "../core/kernel";
+import {ObjectT} from "../core/objectt";
 
 let RE_PARAMETER = /\{\{([a-zA-Z0-9_.]+)\}\}/g;
 

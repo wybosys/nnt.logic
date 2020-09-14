@@ -1,6 +1,6 @@
 import Hashids = require("hashids");
 import {DateTime, Interval} from "../core/time";
-import {StringT} from "../core/kernel";
+import {StringT} from "../core/stringt";
 
 export class IdHash {
 

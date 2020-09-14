@@ -1,10 +1,11 @@
-import {ArrayT, asString} from "../core/kernel";
+import {asString} from "../core/kernel";
 import {UpcaseFirst} from "../core/string";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
 import {Parellel} from "../core/operation";
 import {static_cast} from "../core/core";
 import {toJson, toJsonObject} from "../core/json";
+import {ArrayT} from "../core/arrayt";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 import xlsx = require("xlsx");

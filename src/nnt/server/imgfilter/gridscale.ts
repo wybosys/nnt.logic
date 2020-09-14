@@ -1,7 +1,8 @@
 import {Filter, image_t, ImageFilter} from "./filter";
-import {ArrayT, toNumber} from "../../core/kernel";
+import {toNumber} from "../../core/kernel";
 import {FileInfo} from "../fileinfo";
 import {logger} from "../../core/logger";
+import {ArrayT} from "../../core/arrayt";
 import fs = require("fs");
 import sharp = require("sharp");
 

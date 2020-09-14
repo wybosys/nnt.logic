@@ -1,5 +1,5 @@
 import {logger} from "../core/logger";
-import {LayerMap} from "../core/kernel";
+import {LayerMap} from "../core/map";
 import {Node} from "../config/config";
 
 export interface ITemplate {

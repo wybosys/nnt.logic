@@ -2,9 +2,12 @@ import {Node} from "../config/config";
 import {AbstractMQClient, IMQClient, IMQServer, MQClientOption} from "./mq";
 import {AbstractServer} from "./server";
 import {logger} from "../core/logger";
-import {ReusableObjects, Variant} from "../core/object";
-import {ArrayT, Class, IndexedObject, KvObject, ObjectT} from "../core/kernel";
+import {ReusableObjects} from "../core/object";
+import {Class, IndexedObject, KvObject} from "../core/kernel";
 import {static_cast} from "../core/core";
+import {Variant} from "../core/variant";
+import {ObjectT} from "../core/objectt";
+import {ArrayT} from "../core/arrayt";
 import amqplib = require("amqplib");
 
 interface AmqpNode {

@@ -1,22 +1,14 @@
 import {AbstractParser} from "./parser";
 import {boolean_t, double_t, FieldOption, FP_KEY, integer_t, number_t, string_t} from "../../core/proto";
 import {STATUS} from "../../core/models";
-import {
-    ArrayT,
-    asString,
-    IndexedObject,
-    IntFloat,
-    IsEmpty,
-    Multimap,
-    toBoolean,
-    toDouble,
-    toInt,
-    toJsonObject,
-    toNumber,
-    UploadedFileHandle
-} from "../../core/kernel";
+import {asString, IndexedObject, IsEmpty, toBoolean, toDouble, toInt, toNumber,} from "../../core/kernel";
 import {logger} from "../../core/logger";
 import {Filter} from "../../store/filter";
+import {toJsonObject} from "../../core/json";
+import {Multimap} from "../../core/map";
+import {ArrayT} from "../../core/arrayt";
+import {IntFloat} from "../../core/intfloat";
+import {UploadedFile} from "../../core/uploadedfile";
 
 export class Jsobj extends AbstractParser {
 
@@ -245,7 +237,7 @@ export class Jsobj extends AbstractParser {
             } else if (fp.file) {
                 if (typeof val == "string")
                     return val;
-                return new UploadedFileHandle(val);
+                return new UploadedFile(val);
             } else if (fp.filter) {
                 return Filter.Parse(val);
             } else {

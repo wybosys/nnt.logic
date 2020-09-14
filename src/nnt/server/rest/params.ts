@@ -1,5 +1,5 @@
 import xml2js = require("xml2js");
-import {toJsonObject} from "../../core/kernel";
+import {toJsonObject} from "../../core/json";
 
 export function ParseContentToParams(buf: string, ct: string): Promise<Map<string, any>> {
     return new Promise(resolve => {
@@ -31,8 +31,7 @@ export function ParseContentToParams(buf: string, ct: string): Promise<Map<strin
                 m.set(k, jsobj[k]);
             }
             resolve(m);
-        }
-        else {
+        } else {
             // 否则什么都不处理
             resolve(m);
         }

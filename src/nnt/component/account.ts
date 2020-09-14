@@ -1,8 +1,9 @@
 // 常用的账号相关的处理方法
 import crypto = require("crypto");
 import {DateTime} from "../core/time";
-import {ArrayT, Random} from "../core/kernel";
 import {IsDebug} from "../manager/config";
+import {ArrayT} from "../core/arrayt";
+import {Random} from "../core/random";
 
 // 生成SID
 export function GEN_SID(): string {

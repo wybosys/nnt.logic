@@ -1,3 +1,7 @@
+import {ObjectT} from "./objectt";
+import {COMPARERESULT, IndexedObject, ispod} from "./kernel";
+import {Random} from "./random";
+
 export class ArrayT {
 
     static Allocate<T>(len: number, obj: (idx?: number) => T): T[] {
@@ -531,25 +535,6 @@ export class ArrayT {
                 break;
         }
     };
-
-    static Combination<T>(arr: T[], m = arr.length): T[][] {
-        let iter = G.combination(arr, m);
-        // G的库需要
-        return IterateT.ToArray(iter, e => e.slice());
-    }
-
-    static Permutation<T>(arr: T[], m = arr.length): T[][] {
-        let iter = G.permutation(arr, m);
-        return IterateT.ToArray(iter, e => e.slice());
-    }
-
-    static EachCombination<T>(arr: T[], m: number, proc: (e: T[]) => void) {
-        this.Combination(arr, m).forEach(proc);
-    }
-
-    static EachPermutation<T>(arr: T[], m: number, proc: (e: T[]) => void) {
-        this.Permutation(arr, m).forEach(proc);
-    }
 
     // 把数组按照制定索引来排列，proc返回计算后的数组索引
     static MapIndexIn<T>(arr: T[], indics: number[], proc: (e: T, idx?: number) => number = (e, idx) => idx) {

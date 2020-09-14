@@ -9,7 +9,7 @@ import {STATUS} from "../../core/models";
 import {Base, HttpContentType, HttpMethod, ModelError, ResponseData} from "../../session/model";
 import {Rest as RestSession} from "../../session/rest";
 import {REGEX_PHONE} from "../../component/pattern";
-import {ArrayT} from "../../core/kernel";
+import {ArrayT} from "../../core/arrayt";
 import {AbstractParser} from "../../server/parser/parser";
 import soap = require("soap");
 import crypto = require("crypto");
