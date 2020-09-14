@@ -7,7 +7,6 @@ import {
     DecryptedMessage,
     Device,
     KeyPair,
-    MessageType,
     PreKey,
     Ratchet,
     Session,
@@ -17,9 +16,9 @@ import {
 import {use} from "../../../../core/kernel";
 import {FixedBuffer32} from "../../../../core/buffer";
 import {SessionStorage} from "../sessionstorage";
-import {PushMessage, PushMessageFlag} from "../protocol";
 import {SessionBuilder} from "../sessionbuilder";
 import {generateIdentity, generatePreKeyBundle} from "./test_base";
+import {Message, MessageType} from "../protocol";
 import assert = require('assert');
 
 async function getRemoteRegistrationId() {
@@ -200,9 +199,9 @@ async function doReceiveStep(store: SessionStorage, data: Data, privKeyQueue: Ke
         throw new Error("Unknown data type in test vector");
     }
 
-    let content = new PushMessage().serialin(plaintext.plaintext);
+    let content = new Message().serialin(plaintext.plaintext);
     if (data.expectTerminateSession) {
-        return content.flag == PushMessageFlag.END_SESSION;
+        return content.type == MessageType.END_SESSION;
     }
 
     return content.body.compare(data.expectedSmsText) == 0;
@@ -238,9 +237,9 @@ async function doSendStep(store: SessionStorage, data: Data, privKeyQueue: KeyPa
         return builder.processPreKey(deviceObject);
     }
 
-    let proto = new PushMessage();
+    let proto = new Message();
     if (data.endSession) {
-        proto.flag = PushMessageFlag.END_SESSION;
+        proto.type = MessageType.END_SESSION;
     } else {
         proto.body = data.smsText;
     }

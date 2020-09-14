@@ -1,6 +1,6 @@
 import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
 import {KeyPair} from "./model";
-import {IPodObject} from "../../../core/object";
+import {IPodObject, ISerializableObject} from "../../../core/object";
 import {FixedBuffer32} from "../../../core/buffer";
 
 export abstract class Protocol implements IPodObject {
@@ -118,25 +118,38 @@ export class KeyExchangeMessage extends Protocol {
     }
 }
 
-export enum PushMessageFlag {
-    END_SESSION = 1
+// 发送的消息
+
+export enum MessageType {
+    END_SESSION = 1,
+    CIPHERTEXT = 2,
+    PREKEY_BUNDLE = 3,
 }
 
-export class PushMessage extends Protocol {
+export class Message extends Protocol implements ISerializableObject {
 
-    flag: PushMessageFlag;
+    type: MessageType;
     body: Buffer;
 
     toPod(): IndexedObject {
         return {
-            flag: this.flag,
+            type: this.type,
             body: this.body.toString('base64')
         };
     }
 
     fromPod(obj: IndexedObject): this {
-        this.flag = obj.flag;
+        this.type = obj.type;
         this.body = Buffer.from(obj.body, 'base64');
         return this;
     }
+
+    serialize(): Buffer {
+        return null;
+    }
+
+    unserialize(buf: Buffer): this {
+        return null;
+    }
+
 }

@@ -44,9 +44,19 @@ export function dispose<T>(o: T) {
 export interface ISerializableObject {
 
     // 序列化
-    serialize(): string;
+    serialize(): Buffer;
 
     // 反序列化，序列化成功返回自身，不成功返回null
+    unserialize(buf: Buffer): this;
+}
+
+// 序列化为字符串接口
+export interface ISerializableString {
+
+    // 转换为字符串
+    serialize(): string;
+
+    // 从字符串读取
     unserialize(str: string): this;
 }
 
@@ -243,7 +253,7 @@ export enum VariantType {
     NUMBER = 5,
 }
 
-export class Variant implements ISerializableObject {
+export class Variant implements ISerializableString {
 
     constructor(o: any) {
         this._raw = o;
@@ -274,11 +284,11 @@ export class Variant implements ISerializableObject {
         return this._raw;
     }
 
-    static Unserialize(str: string): Variant {
-        if (!str)
+    static Unserialize(buf: string): Variant {
+        if (!buf)
             return null;
         let t = new Variant(null);
-        if (!t.unserialize(str))
+        if (!t.unserialize(buf))
             return null;
         return t;
     }
@@ -357,8 +367,8 @@ export class Variant implements ISerializableObject {
         return toJson(s);
     }
 
-    unserialize(str: string): this {
-        let obj: any = toJsonObject(str);
+    unserialize(buf: string): this {
+        let obj: any = toJsonObject(buf);
         if (!obj)
             return null;
         if (obj._i != "vo") {

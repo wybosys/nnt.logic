@@ -122,8 +122,7 @@ export class KvRedis extends AbstractKv {
             // 查找类型定义
             let mp = GetStoreInfo(val.object.constructor);
             this.doSet(key, jsstr, mp && mp.setting, cb);
-        }
-        else {
+        } else {
             this.doSet(key, jsstr, null, cb);
         }
     }
@@ -161,8 +160,7 @@ export class KvRedis extends AbstractKv {
             // 查找类型定义
             let mp = GetStoreInfo(val.object.constructor);
             this.doGetSet(key, jsstr, mp && mp.setting, cb);
-        }
-        else {
+        } else {
             this.doGetSet(key, jsstr, null, cb);
         }
     }
@@ -216,8 +214,7 @@ export class KvRedis extends AbstractKv {
                 }
                 cb(toInt(res[0]));
             });
-        }
-        else {
+        } else {
             this._hdl.incrby(key, delta, (err, res: any) => {
                 if (err) {
                     logger.error(err);
@@ -240,8 +237,7 @@ export class KvRedis extends AbstractKv {
                     }
                     cb(toInt(res[0]));
                 });
-            }
-            else {
+            } else {
                 this._hdl.incrby(key, delta, (err, res: any) => {
                     if (err) {
                         logger.error(err);
@@ -251,8 +247,7 @@ export class KvRedis extends AbstractKv {
                     cb(toInt(res[0]));
                 });
             }
-        }
-        else {
+        } else {
             if (delta == -1) {
                 this._hdl.decr(key, (err, res: any) => {
                     if (err) {
@@ -262,8 +257,7 @@ export class KvRedis extends AbstractKv {
                     }
                     cb(toInt(res[0]));
                 });
-            }
-            else {
+            } else {
                 this._hdl.decrby(key, -delta, (err, res: any) => {
                     if (err) {
                         logger.error(err);
@@ -299,8 +293,7 @@ export class KvRedis extends AbstractKv {
                     }
                     cb && cb(true);
                 });
-            }
-            else {
+            } else {
                 cb && cb(true);
             }
         });
@@ -326,8 +319,7 @@ export class KvRedis extends AbstractKv {
                     }
                     cb && cb(true);
                 });
-            }
-            else {
+            } else {
                 cb && cb(false);
             }
         });

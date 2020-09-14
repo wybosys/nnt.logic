@@ -87,20 +87,13 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         this._dirty_hash = true;
     }
 
-    serialize(): string {
-        return this._buf.toString('base64');
+    serialize(): Buffer {
+        return this._buf;
     }
 
-    unserialize(str: string): this {
-        let buf = Buffer.from(str, 'base64');
+    unserialize(buf: Buffer): this {
         return this.reset(buf) ? this : null;
     }
-}
-
-export function UnserializeFixedBuffer<T extends ISerializableObject>(tmp: T, str?: string): T {
-    if (!str)
-        return null;
-    return tmp.unserialize(str) ? tmp : null;
 }
 
 export class FixedBuffer8 extends FixedBuffer<_8> {
@@ -187,6 +180,10 @@ export class BasedBuffer {
 
     constructor(buf?: Buffer) {
         this._buf = buf;
+    }
+
+    get buffer(): Buffer {
+        return this._buf;
     }
 
     get byteLength(): number {
@@ -476,7 +473,7 @@ export class Buffers implements ISerializableObject {
         this._arr.forEach(fn);
     }
 
-    serialize(): string {
+    serialize(): Buffer {
         // count(32bits) + buffers[](length + buffer)
         const count = this._arr.length;
         const lbufs = ArrayT.Sum(this._arr, e => e.byteLength);
@@ -489,11 +486,11 @@ export class Buffers implements ISerializableObject {
             fbuf.writeBuffer(e);
         });
 
-        return fbuf.toString('base64');
+        return fbuf.buffer;
     }
 
-    unserialize(str: string): this {
-        let buf = StreamBuffer.From(Buffer.from(str, 'base64'));
+    unserialize(b: Buffer): this {
+        let buf = StreamBuffer.From(b);
         this._arr.length = 0;
 
         const count = buf.readInt32BE();

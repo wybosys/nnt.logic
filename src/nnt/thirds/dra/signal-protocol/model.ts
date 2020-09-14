@@ -13,11 +13,6 @@ export enum ChainType {
     RECEIVING = 2
 }
 
-export enum MessageType {
-    CIPHERTEXT = 1,
-    PREKEY_BUNDLE = 2,
-}
-
 export class ErrorExt extends Error {
 
     constructor(e: any) {
