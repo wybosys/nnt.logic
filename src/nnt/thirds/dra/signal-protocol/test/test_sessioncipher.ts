@@ -5,6 +5,7 @@ import {SessionRecord} from "../sessionrecord";
 import {
     BaseKeyType,
     DecryptedMessage,
+    Device,
     KeyPair,
     MessageType,
     PreKey,
@@ -227,15 +228,13 @@ async function setupSendStep(store: SessionStorage, data: Data, privKeyQueue: Ke
 async function doSendStep(store: SessionStorage, data: Data, privKeyQueue: KeyPair[], address: Address) {
     await setupSendStep(store, data, privKeyQueue);
     if (data.getKeys) {
-        var deviceObject = {
-            encodedNumber: address.toString(),
-            identityKey: data.getKeys.identityKey,
-            preKey: data.getKeys.devices[0].preKey,
-            signedPreKey: data.getKeys.devices[0].signedPreKey,
-            registrationId: data.getKeys.devices[0].registrationId
-        };
+        let deviceObject = new Device();
+        deviceObject.identityKey = data.getKeys.identifier;
+        deviceObject.preKey = data.getKeys.devices[0].preKey;
+        deviceObject.signedPreKey = data.getKeys.devices[0].signedPreKey;
+        deviceObject.registrationId = data.getKeys.devices[0].registrationId;
 
-        var builder = new SessionBuilder(store, address);
+        let builder = new SessionBuilder(store, address);
         return builder.processPreKey(deviceObject);
     }
 
