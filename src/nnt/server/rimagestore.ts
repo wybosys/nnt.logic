@@ -1,7 +1,7 @@
 import {enumerate, enumm, file, FileType, input, model, optional, output, string} from "../core/proto";
 import {action, IRouter} from "../core/router";
 import {Transaction} from "./transaction";
-import {static_cast, UUID} from "../core/core";
+import {static_cast} from "../core/core";
 import {logger} from "../core/logger";
 import {Filter} from "./imgfilter/filter";
 import {STATUS} from "../core/models";
@@ -12,12 +12,13 @@ import {Mime} from "../core/file";
 import {ConvertFile, FindSupportConvertor} from "./convert/convert";
 import {FileInfo} from "./fileinfo";
 import {QrCode} from "../component/qrcode";
+import {IMediaStore} from "./imediastore";
+import {UUID} from "../core/random";
 import Hashids = require("hashids");
 import fs = require("fs-extra");
 import ph = require("path");
 import req = require("request");
 import childproc = require("child_process");
-import {IMediaStore} from "./imediastore";
 
 // 使用类型来模拟枚举
 @model([enumm])

@@ -1,4 +1,10 @@
-// 不保证完全唯一，但是可以指定
+import {v4} from 'uuid';
+
+export function UUID(): string {
+    return v4().replace(/-/g, "");
+}
+
+// 不保证完全唯一，但是可以指定宽度
 export function unsafeUuid(len: number, radix: number) {
     var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
     var uuid = [], i;

@@ -2,7 +2,6 @@ import {action, IRouter} from "../../nnt/core/router";
 import {DateTime} from "../../nnt/core/time";
 import {TODAY_RANGE} from "../../nnt/component/today";
 import {Echoo, Login, LoginSDK, LoginVerifySDK, Message, Upload, User} from "../model/sample";
-import {UUID} from "../../nnt/core/core";
 import {Trans} from "../model/trans";
 import {Get, Set} from "../../nnt/manager/dbmss";
 import {Fetch} from "../../nnt/server/remote";
@@ -13,6 +12,7 @@ import {Rest} from "../../nnt/session/rest";
 import {Sdks, SdkUserLogin, SdkUserVerify} from "../../nnt/thirds/sdks/sdks";
 import {Find} from "../../nnt/manager/servers";
 import {Manager} from "../manager/manager";
+import {UUID} from "../../nnt/core/random";
 
 export class RSample implements IRouter {
     action = "sample";

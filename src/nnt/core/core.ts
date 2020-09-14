@@ -1,9 +1,7 @@
-import uuidv4 = require('uuid/v4');
 import fs = require("fs");
 import {Capture} from "./v8";
 import {logger} from "./logger";
 import {REGEX_JS} from "../component/pattern";
-import crypto = require("crypto");
 
 export function static_cast<T>(l: any): T {
     return l;
@@ -48,14 +46,6 @@ export function GetClassName(clz: any): string {
 
 export function GetObjectClassName(mdl: any): string {
     return mdl.constructor["name"];
-}
-
-export function UUID(): string {
-    return uuidv4().replace(/-/g, "");
-}
-
-export function MD5(str: string, format: 'hex' | 'base64' = 'hex'): string {
-    return crypto.createHash('md5').update(str).digest(format);
 }
 
 let __static_vars = new Map<string, any>();

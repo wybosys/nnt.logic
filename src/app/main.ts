@@ -1,7 +1,6 @@
 import {App} from "../nnt/manager/app";
 import {Clusters} from "../nnt/manager/clusters";
 import {Config} from "../nnt/manager/config";
-import {test_signal_protocol} from "../nnt/thirds/dra/signal-protocol/test/test";
 
 export function launch() {
     App.LoadConfig();
@@ -13,5 +12,3 @@ export function launch() {
         app.start();
     }, Config.CLUSTER_PARALLEL);
 }
-
-test_signal_protocol();

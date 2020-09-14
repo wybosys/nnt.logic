@@ -3,13 +3,14 @@ import {enumerate, enumm, input, model, optional, output, string} from "../core/
 import {Mime} from "../core/file";
 import {Fs, IndexedObject, toInt} from "../core/kernel";
 import {IMediaStore} from "./imediastore";
-import {static_cast, UUID} from "../core/core";
+import {static_cast} from "../core/core";
 import {logger} from "../core/logger";
 import {Config, IsDebug} from "../manager/config";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {FileInfo} from "./fileinfo";
 import {RespFile} from "./file";
+import {UUID} from "../core/random";
 import Hashids = require("hashids");
 import fs = require("fs-extra");
 import req = require("request");

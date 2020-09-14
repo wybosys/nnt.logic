@@ -5,16 +5,17 @@ import {Fs, IndexedObject, toInt} from "../core/kernel";
 import {Transaction} from "./transaction";
 import {STATUS} from "../core/models";
 import {Base64File, Mime} from "../core/file";
-import {static_cast, UUID} from "../core/core";
+import {static_cast} from "../core/core";
 import {logger} from "../core/logger";
 import {RespFile} from "./file";
 import {Config, IsDebug} from "../manager/config";
+import {IMediaStore} from "./imediastore";
+import {UUID} from "../core/random";
 import fs = require("fs");
 import Hashids = require("hashids");
 import req = require("request");
 import ffmpeg = require("fluent-ffmpeg");
 import path = require("path");
-import {IMediaStore} from "./imediastore";
 
 @model([enumm])
 export class AudioSupport {
@@ -134,8 +135,7 @@ export class RAudioStore implements IRouter {
             m.path = result.path;
             trans.status = result.status;
             trans.submit();
-        }
-        else if (typeof m.file == "object") {
+        } else if (typeof m.file == "object") {
             if (pat.indexOf(m.file.type) == -1) {
                 trans.status = STATUS.TYPE_MISMATCH;
                 trans.submit();
@@ -152,25 +152,21 @@ export class RAudioStore implements IRouter {
                     m.path = result.path;
                     trans.status = result.status;
                     trans.submit();
-                }
-                else {
+                } else {
                     trans.status = STATUS.UPLOAD_FAILED;
                     trans.submit();
                 }
-            }
-            else if (pat.indexOf(typ) == -1) {
+            } else if (pat.indexOf(typ) == -1) {
                 trans.status = STATUS.TYPE_MISMATCH;
                 trans.submit();
-            }
-            else {
+            } else {
                 let result = await this.doUploadFile(srv, m.file);
                 result = await this.doConvertUpload(srv, m.type, result);
                 m.path = result.path;
                 trans.status = result.status;
                 trans.submit();
             }
-        }
-        else {
+        } else {
             trans.status = STATUS.TYPE_MISMATCH;
             trans.submit();
         }
@@ -206,8 +202,7 @@ export class RAudioStore implements IRouter {
                                 status: STATUS.OK,
                                 path: dir + "/" + nm
                             });
-                        }
-                        else {
+                        } else {
                             // 删除该文件
                             fs.unlink(path, () => {
                                 logger.info("上传的文件格式不匹配");
@@ -216,8 +211,7 @@ export class RAudioStore implements IRouter {
                                 status: STATUS.TYPE_MISMATCH
                             });
                         }
-                    }
-                    else {
+                    } else {
                         if (pat.indexOf(typ) == -1) {
                             fs.unlink(path, () => {
                                 logger.info("上传的文件格式不匹配");
@@ -225,8 +219,7 @@ export class RAudioStore implements IRouter {
                             resolve({
                                 status: STATUS.TYPE_MISMATCH
                             });
-                        }
-                        else {
+                        } else {
                             resolve({
                                 status: STATUS.OK,
                                 path: dir + "/" + nm
@@ -258,8 +251,7 @@ export class RAudioStore implements IRouter {
                     resolve({
                         status: STATUS.FILESYSTEM_FAILED
                     });
-                }
-                else {
+                } else {
                     resolve({
                         status: STATUS.OK,
                         path: dir + "/" + nm
@@ -339,8 +331,7 @@ export class RAudioStore implements IRouter {
             let tgt = tgtdir + fn;
             if (fs.existsSync(tgt)) {
                 trans.output("audio/mpeg", RespFile.Regular(tgt));
-            }
-            else {
+            } else {
                 if (!fs.existsSync(tgtdir))
                     fs.mkdirSync(tgtdir);
                 logger.log("自动转换amr到mp3 " + m.name);
@@ -362,8 +353,7 @@ export class RAudioStore implements IRouter {
                     })
                     .run();
             }
-        }
-        else {
+        } else {
             trans.output(typ, RespFile.Regular(input));
         }
     }
@@ -412,8 +402,7 @@ export class RAudioStore implements IRouter {
                     trans.submit();
                 });
             });
-        }
-        else {
+        } else {
             logger.log("开始下载 " + m.source);
 
             // 可以开始下载
@@ -460,17 +449,14 @@ export class RAudioStore implements IRouter {
                                         logger.error(err);
                                 });
                                 resolve(dir + "/" + nm + ext);
-                            }
-                            else {
+                            } else {
                                 logger.warn("没有找到下载的对象类型");
                                 resolve(null);
                             }
-                        }
-                        else if (pat.indexOf(typ) == -1) {
+                        } else if (pat.indexOf(typ) == -1) {
                             logger.warn("下载的文件类型不匹配 " + typ);
                             resolve(null);
-                        }
-                        else {
+                        } else {
                             Fs.move(path, path + ext, err => {
                                 if (err)
                                     logger.error(err);
