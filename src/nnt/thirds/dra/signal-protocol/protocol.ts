@@ -121,6 +121,7 @@ export class KeyExchangeMessage extends Protocol {
 // 发送的消息
 
 export enum MessageType {
+    PLAINTEXT = 0,
     END_SESSION = 1,
     CIPHERTEXT = 2,
     PREKEY_BUNDLE = 3,
