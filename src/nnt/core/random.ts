@@ -1,4 +1,74 @@
 import {v4} from 'uuid';
+import seedrandom = require("seed-random");
+
+export class Random {
+
+    constructor(sd?: string) {
+        this._seed = sd;
+    }
+
+    valueOf(): number {
+        return this.value;
+    }
+
+    get value(): number {
+        if (!this._hdl) {
+            this._hdl = seedrandom(this._seed, {entropy: this._entropy});
+        }
+        return this._hdl();
+    }
+
+    toString(): string {
+        return this.value.toString();
+    }
+
+    get entropy(): boolean {
+        return this._entropy;
+    }
+
+    set entropy(v: boolean) {
+        if (this._entropy == v)
+            return;
+        this._hdl = null;
+        this._entropy = v;
+    }
+
+    get seed(): string {
+        return this._seed;
+    }
+
+    set seed(s: string) {
+        if (this._seed == s)
+            return;
+        this._hdl = null;
+        this._seed = s;
+    }
+
+    private _seed: string;
+    private _hdl: any;
+    private _entropy: boolean = true;
+
+    static Rangef(from: number, to: number): number {
+        return Math.random() * (to - from) + from;
+    }
+
+    // @param close true:[], false:[)
+    static Rangei(from: number, to: number, close = false): number {
+        if (close)
+            return Math.round(Random.Rangef(from, to));
+        return Math.floor(Random.Rangef(from, to));
+    }
+
+    rangef(from: number, to: number): number {
+        return this.value * (to - from) + from;
+    }
+
+    rangei(from: number, to: number, close = false): number {
+        if (close)
+            return Math.round(this.rangef(from, to));
+        return Math.floor(this.rangef(from, to));
+    }
+}
 
 export function UUID(): string {
     return v4().replace(/-/g, "");

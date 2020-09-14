@@ -1,10 +1,11 @@
 import {action, IRouter} from "../../core/router";
 import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../../server/transaction";
-import {IndexedObject, toJsonObject} from "../../core/kernel";
+import {IndexedObject} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Call} from "../../manager/servers";
 import {Mime} from "../../core/file";
+import {toJsonObject} from "../../core/json";
 import fs = require("fs");
 import ph = require("path");
 

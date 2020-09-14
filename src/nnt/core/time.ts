@@ -1,6 +1,7 @@
 import {IndexedObject} from "./kernel";
 import {logger} from "./logger";
 import {colinteger} from "../store/proto";
+import {OidObject} from "./object";
 
 export type DateTimeRange = {
     from: number, // 开始
@@ -599,4 +600,31 @@ export function Retry(cond: () => boolean, proc: () => void, interval = 1, delta
     } else {
         proc();
     }
+}
+
+export class Delayer extends OidObject {
+
+    constructor(time: number, proc: Function) {
+        super();
+        this._proc = () => {
+            proc();
+            this._hdl = null;
+        };
+        this._time = time;
+    }
+
+    run() {
+        this._hdl = Delay(this._time, this._proc);
+    }
+
+    cancel() {
+        if (this._hdl) {
+            CancelDelay(this._hdl);
+            this._hdl = null;
+        }
+    }
+
+    private _proc: Function;
+    private _time: number;
+    private _hdl: DelayHandler;
 }

@@ -1,9 +1,10 @@
-import {ArrayT, asString, toJson, toJsonObject} from "../core/kernel";
+import {ArrayT, asString} from "../core/kernel";
 import {UpcaseFirst} from "../core/string";
 import {logger} from "../core/logger";
 import {expand} from "../core/url";
 import {Parellel} from "../core/operation";
 import {static_cast} from "../core/core";
+import {toJson, toJsonObject} from "../core/json";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 import xlsx = require("xlsx");
@@ -194,8 +195,7 @@ class Sheet {
                     let proc = processors.get(f.type.config);
                     if (!proc) {
                         logger.log("没有找到 {{=it.st}} 自定义配置 {{=it.config}} 的处理器", {config: f.type.config, st: this.name});
-                    }
-                    else {
+                    } else {
                         e = proc.convert(e.toString());
                         if (proc.string)
                             val = '"' + e + '"';
@@ -204,8 +204,7 @@ class Sheet {
                         else
                             val = "";
                     }
-                }
-                else {
+                } else {
                     if (f.string)
                         val = '"' + e + '"';
                     else
@@ -228,8 +227,7 @@ class Sheet {
             let key: any;
             if (fp == null) {
                 key = idx;
-            }
-            else {
+            } else {
                 if (fp.string)
                     key = '"' + row[fp.index] + '"';
                 else
@@ -416,19 +414,15 @@ export function ParseSheet(nm: string, s: xlsx.WorkSheet, opt: ParseOption): She
                 if (f.type.client) {
                     if (opt.client)
                         r.fields.push(f);
-                }
-                else if (f.type.server) {
+                } else if (f.type.server) {
                     if (opt.server)
                         r.fields.push(f);
-                }
-                else {
+                } else {
                     r.fields.push(f);
                 }
-            }
-            else
+            } else
                 r.fields.push(f);
-        }
-        else {
+        } else {
             r.pfields.push(f);
         }
     });
@@ -458,8 +452,7 @@ export function ParseSheet(nm: string, s: xlsx.WorkSheet, opt: ParseOption): She
                         if (idfp.string)
                             cv = '"' + cv + '"';
                         c.value = cv;
-                    }
-                    else {
+                    } else {
                         c.value = r.datas.length;
                     }
                     r.consts.push(c);
