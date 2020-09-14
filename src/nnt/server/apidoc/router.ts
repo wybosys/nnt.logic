@@ -2,7 +2,7 @@ import {action, expose, FindAction, GetAllActionNames, IRouter} from "../../core
 import {Null, STATUS} from "../../core/models";
 import {Transaction} from "../transaction";
 import {IRouterable, Routers} from "../routers";
-import {IsClass, Require, static_cast} from "../../core/core";
+import {IsClass, static_cast} from "../../core/core";
 import {AnyClass, clazz_type, IndexedObject} from "../../core/kernel";
 import {expand} from "../../core/url";
 import {Template} from "../../component/template";
@@ -27,6 +27,7 @@ import {GetDomain} from "../../core/devops";
 import {JsonObject, toJson} from "../../core/json";
 import {ObjectT} from "../../core/objectt";
 import {ArrayT} from "../../core/arrayt";
+import {Require} from "../../core/module";
 import fs = require("fs");
 import tpl = require("dustjs-linkedin");
 
