@@ -480,7 +480,7 @@ export class Buffers implements ISerializableObject {
         // count(32bits) + buffers[](length + buffer)
         const count = this._arr.length;
         const lbufs = ArrayT.Sum(this._arr, e => e.byteLength);
-        let fbuf = StreamBuffer.Alloc(4 + 8 * count + lbufs);
+        let fbuf = StreamBuffer.Alloc(4 + 4 * count + lbufs);
 
         // 填充数据
         fbuf.writeInt32BE(count);
