@@ -1,7 +1,7 @@
 import {IndexedObject, toJson, toJsonObject} from "../../../core/kernel";
 import {KeyPair} from "./model";
 import {IPodObject, ISerializableObject} from "../../../core/object";
-import {FixedBuffer32} from "../../../core/buffer";
+import {FixedBuffer32, StreamBuffer, TYPEBYTES} from "../../../core/buffer";
 
 export abstract class Protocol implements IPodObject {
 
@@ -145,11 +145,19 @@ export class Message extends Protocol implements ISerializableObject {
     }
 
     serialize(): Buffer {
-        return null;
+        let r = StreamBuffer.Alloc(TYPEBYTES.INT32 + TYPEBYTES.INT32 + this.body.byteLength);
+        r.writeInt32BE(this.type);
+        r.writeInt32BE(this.body.byteLength);
+        r.writeBuffer(this.body);
+        return r.buffer;
     }
 
     unserialize(buf: Buffer): this {
-        return null;
+        let stm = StreamBuffer.From(buf);
+        this.type = stm.readInt32BE();
+        let size = stm.readInt32BE();
+        this.body = stm.readBuffer(size);
+        return this;
     }
 
 }

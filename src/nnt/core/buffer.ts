@@ -201,6 +201,14 @@ export class BasedBuffer {
     protected _buf: Buffer;
 }
 
+export enum TYPEBYTES {
+    INT8 = 1,
+    INT16 = 2,
+    INT32 = 4,
+    FLOAT = 4,
+    DOUBLE = 8
+}
+
 export class StreamBuffer extends BasedBuffer {
 
     static From(buf: Buffer): StreamBuffer {
@@ -261,85 +269,85 @@ export class StreamBuffer extends BasedBuffer {
 
     readUInt8(): number {
         let r = this._buf.readUInt8(this._offset_read);
-        this._offset_read += 1;
+        this._offset_read += TYPEBYTES.INT8;
         return r;
     }
 
     readUInt16LE(): number {
         let r = this._buf.readUInt16LE(this._offset_read);
-        this._offset_read += 2;
+        this._offset_read += TYPEBYTES.INT16;
         return r;
     }
 
     readUInt16BE(): number {
         let r = this._buf.readUInt16BE(this._offset_read);
-        this._offset_read += 2;
+        this._offset_read += TYPEBYTES.INT16;
         return r;
     }
 
     readUInt32LE(): number {
         let r = this._buf.readUInt32LE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.INT32;
         return r;
     }
 
     readUInt32BE(): number {
         let r = this._buf.readUInt32BE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.INT32;
         return r;
     }
 
     readInt8(): number {
         let r = this._buf.readInt8(this._offset_read);
-        this._offset_read += 1;
+        this._offset_read += TYPEBYTES.INT8;
         return r;
     }
 
     readInt16LE(): number {
         let r = this._buf.readInt16LE(this._offset_read);
-        this._offset_read += 2;
+        this._offset_read += TYPEBYTES.INT16;
         return r;
     }
 
     readInt16BE(): number {
         let r = this._buf.readInt16BE(this._offset_read);
-        this._offset_read += 2;
+        this._offset_read += TYPEBYTES.INT16;
         return r;
     }
 
     readInt32LE(): number {
         let r = this._buf.readInt32LE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.INT32;
         return r;
     }
 
     readInt32BE(): number {
         let r = this._buf.readInt32BE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.INT32;
         return r;
     }
 
     readFloatLE(): number {
         let r = this._buf.readFloatLE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.INT32;
         return r;
     }
 
     readFloatBE(): number {
         let r = this._buf.readFloatBE(this._offset_read);
-        this._offset_read += 4;
+        this._offset_read += TYPEBYTES.FLOAT;
         return r;
     }
 
     readDoubleLE(): number {
         let r = this._buf.readDoubleLE(this._offset_read);
-        this._offset_read += 8;
+        this._offset_read += TYPEBYTES.DOUBLE;
         return r;
     }
 
     readDoubleBE(): number {
         let r = this._buf.readDoubleBE(this._offset_read);
-        this._offset_read += 8;
+        this._offset_read += TYPEBYTES.DOUBLE;
         return r;
     }
 
@@ -477,7 +485,7 @@ export class Buffers implements ISerializableObject {
         // count(32bits) + buffers[](length + buffer)
         const count = this._arr.length;
         const lbufs = ArrayT.Sum(this._arr, e => e.byteLength);
-        let fbuf = StreamBuffer.Alloc(4 + 4 * count + lbufs);
+        let fbuf = StreamBuffer.Alloc(TYPEBYTES.INT32 + TYPEBYTES.INT32 * count + lbufs);
 
         // 填充数据
         fbuf.writeInt32BE(count);
