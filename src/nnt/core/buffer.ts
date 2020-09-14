@@ -101,7 +101,7 @@ export function UnserializeFixedBuffer<T extends ISerializableObject>(tmp: T, st
     if (!str)
         return null;
     return tmp.unserialize(str) ? tmp : null;
-};
+}
 
 export class FixedBuffer8 extends FixedBuffer<_8> {
 
@@ -183,6 +183,267 @@ export class FixedBuffer512 extends FixedBuffer<_512> {
     private _512: _512;
 }
 
+export class BasedBuffer {
+
+    constructor(buf?: Buffer) {
+        this._buf = buf;
+    }
+
+    get byteLength(): number {
+        return this._buf.byteLength;
+    }
+
+    slice(begin?: number, end?: number): Buffer {
+        return this._buf.slice(begin, end);
+    }
+
+    toString(encoding?: BufferEncoding, start?: number, end?: number): string {
+        return this._buf.toString(encoding, start, end);
+    }
+
+    protected _buf: Buffer;
+}
+
+export class StreamBuffer extends BasedBuffer {
+
+    static From(buf: Buffer): StreamBuffer {
+        let r = new StreamBuffer();
+        r._buf = buf;
+        return r;
+    }
+
+    static Alloc(len: number): StreamBuffer {
+        let r = new StreamBuffer();
+        r._buf = Buffer.alloc(len);
+        return r;
+    }
+
+    writeUIntLE(value: number, byteLength: number): number {
+        this._offset_write = this._buf.writeUIntLE(value, this._offset_write, byteLength);
+        return this._offset_write;
+    }
+
+    writeUIntBE(value: number, byteLength: number): number {
+        this._offset_write = this._buf.writeUIntBE(value, this._offset_write, byteLength);
+        return this._offset_write;
+    }
+
+    writeIntLE(value: number, byteLength: number): number {
+        this._offset_write = this._buf.writeIntLE(value, this._offset_write, byteLength);
+        return this._offset_write;
+    }
+
+    writeIntBE(value: number, byteLength: number): number {
+        this._offset_write = this._buf.writeIntBE(value, this._offset_write, byteLength);
+        return this._offset_write;
+    }
+
+    readUIntLE(byteLength: number): number {
+        let r = this._buf.readUIntLE(this._offset_read, byteLength);
+        this._offset_read += byteLength;
+        return r;
+    }
+
+    readUIntBE(byteLength: number): number {
+        let r = this._buf.readUIntBE(this._offset_read, byteLength);
+        this._offset_read += byteLength;
+        return r;
+    }
+
+    readIntLE(byteLength: number): number {
+        let r = this._buf.readIntLE(this._offset_read, byteLength);
+        this._offset_read += byteLength;
+        return r;
+    }
+
+    readIntBE(byteLength: number): number {
+        let r = this._buf.readIntBE(this._offset_read, byteLength);
+        this._offset_read += byteLength;
+        return r;
+    }
+
+    readUInt8(): number {
+        let r = this._buf.readUInt8(this._offset_read);
+        this._offset_read += 1;
+        return r;
+    }
+
+    readUInt16LE(): number {
+        let r = this._buf.readUInt16LE(this._offset_read);
+        this._offset_read += 2;
+        return r;
+    }
+
+    readUInt16BE(): number {
+        let r = this._buf.readUInt16BE(this._offset_read);
+        this._offset_read += 2;
+        return r;
+    }
+
+    readUInt32LE(): number {
+        let r = this._buf.readUInt32LE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readUInt32BE(): number {
+        let r = this._buf.readUInt32BE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readInt8(): number {
+        let r = this._buf.readInt8(this._offset_read);
+        this._offset_read += 1;
+        return r;
+    }
+
+    readInt16LE(): number {
+        let r = this._buf.readInt16LE(this._offset_read);
+        this._offset_read += 2;
+        return r;
+    }
+
+    readInt16BE(): number {
+        let r = this._buf.readInt16BE(this._offset_read);
+        this._offset_read += 2;
+        return r;
+    }
+
+    readInt32LE(): number {
+        let r = this._buf.readInt32LE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readInt32BE(): number {
+        let r = this._buf.readInt32BE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readFloatLE(): number {
+        let r = this._buf.readFloatLE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readFloatBE(): number {
+        let r = this._buf.readFloatBE(this._offset_read);
+        this._offset_read += 4;
+        return r;
+    }
+
+    readDoubleLE(): number {
+        let r = this._buf.readDoubleLE(this._offset_read);
+        this._offset_read += 8;
+        return r;
+    }
+
+    readDoubleBE(): number {
+        let r = this._buf.readDoubleBE(this._offset_read);
+        this._offset_read += 8;
+        return r;
+    }
+
+    writeUInt8(value: number): number {
+        this._offset_write = this._buf.writeUInt8(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeUInt16LE(value: number): number {
+        this._offset_write = this._buf.writeUInt16LE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeUInt16BE(value: number): number {
+        this._offset_write = this._buf.writeUInt16BE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeUInt32LE(value: number): number {
+        this._offset_write = this._buf.writeUInt32LE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeUInt32BE(value: number): number {
+        this._offset_write = this._buf.writeUInt32BE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeInt8(value: number): number {
+        this._offset_write = this._buf.writeInt8(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeInt16LE(value: number): number {
+        this._offset_write = this._buf.writeInt16LE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeInt16BE(value: number): number {
+        this._offset_write = this._buf.writeInt16BE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeInt32LE(value: number): number {
+        this._offset_write = this._buf.writeInt32LE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeInt32BE(value: number): number {
+        this._offset_write = this._buf.writeInt32BE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeFloatLE(value: number): number {
+        this._offset_write = this._buf.writeFloatLE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeFloatBE(value: number): number {
+        this._offset_write = this._buf.writeFloatBE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeDoubleLE(value: number): number {
+        this._offset_write = this._buf.writeDoubleLE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeDoubleBE(value: number): number {
+        this._offset_write = this._buf.writeDoubleBE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeBuffer(value: Buffer): number {
+        this._buf.set(value, this._offset_write);
+        this._offset_write += value.byteLength;
+        return this._offset_write;
+    }
+
+    readBuffer(size: number): Buffer {
+        let r = this._buf.slice(this._offset_read, this._offset_read + size);
+        this._offset_read += size;
+        return r;
+    }
+
+    toString(encoding?: BufferEncoding, start?: number, end?: number): string {
+        if (end == null)
+            end = this._offset_write;
+        return this._buf.toString(encoding, start, end);
+    }
+
+    // 实际的数据长度
+    get length(): number {
+        return this._offset_write;
+    }
+
+    // 当前读写的便宜
+    private _offset_read = 0;
+    private _offset_write = 0;
+}
+
 export class Buffers implements ISerializableObject {
 
     constructor(...bufs: Buffer[]) {
@@ -216,34 +477,29 @@ export class Buffers implements ISerializableObject {
     }
 
     serialize(): string {
-        // count(32bits) + buffers[](size + buffer)
+        // count(32bits) + buffers[](length + buffer)
         const count = this._arr.length;
         const lbufs = ArrayT.Sum(this._arr, e => e.byteLength);
-        let fbuf = new Buffer(4 + 4 * count + lbufs);
+        let fbuf = StreamBuffer.Alloc(4 + 8 * count + lbufs);
 
         // 填充数据
-        let offset = fbuf.writeInt32BE(count);
+        fbuf.writeInt32BE(count);
         this._arr.forEach(e => {
-            offset = fbuf.writeInt32BE(e.byteLength, offset);
-            fbuf.set(e, offset);
-            offset += e.byteLength;
+            fbuf.writeInt32BE(e.byteLength);
+            fbuf.writeBuffer(e);
         });
 
         return fbuf.toString('base64');
     }
 
     unserialize(str: string): this {
-        let buf = Buffer.from(str, 'base64');
+        let buf = StreamBuffer.From(Buffer.from(str, 'base64'));
         this._arr.length = 0;
 
-        let offset = 0;
-        const count = buf.readInt32BE(offset);
-        offset += 4;
+        const count = buf.readInt32BE();
         for (let i = 0; i < count; ++i) {
-            let size = buf.readInt32BE(offset);
-            offset += 4;
-            let cur = buf.slice(offset, offset + size);
-            offset += size;
+            let size = buf.readInt32BE();
+            let cur = buf.readBuffer(size);
             this._arr.push(cur);
         }
 
