@@ -36,7 +36,7 @@ export class SessionBuilder {
             throw new Error('dra: Identity key changed');
         }
 
-        let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.pubKeyX.buffer, device.signedPreKey.signature);
+        let verified = Crypto.Ed25519Verify(device.identityKey, device.signedPreKey.pubKeyEd.buffer, device.signedPreKey.signature);
         if (!verified) {
             throw new Error('dra: Signature error');
         }

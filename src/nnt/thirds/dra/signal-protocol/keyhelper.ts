@@ -19,7 +19,7 @@ export class KeyHelper {
         }
 
         let keyPair = Crypto.CreateKeyPair();
-        let sig = Crypto.Ed25519Sign(identityKeyPair, keyPair.pubKeyX.buffer);
+        let sig = Crypto.Ed25519Sign(identityKeyPair, keyPair.pubKeyEd.buffer);
 
         let r = new SignedPreKey();
         r.keyId = signedKeyId;
