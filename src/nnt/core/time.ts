@@ -11,6 +11,12 @@ export function Defer(proc: Function) {
     process.nextTick(proc);
 }
 
+export function Sleep(seconds: number): Promise<void> {
+    return new Promise<void>(resolve => {
+        setTimeout(resolve, seconds * 1000);
+    });
+}
+
 export type DelayHandler = number;
 export type RepeatHandler = number;
 

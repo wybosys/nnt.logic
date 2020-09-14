@@ -2428,20 +2428,6 @@ export class IntFloat {
 
 export type intfloat = IntFloat | number;
 
-/** 运行公式 */
-export function EvalFormula(f: string, vars: IndexedObject, upcase: boolean = true): any {
-    try {
-        let vs = [];
-        for (let k in vars) {
-            vs.push(!upcase ? k : k.toUpperCase() + "=" + vars[k]);
-        }
-        let cmd = "var " + vs.join(",") + ";" + f;
-        return eval(cmd);
-    } catch (err) {
-        logger.log(err);
-    }
-}
-
 export class IndexedMap<K, V> {
 
     set(k: K, v: V) {
@@ -2495,31 +2481,6 @@ export class IndexedMap<K, V> {
     private _map = new Map<K, V>();
     private _keys = new Array<K>();
     private _vals = new Array<V>();
-}
-
-export class Mask {
-
-    static Set(value: number, mask: number): number {
-        if (this.Has(value, mask))
-            return value;
-        return value | mask;
-    }
-
-    static Unset(value: number, mask: number): number {
-        if (!this.Has(value, mask))
-            return value;
-        return value ^ mask;
-    }
-
-    static Has(value: number, mask: number): boolean {
-        return (value & mask) == mask;
-    }
-}
-
-export function Sleep(seconds: number): Promise<void> {
-    return new Promise<void>(resolve => {
-        setTimeout(resolve, seconds * 1000);
-    });
 }
 
 export class Counter {
