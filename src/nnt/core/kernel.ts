@@ -135,6 +135,10 @@ export function use<T>(v: T, proc: (v: T) => void): T {
     return v;
 }
 
+export function lambda<T, R>(v: T, proc: (v: T) => R): R {
+    return proc(v);
+}
+
 function _istuple(obj: any, len = 2): boolean {
     if (!(typeof obj == "object"))
         return false;

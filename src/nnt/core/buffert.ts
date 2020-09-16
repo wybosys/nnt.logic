@@ -79,4 +79,29 @@ export class BufferT {
         b.writeDoubleBE(v);
         return b;
     }
+
+    // 定长切
+    static Split(buf: Buffer, length: number, beg: number = 0, end?: number): Buffer[] {
+        let r: Buffer[] = [];
+        if (end == null)
+            end = buf.byteLength;
+        while (beg < end) {
+            let tl = Math.min(length, end - beg);
+            r.push(buf.slice(beg, beg + tl));
+            beg += tl;
+        }
+        return r;
+    }
+
+    // 按照制定长度切
+    static SplitAs(buf: Buffer, ...lens: number[]): Buffer[] {
+        let r: Buffer[] = [];
+        let pos = 0;
+        lens.forEach(e => {
+            let end = Math.min(pos + e, buf.byteLength);
+            r.push(buf.subarray(pos, end));
+            pos += e;
+        });
+        return r;
+    }
 }
