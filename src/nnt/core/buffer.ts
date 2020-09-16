@@ -92,7 +92,7 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
         return this._buf;
     }
 
-    unserialize(buf: Buffer): this {
+    deserialize(buf: Buffer): this {
         return this.reset(buf) ? this : null;
     }
 }
@@ -206,6 +206,7 @@ export enum TYPEBYTES {
     INT8 = 1,
     INT16 = 2,
     INT32 = 4,
+    INT64 = 8,
     FLOAT = 4,
     DOUBLE = 8
 }
@@ -352,6 +353,18 @@ export class StreamBuffer extends BasedBuffer {
         return r;
     }
 
+    readBigInt64LE(): bigint {
+        let r = this._buf.readBigInt64LE(this._offset_read);
+        this._offset_read += TYPEBYTES.INT64;
+        return r;
+    }
+
+    readBigInt64BE(): bigint {
+        let r = this._buf.readBigInt64BE(this._offset_read);
+        this._offset_read += TYPEBYTES.INT64;
+        return r;
+    }
+
     writeUInt8(value: number): number {
         this._offset_write = this._buf.writeUInt8(value, this._offset_write);
         return this._offset_write;
@@ -419,6 +432,11 @@ export class StreamBuffer extends BasedBuffer {
 
     writeDoubleBE(value: number): number {
         this._offset_write = this._buf.writeDoubleBE(value, this._offset_write);
+        return this._offset_write;
+    }
+
+    writeBigInt64LE(value: bigint): number {
+        this._offset_write = this._buf.writeBigInt64LE(value, this._offset_write);
         return this._offset_write;
     }
 
@@ -498,7 +516,7 @@ export class Buffers implements ISerializableObject {
         return fbuf.buffer;
     }
 
-    unserialize(b: Buffer): this {
+    deserialize(b: Buffer): this {
         let buf = StreamBuffer.From(b);
         this._arr.length = 0;
 

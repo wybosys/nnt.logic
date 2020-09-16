@@ -94,7 +94,7 @@ export class KeyPair implements IPodObject {
     }
 
     fromPod(obj: IndexedObject): this {
-        this.pubKeyEd = new Ed25519PublicKey().unserialize(obj.pubKeyEd);
+        this.pubKeyEd = new Ed25519PublicKey().deserialize(obj.pubKeyEd);
         this.pubKeyX = this.pubKeyEd.toX();
         return this;
     }
@@ -138,7 +138,7 @@ export class SignedPreKey extends PreKey {
     fromPod(obj: IndexedObject): this {
         super.fromPod(obj);
         if (obj.signature)
-            this.signature = new FixedBuffer64().unserialize(obj.signature);
+            this.signature = new FixedBuffer64().deserialize(obj.signature);
         return this;
     }
 }
@@ -219,7 +219,7 @@ export class Ratchet implements IPodObject {
 
     fromPod(obj: IndexedObject): this {
         this.ephemeralKeyPair = new KeyPair().fromPod(obj.ephemeralKeyPair);
-        this.rootKey = new FixedBuffer32().unserialize(obj.rootKey);
+        this.rootKey = new FixedBuffer32().deserialize(obj.rootKey);
         this.lastRemoteEphemeralKey = new KeyPair().fromPod(obj.lastRemoteEphemeralKey);
         this.previousCounter = obj.previousCounter;
         return this;
@@ -273,11 +273,11 @@ export class RatchetChain implements IPodObject {
         this.messageKeys.clear();
         for (let k in obj.messageKeys) {
             let v = obj.messageKeys[k];
-            this.messageKeys.set(<any>k, new FixedBuffer32().unserialize(v));
+            this.messageKeys.set(<any>k, new FixedBuffer32().deserialize(v));
         }
         this.chainType = obj.chainType;
         this.chainCounter = obj.chainCounter;
-        this.chainKey = new FixedBuffer32().unserialize(obj.chainKey);
+        this.chainKey = new FixedBuffer32().deserialize(obj.chainKey);
         return this;
     }
 }

@@ -29,7 +29,7 @@ export interface ISerializableObject {
     serialize(): Buffer;
 
     // 反序列化，序列化成功返回自身，不成功返回null
-    unserialize(buf: Buffer): this;
+    deserialize(buf: Buffer): this;
 }
 
 // 序列化为字符串接口

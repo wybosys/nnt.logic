@@ -114,7 +114,7 @@ export class KeyExchangeMessage extends Protocol {
         this.baseKey = new KeyPair().fromPod(obj.baseKey);
         this.ephemeralKey = new KeyPair().fromPod(obj.ephemeralKey);
         this.identityKey = new KeyPair().fromPod(obj.identityKey);
-        this.baseKeySignature = new FixedBuffer32().unserialize(obj.baseKeySignature);
+        this.baseKeySignature = new FixedBuffer32().deserialize(obj.baseKeySignature);
         return this;
     }
 }
@@ -154,7 +154,7 @@ export class Message extends Protocol implements ISerializableObject {
         return r.buffer;
     }
 
-    unserialize(buf: Buffer): this {
+    deserialize(buf: Buffer): this {
         let stm = StreamBuffer.From(buf);
         this.type = stm.readInt32BE();
         let size = stm.readInt32BE();
