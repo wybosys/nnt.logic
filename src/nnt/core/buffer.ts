@@ -1,4 +1,4 @@
-import {_128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
+import {_1, _128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
 import {ISerializableObject} from "./object";
 import {StringT} from "./stringt";
 import {ArrayT} from "./arrayt";
@@ -98,6 +98,16 @@ export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
     deserialize(buf: Buffer): this {
         return this.reset(buf) ? this : null;
     }
+}
+
+export class FixedBuffer1 extends FixedBuffer<_1> {
+
+    constructor(buf?: FixedBufferType) {
+        super(_1.obj, buf);
+        this._1 = _1.obj;
+    }
+
+    private _1: _1;
 }
 
 export class FixedBuffer8 extends FixedBuffer<_8> {

@@ -52,6 +52,17 @@ export interface IPodObject {
     fromPod(obj: IndexedObject): this;
 }
 
+// 比较接口
+export interface IComparableObject {
+
+    compare(r: this): number;
+}
+
+export interface IEqualableObject {
+
+    isEqual(r: this): boolean;
+}
+
 // 基Object的接口
 export interface IObject {
     dispose(): void;
