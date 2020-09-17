@@ -63,6 +63,12 @@ export interface IEqualableObject {
     isEqual(r: this): boolean;
 }
 
+// 含有计算hash值的接口
+export interface IHashObject {
+
+    hash: number;
+}
+
 // 基Object的接口
 export interface IObject {
     dispose(): void;
