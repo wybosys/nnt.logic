@@ -12,6 +12,9 @@ export class BytesBuilder {
     // 当长度不足时自动额外分配的大小
     reserveLength: number;
 
+    // 默认为大端
+    be = true;
+
     protected _buf: Buffer;
 
     // 还剩下多少个字节的空间，加速判断
@@ -109,12 +112,20 @@ export class BytesBuilder {
         return this;
     }
 
+    addInt16(val: number, be = this.be): this {
+        return be ? this.addInt16BE(val) : this.addInt16LE(val);
+    }
+
     addInt16LE(val: number): this {
         return this.addIntLE(val, TYPEBYTES.INT16);
     }
 
     addInt16BE(val: number): this {
         return this.addIntBE(val, TYPEBYTES.INT16);
+    }
+
+    setInt16(val: number, offset: number, be = this.be): this {
+        return be ? this.setInt16BE(val, offset) : this.setInt16LE(val, offset);
     }
 
     setInt16LE(val: number, offset: number): this {
@@ -127,12 +138,20 @@ export class BytesBuilder {
         return this;
     }
 
+    addUInt16(val: number, be = this.be): this {
+        return be ? this.addUInt16BE(val) : this.addUInt16LE(val);
+    }
+
     addUInt16LE(val: number): this {
         return this.addUIntLE(val, TYPEBYTES.INT16);
     }
 
     addUInt16BE(val: number): this {
         return this.addUIntBE(val, TYPEBYTES.INT16);
+    }
+
+    setUInt16(val: number, offset: number, be = this.be): this {
+        return be ? this.setUInt16BE(val, offset) : this.setUInt16LE(val, offset);
     }
 
     setUInt16LE(val: number, offset: number): this {
@@ -145,12 +164,20 @@ export class BytesBuilder {
         return this;
     }
 
+    addInt32(val: number, be = this.be): this {
+        return be ? this.addInt32BE(val) : this.addInt32LE(val);
+    }
+
     addInt32LE(val: number): this {
         return this.addIntLE(val, TYPEBYTES.INT32);
     }
 
     addInt32BE(val: number): this {
         return this.addIntBE(val, TYPEBYTES.INT32);
+    }
+
+    setInt32(val: number, offset: number, be = this.be): this {
+        return be ? this.setInt32BE(val, offset) : this.setInt32LE(val, offset);
     }
 
     setInt32LE(val: number, offset: number): this {
@@ -163,12 +190,20 @@ export class BytesBuilder {
         return this;
     }
 
+    addUInt32(val: number, be = this.be): this {
+        return be ? this.addUInt32BE(val) : this.addUInt32LE(val);
+    }
+
     addUInt32LE(val: number): this {
         return this.addIntLE(val, TYPEBYTES.INT32);
     }
 
     addUInt32BE(val: number): this {
         return this.addIntBE(val, TYPEBYTES.INT32);
+    }
+
+    setUInt32(val: number, offset: number, be = this.be): this {
+        return be ? this.setUInt32BE(val, offset) : this.setUInt32LE(val, offset);
     }
 
     setUInt32LE(val: number, offset: number): this {
@@ -179,6 +214,10 @@ export class BytesBuilder {
     setUInt32BE(val: number, offset: number): this {
         this._buf.writeUInt32BE(val, offset);
         return this;
+    }
+
+    addBigInt64(val: bigint, be = this.be): this {
+        return be ? this.addBigInt64BE(val) : this.addBigInt64LE(val);
     }
 
     addBigInt64LE(val: bigint): this {
@@ -197,6 +236,24 @@ export class BytesBuilder {
         return this;
     }
 
+    setBigInt64(val: bigint, offset: number, be = this.be): this {
+        return be ? this.setBigInt64BE(val, offset) : this.setBigInt64LE(val, offset);
+    }
+
+    setBigInt64LE(val: bigint, offset: number): this {
+        this._buf.writeBigInt64LE(val, offset);
+        return this;
+    }
+
+    setBigInt64BE(val: bigint, offset: number): this {
+        this._buf.writeBigInt64BE(val, offset);
+        return this;
+    }
+
+    addBigUInt64(val: bigint, be = this.be): this {
+        return be ? this.addBigUInt64BE(val) : this.addBigUInt64LE(val);
+    }
+
     addBigUInt64LE(val: bigint): this {
         this.deltaAlloc(TYPEBYTES.INT64);
         this._buf.writeBigUInt64LE(val, this._offset);
@@ -211,6 +268,24 @@ export class BytesBuilder {
         this._offset += TYPEBYTES.INT64;
         this._left -= TYPEBYTES.INT64;
         return this;
+    }
+
+    setBigUInt64(val: bigint, offset: number, be = this.be): this {
+        return be ? this.setBigUInt64BE(val, offset) : this.setBigUInt64LE(val, offset);
+    }
+
+    setBigUInt64LE(val: bigint, offset: number): this {
+        this._buf.writeBigUInt64LE(val, offset);
+        return this;
+    }
+
+    setBigUInt64BE(val: bigint, offset: number): this {
+        this._buf.writeBigUInt64BE(val, offset);
+        return this;
+    }
+
+    addFloat(val: number, be = this.be): this {
+        return be ? this.addFloatBE(val) : this.addFloatLE(val);
     }
 
     addFloatLE(val: number): this {
@@ -229,6 +304,10 @@ export class BytesBuilder {
         return this;
     }
 
+    setFloat(val: number, offset: number, be = this.be): this {
+        return be ? this.setFloatBE(val, offset) : this.setFloatLE(val, offset);
+    }
+
     setFloatLE(val: number, offset: number): this {
         this._buf.writeFloatLE(val, offset);
         return this;
@@ -237,6 +316,10 @@ export class BytesBuilder {
     setFloatBE(val: number, offset: number): this {
         this._buf.writeFloatBE(val, offset);
         return this;
+    }
+
+    addDouble(val: number, be = this.be): this {
+        return be ? this.addDoubleBE(val) : this.addDoubleLE(val);
     }
 
     addDoubleLE(val: number): this {
@@ -253,6 +336,10 @@ export class BytesBuilder {
         this._offset += TYPEBYTES.DOUBLE;
         this._left -= TYPEBYTES.DOUBLE;
         return this;
+    }
+
+    setDouble(val: number, offset: number, be = this.be): this {
+        return be ? this.setDoubleBE(val, offset) : this.setDoubleLE(val, offset);
     }
 
     setDoubleLE(val: number, offset: number): this {

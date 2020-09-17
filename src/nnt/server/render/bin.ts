@@ -11,6 +11,7 @@ import {Multimap} from "../../core/map";
 export class Bin extends AbstractRender {
 
     type = Mime.Type("bin");
+    be: true;
 
     render(trans: Transaction, opt?: TransactionSubmitOption): Buffer {
         let bytes = new BytesBuilder();
