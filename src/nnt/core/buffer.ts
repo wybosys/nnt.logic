@@ -1,5 +1,5 @@
 import {_1, _128, _16, _256, _32, _33, _512, _64, _8} from "./digital";
-import {ISerializableObject} from "./object";
+import {IEqualableObject, IHashObject, ISerializableObject} from "./object";
 import {StringT} from "./stringt";
 import {ArrayT} from "./arrayt";
 
@@ -12,7 +12,7 @@ function ToBuffer(buf: FixedBufferType): Buffer {
     return Buffer.from(buf);
 }
 
-export abstract class FixedBuffer<BYTELEN> implements ISerializableObject {
+export abstract class FixedBuffer<BYTELEN> implements ISerializableObject, IEqualableObject, IHashObject {
 
     constructor(len: any, buf?: FixedBufferType) {
         this._digital = len;

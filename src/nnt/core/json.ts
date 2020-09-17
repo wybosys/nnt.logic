@@ -31,8 +31,9 @@ export function toJsonObject(o: jsonobj, def: any = null): IndexedObject {
             r = def;
         }
         return r;
-    } else if (t == 'object')
+    } else if (t == 'object') {
         return <any>o;
+    }
     return def;
 }
 
