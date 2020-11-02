@@ -56,7 +56,7 @@ export abstract class CTimer
 
     /** 已经过去了的时间 */
     get pastTime(): number {
-        return this._firedCount / this.interval;
+        return this._firedCount * this.interval;
     }
 
     /** 当前的逻辑时间戳 */
