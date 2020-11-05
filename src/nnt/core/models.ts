@@ -86,7 +86,7 @@ export class STATUS {
     static SERVER_NOT_FOUND = -989; // 没有找到服务器
     static LENGTH_OVERFLOW = -988; // 长度超过限制
     static TARGET_NOT_FOUND = -987; // 目标对象没有找到
-    static PERMISSIO_FAILED = -986; // 没有权限
+    static PERMISSION_FAILED = -986; // 没有权限
     static WAIT_IMPLEMENTION = -985; // 等待实现
     static ACTION_NOT_FOUND = -984; // 没有找到动作
     static TARGET_EXISTS = -983; // 已经存在

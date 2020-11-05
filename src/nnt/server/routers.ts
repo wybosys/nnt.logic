@@ -86,7 +86,7 @@ export class Routers {
             } else {
                 // 检查devops
                 if (!await this.devopscheck(trans)) {
-                    trans.status = STATUS.PERMISSIO_FAILED;
+                    trans.status = STATUS.PERMISSION_FAILED;
                     trans.submit();
                     return;
                 }
