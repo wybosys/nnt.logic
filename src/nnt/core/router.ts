@@ -61,8 +61,7 @@ function DefineAp<T>(target: any, key: string, ap: ActionProto) {
     let aps: IndexedObject;
     if (target[AP_KEY]) {
         aps = target[AP_KEY];
-    }
-    else {
+    } else {
         aps = {};
         Object.defineProperty(target, AP_KEY, {
             enumerable: false,
@@ -98,11 +97,12 @@ export function action<T>(model: Class<T>, options?: string[], comment?: string)
     return (target: any, key: string) => {
         let pass = true;
         // 判断是否需要判断可用性
-        if (debug in ap ||
-            develop in ap ||
-            local in ap ||
-            devops in ap ||
-            devopsrelease in ap) {
+        if (ap.debug ||
+            ap.develop ||
+            ap.local ||
+            ap.devops ||
+            ap.devopsdevelop ||
+            ap.devopsrelease) {
             // 挨个判断
             pass = false;
             if (!pass && ap.debug) {
